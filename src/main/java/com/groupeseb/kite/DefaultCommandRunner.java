@@ -208,6 +208,7 @@ public class DefaultCommandRunner implements ICommandRunner {
     void delete(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException {
         log.info("DELETE " + command.getProcessedURI(creationLog) + " (expecting " + command.getExpectedStatus() + ")");
         Response r = given().contentType(JSON_UTF8)
+		        .body(command.getProcessedBody(creationLog)).log().everything(true)
                 .expect().statusCode(command.getExpectedStatus())
                 .when().delete(command.getProcessedURI(creationLog));
 
