@@ -215,9 +215,12 @@ public class DefaultCommandRunner implements ICommandRunner {
         runChecks(command.getChecks(creationLog), r.prettyPrint(), context);
 
         log.info("Checking resource: " + command.getProcessedURI(creationLog) + "...");
-        given().contentType(JSON_UTF8)
-                .expect().statusCode(HttpStatus.SC_NOT_FOUND)
-                .when().get(command.getProcessedURI(creationLog));
+
+	    if (command.getAutomaticCheck()) {
+		    given().contentType(JSON_UTF8)
+				    .expect().statusCode(HttpStatus.SC_NOT_FOUND)
+				    .when().get(command.getProcessedURI(creationLog));
+	    }
     }
 
     void runChecks(Collection<Check> checks, String responseBody, ApplicationContext context) throws ParseException {
