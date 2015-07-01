@@ -1,14 +1,22 @@
 package com.groupeseb.kite.check.impl.operators;
 
 
-import com.google.common.base.Preconditions;
-import com.groupeseb.kite.check.ICheckOperator;
-import org.springframework.stereotype.Component;
-
-import java.util.Collection;
-
 import static org.testng.Assert.assertTrue;
 
+import org.springframework.stereotype.Component;
+
+import com.google.common.base.Preconditions;
+import com.groupeseb.kite.Json;
+import com.groupeseb.kite.check.ICheckOperator;
+
+/**
+ * Verifies if actual value is strictly greater than expected value
+ * <p>
+ * Launch an {@link IllegalArgumentException} if actual or expected values are not numeric
+ * 
+ * @author mgaudin
+ *
+ */
 @Component
 public class GreaterThanOperator implements ICheckOperator {
     @Override
@@ -17,7 +25,7 @@ public class GreaterThanOperator implements ICheckOperator {
     }
 
     @Override
-    public void apply(Object value, Object expected, String description) {
+	public void apply(Object value, Object expected, String description, Json parameters) {
         Preconditions.checkArgument(
                 Number.class.isAssignableFrom(value.getClass()),
                 "The input argument of 'gt' must be a number"
