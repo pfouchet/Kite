@@ -76,10 +76,14 @@ public class DefaultCheckRunner implements ICheckRunner {
             }
 
             for (Object o : nodeList) {
-                operator.apply(method.apply(o, check.getParameters()), parseExpectedValue(check.getExpectedValue(), responseBody), check.getDescription());
+				operator.apply(method.apply(o, check.getParameters()),
+						parseExpectedValue(check.getExpectedValue(), responseBody),
+						check.getDescription(), check.getParameters());
             }
         } else {
-            operator.apply(method.apply(node, check.getParameters()), parseExpectedValue(check.getExpectedValue(), responseBody), check.getDescription());
+			operator.apply(method.apply(node, check.getParameters()),
+					parseExpectedValue(check.getExpectedValue(), responseBody),
+					check.getDescription(), check.getParameters());
         }
     }
 
