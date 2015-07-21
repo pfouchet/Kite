@@ -99,6 +99,10 @@ class Command {
             processedHeaders.put(entry.getKey(), creationLog.processPlaceholders(getName(), processedHeaders.get(entry.getKey())));
         }
 
+	    if(!processedHeaders.containsKey("Accept")) {
+		    processedHeaders.put("Accept", "application/json");
+	    }
+
         return processedHeaders;
     }
 }
