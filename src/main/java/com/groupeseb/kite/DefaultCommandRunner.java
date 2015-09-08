@@ -7,8 +7,10 @@ import com.groupeseb.kite.function.Function;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
+
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -24,7 +26,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
+
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
@@ -36,8 +41,9 @@ import static org.testng.AssertJUnit.fail;
 @NoArgsConstructor
 @Component
 public class DefaultCommandRunner implements ICommandRunner {
-	private static final String JSON_UTF8 = ContentType.create(ContentType.APPLICATION_JSON.getMimeType(),
-	                                                           "UTF-8").toString();
+	private static final String UTF_8_ENCODING = "UTF-8";
+	private static final String JSON_UTF8 = ContentType.create(
+			ContentType.APPLICATION_JSON.getMimeType(), UTF_8_ENCODING).toString();
 	private static final String POST = "POST";
 	private static final String PUT = "PUT";
 	private static final String DELETE = "DELETE";
@@ -101,7 +107,7 @@ public class DefaultCommandRunner implements ICommandRunner {
 
 		Response postResponse = given()
 				.contentType(JSON_UTF8).headers(command.getProcessedHeaders(creationLog))
-				.body(command.getProcessedBody(creationLog))
+				.body(getProcessedBodyBytes(command, creationLog))
 				.when().post(command.getProcessedURI(creationLog));
 
 		String response = postResponse.prettyPrint();
@@ -120,7 +126,8 @@ public class DefaultCommandRunner implements ICommandRunner {
 		if (command.getAutomaticCheck()) {
 			String location = postResponse.getHeader("Location");
 			log.info("Checking resource: " + location + "...");
-			given().header("Accept-Encoding", "UTF-8").headers(command.getProcessedHeaders(creationLog))
+			given().header("Accept-Encoding", UTF_8_ENCODING)
+					.headers(command.getProcessedHeaders(creationLog))
 					.expect().statusCode(HttpStatus.SC_OK)
 					.when().get(location);
 
@@ -145,7 +152,7 @@ public class DefaultCommandRunner implements ICommandRunner {
 
 		Response patchResponse = given()
 				.contentType(JSON_UTF8).headers(command.getProcessedHeaders(creationLog))
-				.body(command.getProcessedBody(creationLog))
+				.body(getProcessedBodyBytes(command, creationLog))
 				.when().patch(command.getProcessedURI(creationLog));
 
 		String response = patchResponse.prettyPrint();
@@ -164,7 +171,8 @@ public class DefaultCommandRunner implements ICommandRunner {
 		if (command.getAutomaticCheck()) {
 			String location = patchResponse.getHeader("Location");
 			log.info("Checking resource: " + location + "...");
-			given().header("Accept-Encoding", "UTF-8").headers(command.getProcessedHeaders(creationLog))
+			given().header("Accept-Encoding", UTF_8_ENCODING)
+					.headers(command.getProcessedHeaders(creationLog))
 					.expect().statusCode(HttpStatus.SC_OK)
 					.when().get(location);
 
@@ -262,7 +270,7 @@ public class DefaultCommandRunner implements ICommandRunner {
 
 		Response putResponse = given()
 				.contentType(JSON_UTF8).headers(command.getProcessedHeaders(creationLog))
-				.body(command.getProcessedBody(creationLog)).log().everything(true)
+				.body(getProcessedBodyBytes(command, creationLog)).log().everything(true)
 				.expect().statusCode(command.getExpectedStatus())
 				.when().put(command.getProcessedURI(creationLog));
 
@@ -280,7 +288,7 @@ public class DefaultCommandRunner implements ICommandRunner {
 	void delete(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException {
 		log.info("DELETE " + command.getProcessedURI(creationLog) + " (expecting " + command.getExpectedStatus() + ")");
 		Response r = given().contentType(JSON_UTF8).headers(command.getProcessedHeaders(creationLog))
-				.body(command.getProcessedBody(creationLog)).log().everything(true)
+				.body(getProcessedBodyBytes(command, creationLog)).log().everything(true)
 				.expect().statusCode(command.getExpectedStatus())
 				.when().delete(command.getProcessedURI(creationLog));
 
@@ -303,5 +311,21 @@ public class DefaultCommandRunner implements ICommandRunner {
 				fail("Check [" + check.getDescription() + "] failed : " + e.getMessage());
 			}
 		}
+	}
+
+	/**
+	 * Processes and encodes the body of the request using UTF-8 {@link Charset}.
+	 * <p>
+	 * Processing is done using {@link Command#getProcessedBody(CreationLog)} prior encoding to
+	 * bytes.
+	 * 
+	 * @param command
+	 *            the command to get body from, not null
+	 * @param creationLog
+	 *            the creation log related to the command, not null
+	 * @return the body of the request, with placeholders processed and encoded in UTF-8
+	 */
+	private byte[] getProcessedBodyBytes(Command command, CreationLog creationLog) {
+		return command.getProcessedBody(creationLog).getBytes(Charset.forName(UTF_8_ENCODING));
 	}
 }
