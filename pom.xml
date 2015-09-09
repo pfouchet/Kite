@@ -4,7 +4,7 @@
 
     <groupId>com.groupeseb</groupId>
     <artifactId>kite</artifactId>
-    <version>2.8-SNAPSHOT</version>
+    <version>2.8</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -25,8 +25,8 @@
     </distributionManagement>
 
     <scm>
-        <developerConnection>scm:git:https://github.com/pfouchet/Kite.git</developerConnection>
-      <tag>HEAD</tag>
+        <developerConnection>scm:git:https://github.com/groupeseb/Kite.git</developerConnection>
+      <tag>kite-2.8</tag>
   </scm>
 
     <repositories>
