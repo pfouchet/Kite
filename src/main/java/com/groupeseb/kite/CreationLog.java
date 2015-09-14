@@ -1,10 +1,16 @@
 package com.groupeseb.kite;
 
 import com.groupeseb.kite.function.Function;
+import com.groupeseb.kite.function.impl.UUIDFunction;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
+
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.*;
@@ -52,7 +58,8 @@ public class CreationLog {
     }
 
     private Map<String, String> getEveryUUIDs(String scenario) {
-        Pattern uuidPattern = Pattern.compile("\\{\\{UUID:(.+?)\\}\\}");
+        Pattern uuidPattern = Pattern.compile("\\{\\{" + UUIDFunction.NAME
+                + ":(.+?)\\}\\}");
         Matcher uuidMatcher = uuidPattern.matcher(scenario);
 
         Map<String, String> uuids = new HashMap<>();
@@ -79,22 +86,45 @@ public class CreationLog {
     }
 
     String executeFunctions(String name, String body) {
-        Pattern withoutParameters = Pattern.compile("\\{\\{" + name + "\\}\\}", Pattern.CASE_INSENSITIVE);
+        // Function name is escaped for matching, since body is a JSON String
+        // (see
+        // org.json.simple.JSONObject.toJSONString()), and thus placeholder will
+        // have its name
+        // escaped in body if it contains JSON special characters
+
+        String escapedFunctionName = JSONObject.escape(name);
+        Pattern withoutParameters = Pattern.compile("\\{\\{"
+                + escapedFunctionName + "\\}\\}", Pattern.CASE_INSENSITIVE);
 
         if (withoutParameters.matcher(body).find()) {
-            body = withoutParameters.matcher(body).replaceAll(getFunction(name).apply(new ArrayList<String>(), this));
+            body = withoutParameters.matcher(body).replaceAll(
+                    getFunction(name).apply(new ArrayList<String>(), this));
         } else {
-            Pattern pattern = Pattern.compile("\\{\\{" + name + "\\:(.+?)\\}\\}", Pattern.CASE_INSENSITIVE);
+            Pattern pattern = Pattern.compile("\\{\\{" + escapedFunctionName
+                    + "\\:(.+?)\\}\\}", Pattern.CASE_INSENSITIVE);
             Matcher matcher = pattern.matcher(body);
 
             while (matcher.find()) {
                 List<String> parameters = new ArrayList<>();
 
                 for (int i = 1; i <= matcher.groupCount(); ++i) {
-                    parameters.add(matcher.group(i));
+                    // If function parameter contains JSON special character,
+                    // the are encoded by the
+                    // JSON parser. It is necessary to unecape them before using
+                    // them in the
+                    // function
+                    String paramValue = StringEscapeUtils.unescapeJson(matcher
+                            .group(i));
+                    parameters.add(paramValue);
                 }
 
-                body = body.replace(matcher.group(0), getFunction(name).apply(parameters, this));
+                String functionResult = getFunction(name).apply(parameters,
+                        this);
+                // Function result is JSON-escaped before being reinjected in
+                // body, to keep body
+                // String valid with respect to JSON syntax
+                body = body.replace(matcher.group(0),
+                        JSONObject.escape(functionResult));
             }
         }
         return body;
@@ -104,10 +134,18 @@ public class CreationLog {
         String processedBody = new String(body);
 
         for (Function availableFunction : availableFunctions) {
-            processedBody = executeFunctions(availableFunction.getName(), processedBody);
+            processedBody = executeFunctions(availableFunction.getName(),
+                    processedBody);
         }
 
-        processedBody = processedBody.replace("{{Timestamp:Now}}", DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date()));
+        // 'Timestamp' is not implemented like other functions, because that
+        // would not permit to
+        // generate the same date for the whole command (since function is
+        // called for each
+        // placeholder and not one time by)
+        processedBody = processedBody.replace("{{Timestamp:Now}}", JSONObject
+                .escape(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT
+                        .format(new Date())));
 
         return processedBody;
     }
@@ -116,29 +154,33 @@ public class CreationLog {
         return processPlaceholders(null, body);
     }
 
+    /**
+     * Replace placeholders in given body string by applying functions available
+     * for this creation log
+     * 
+     * @param commandName
+     *            the name of the command for which placeholders are escaped
+     * @param body
+     *            the String representation of a JSON object. This String is
+     *            expected to be valid with respect to JSON syntax (with escaped
+     *            values in key and String values). Placeholders are unescaped
+     *            before being processed, and their replacing value is escaped
+     *            before being replaced in the returned String
+     * @return the initial body with function's placehoders replaced
+     */
     public String processPlaceholders(String commandName, String body) {
         String processedBody = new String(body);
 
+        // Assign UUID for current command if needed
         if (commandName != null) {
-            processedBody = processedBody.replace("{{UUID}}", "{{UUID:" + commandName + "}}");
+            processedBody = processedBody
+                    .replace("{{" + UUIDFunction.NAME + "}}", "{{"
+                            + UUIDFunction.NAME + ":" + commandName + "}}");
         }
-
+        // Update UUIDs list to add the one assigned for current command
         this.uuids.putAll(getEveryUUIDs(processedBody));
 
-        for (Map.Entry<String, String> entry : getVariables().entrySet()) {
-            processedBody = processedBody.replace("{{Variable:" + entry.getKey() + "}}", entry.getValue().toString());
-        }
-
-        for (Map.Entry<String, String> entry : this.getUuids().entrySet()) {
-            processedBody = processedBody.replace("{{UUID:" + entry.getKey() + "}}", entry.getValue());
-        }
-
-        for (Map.Entry<String, String> entry : getLocations().entrySet()) {
-            processedBody = processedBody.replace("{{Location:" + entry.getKey() + "}}", entry.getValue());
-        }
-
         processedBody = applyFunctions(processedBody);
-
         return processedBody;
     }
 
@@ -147,7 +189,8 @@ public class CreationLog {
             return processPlaceholdersInString(expected.toString());
         } else if (expected instanceof Json) {
             Json expectedObject = (Json) expected;
-            return new Json(processPlaceholdersInString(expectedObject.toString()));
+            return new Json(
+                    processPlaceholdersInString(expectedObject.toString()));
         } else if (expected instanceof Boolean) {
             return expected;
         } else if (expected instanceof Long) {
