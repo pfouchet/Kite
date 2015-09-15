@@ -4,7 +4,7 @@
 
     <groupId>com.groupeseb</groupId>
     <artifactId>kite</artifactId>
-    <version>2.8-SNAPSHOT</version>
+    <version>2.9-SNAPSHOT</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -25,7 +25,7 @@
     </distributionManagement>
 
     <scm>
-        <developerConnection>scm:git:https://github.com/pfouchet/Kite.git</developerConnection>
+        <developerConnection>scm:git:https://github.com/groupeseb/Kite.git</developerConnection>
       <tag>HEAD</tag>
   </scm>
 
@@ -112,12 +112,22 @@
             <version>1.2.3</version>
         </dependency>
         
-        
+        <dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.3</version>
+		</dependency>
 
         <dependency>
             <groupId>com.jayway.restassured</groupId>
             <artifactId>rest-assured</artifactId>
             <version>2.3.0</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-lang3</artifactId>
+				</exclusion>
+			</exclusions>
         </dependency>
 
         <dependency>

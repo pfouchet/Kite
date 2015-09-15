@@ -325,7 +325,15 @@ public class DefaultCommandRunner implements ICommandRunner {
 	 *            the creation log related to the command, not null
 	 * @return the body of the request, with placeholders processed and encoded in UTF-8
 	 */
-	private byte[] getProcessedBodyBytes(Command command, CreationLog creationLog) {
-		return command.getProcessedBody(creationLog).getBytes(Charset.forName(UTF_8_ENCODING));
-	}
+    private byte[] getProcessedBodyBytes(Command command,
+            CreationLog creationLog) {
+        try {
+            return command.getProcessedBody(creationLog).getBytes(
+                    Charset.forName(UTF_8_ENCODING));
+        } catch (RuntimeException e) {
+            fail("Command [" + command.getDescription() + "] failed : "
+                    + e.getMessage());
+            throw e;
+        }
+    }
 }
