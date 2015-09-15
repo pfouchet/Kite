@@ -84,14 +84,15 @@ class Command {
 	}
 
 	String getProcessedURI(CreationLog creationLog) {
-		return creationLog.processPlaceholders(getName(), getUri());
+        return creationLog.processPlaceholders(getName(), getUri(), false);
 	}
 
 	String getProcessedBody(CreationLog creationLog) {
 		if (getBody() == null) {
 			return "";
 		}
-		return creationLog.processPlaceholders(getName(), getBody().toString());
+        return creationLog.processPlaceholders(getName(), getBody().toString(),
+                true);
 	}
 
 	Map<String, String> getProcessedHeaders(CreationLog creationLog) {
@@ -99,7 +100,8 @@ class Command {
 
 		for (Map.Entry<String, String> entry : processedHeaders.entrySet()) {
 			processedHeaders.put(entry.getKey(),
-			                     creationLog.processPlaceholders(getName(), processedHeaders.get(entry.getKey())));
+                    creationLog.processPlaceholders(getName(),
+                            processedHeaders.get(entry.getKey()), false));
 		}
 
 		if (!processedHeaders.containsKey("Accept")) {
