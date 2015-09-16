@@ -2,6 +2,8 @@ package com.groupeseb.kite.function.impl;
 
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
 import com.google.common.base.Preconditions;
 import com.groupeseb.kite.CreationLog;
 import com.groupeseb.kite.function.Function;
@@ -13,6 +15,7 @@ import com.groupeseb.kite.function.Function;
  * @author jcanquelain
  *
  */
+@Component
 public class LocationFunction extends Function {
 	@Override
 	public String getName() {

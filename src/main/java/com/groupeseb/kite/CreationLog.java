@@ -85,34 +85,43 @@ public class CreationLog {
         return null;
     }
 
-    String executeFunctions(String name, String body) {
-        // Function name is escaped for matching, since body is a JSON String
-        // (see
-        // org.json.simple.JSONObject.toJSONString()), and thus placeholder will
-        // have its name
-        // escaped in body if it contains JSON special characters
+    /**
+     * Applies function with given name on given value with function
+     * placeholders
+     * 
+     * @param name
+     *            name of the function to apply
+     * @param valueWithPlaceHolders
+     *            value on which function is applied
+     * @param jsonEscapeFunctionResult
+     *            true if function result must be json-escaped prior replacing
+     *            placeholder in valueWithPlaceholder
+     * @return the copy of initial valueWithPlaceholders with function's
+     *         placehoders replaced
+     */
+    private String executeFunctions(String name, String valueWithPlaceHolders,
+            boolean jsonEscapeFunctionResult) {
+        Pattern withoutParameters = Pattern.compile("\\{\\{" + name + "\\}\\}",
+                Pattern.CASE_INSENSITIVE);
 
-        String escapedFunctionName = JSONObject.escape(name);
-        Pattern withoutParameters = Pattern.compile("\\{\\{"
-                + escapedFunctionName + "\\}\\}", Pattern.CASE_INSENSITIVE);
-
-        if (withoutParameters.matcher(body).find()) {
-            body = withoutParameters.matcher(body).replaceAll(
+        if (withoutParameters.matcher(valueWithPlaceHolders).find()) {
+            valueWithPlaceHolders = withoutParameters.matcher(
+                    valueWithPlaceHolders).replaceAll(
                     getFunction(name).apply(new ArrayList<String>(), this));
         } else {
-            Pattern pattern = Pattern.compile("\\{\\{" + escapedFunctionName
+            Pattern pattern = Pattern.compile("\\{\\{" + name
                     + "\\:(.+?)\\}\\}", Pattern.CASE_INSENSITIVE);
-            Matcher matcher = pattern.matcher(body);
+            Matcher matcher = pattern.matcher(valueWithPlaceHolders);
 
             while (matcher.find()) {
                 List<String> parameters = new ArrayList<>();
 
                 for (int i = 1; i <= matcher.groupCount(); ++i) {
                     // If function parameter contains JSON special character,
-                    // the are encoded by the
-                    // JSON parser. It is necessary to unecape them before using
-                    // them in the
-                    // function
+                    // they may be encoded by the JSON parser (if value with
+                    // placeholder is a JSON String).
+                    // It is necessary to unecape them before using
+                    // them in the function
                     String paramValue = StringEscapeUtils.unescapeJson(matcher
                             .group(i));
                     parameters.add(paramValue);
@@ -120,22 +129,44 @@ public class CreationLog {
 
                 String functionResult = getFunction(name).apply(parameters,
                         this);
-                // Function result is JSON-escaped before being reinjected in
-                // body, to keep body
-                // String valid with respect to JSON syntax
-                body = body.replace(matcher.group(0),
-                        JSONObject.escape(functionResult));
+                if (jsonEscapeFunctionResult) {
+                    functionResult = JSONObject.escape(functionResult);
+                }
+
+                valueWithPlaceHolders = valueWithPlaceHolders.replace(
+                        matcher.group(0), functionResult);
             }
         }
-        return body;
+        return valueWithPlaceHolders;
     }
 
-    String applyFunctions(String body) {
-        String processedBody = new String(body);
+    /**
+     * Apply all available functions for this creation log to replace
+     * placeholders in given value
+     * 
+     * @param valueWithPlaceholders
+     *            the String containing the placeholders to replace. This String
+     *            may be (or not) the representation of a JSON object (with
+     *            escaped values in keys and String values). Thus, placeholders
+     *            are json-unescaped before being processed (this have no effect
+     *            if this parameter is not a Json String)
+     * @param jsonEscapeFunctionResult
+     *            if true, function result will be json-escaped before being
+     *            replaced in processed string. If false, function return is
+     *            injected as is.
+     *            <p>
+     *            <b>Use true if the result must be directly parsed as JSON</b>,
+     *            false otherwise.
+     * @return the copy of initial valueWithPlaceholders with function's
+     *         placehoders replaced
+     */
+    String applyFunctions(String valueWithPlaceholders,
+            boolean jsonEscapeFunctionResult) {
+        String processedValue = new String(valueWithPlaceholders);
 
         for (Function availableFunction : availableFunctions) {
-            processedBody = executeFunctions(availableFunction.getName(),
-                    processedBody);
+            processedValue = executeFunctions(availableFunction.getName(),
+                    processedValue, jsonEscapeFunctionResult);
         }
 
         // 'Timestamp' is not implemented like other functions, because that
@@ -143,54 +174,98 @@ public class CreationLog {
         // generate the same date for the whole command (since function is
         // called for each
         // placeholder and not one time by)
-        processedBody = processedBody.replace("{{Timestamp:Now}}", JSONObject
-                .escape(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT
-                        .format(new Date())));
-
-        return processedBody;
-    }
-
-    public String processPlaceholdersInString(String body) {
-        return processPlaceholders(null, body);
+        String currentDateString = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT
+                .format(new Date());
+        if (jsonEscapeFunctionResult) {
+            currentDateString = JSONObject.escape(currentDateString);
+        }
+        processedValue = processedValue.replace("{{Timestamp:Now}}",
+                currentDateString);
+        return processedValue;
     }
 
     /**
-     * Replace placeholders in given body string by applying functions available
-     * for this creation log
+     * Replace placeholders in given string value by applying functions
+     * available for this creation log
+     * 
+     * @param value
+     *            the String value in which placeholder are replaced
+     * @return a copy of the initial value with function's placehoders replaced
+     */
+    public String processPlaceholdersInString(String value) {
+        return processPlaceholders(null, value, false);
+    }
+
+    /**
+     * Replace placeholders in given json by applying functions available for
+     * this creation log
+     * 
+     * @param json
+     *            The JSON object onto which functions are applied. Functions
+     *            are applied on the String representation of this object
+     *            (obtained with {@link Json#toString()}). In order to keep the
+     *            string valid with respect to JSON syntax, placeholders are
+     *            unescaped before being processed, and their replacing value is
+     *            escaped before being replaced in the String
+     * @return a copy of the given json object with function's placeholders
+     *         replaced
+     * @throws ParseException
+     *             if the string obtained after placeholder replacement is not a
+     *             valid JSON object
+     */
+    private Object processPlaceholdersInJSON(Json json) throws ParseException {
+        return new Json(processPlaceholders(null, json.toString(), true));
+    }
+
+    /**
+     * Replace placeholders in given string by applying functions available for
+     * this creation log
+     * <p>
+     * Also computes UUID corresponding to given command (if not null) and
+     * update the list of UUIDs for this creation log.
      * 
      * @param commandName
      *            the name of the command for which placeholders are escaped
-     * @param body
-     *            the String representation of a JSON object. This String is
-     *            expected to be valid with respect to JSON syntax (with escaped
-     *            values in key and String values). Placeholders are unescaped
-     *            before being processed, and their replacing value is escaped
-     *            before being replaced in the returned String
-     * @return the initial body with function's placehoders replaced
+     *            (context command)
+     * @param valueWithPlaceholders
+     *            the String containing the placeholders to replace. This String
+     *            may be (or not) the representation of a JSON object (with
+     *            escaped values in keys and String values). Thus, placeholders
+     *            are json-unescaped before being processed (this have no effect
+     *            if this parameter is not a Json String)
+     * @param jsonEscapeFunctionResult
+     *            if true, function result will be json-escaped before being
+     *            replaced in processed string. If false, function return is
+     *            injected as is.
+     *            <p>
+     *            <b>Use true if the result must be directly parsed as JSON</b>,
+     *            false otherwise.
+     * @return the copy of initial valueWithPlaceholders with function's
+     *         placehoders replaced
      */
-    public String processPlaceholders(String commandName, String body) {
-        String processedBody = new String(body);
+    public String processPlaceholders(String commandName,
+            String valueWithPlaceholders, boolean jsonEscapeFunctionResult) {
+        String processedValue = new String(valueWithPlaceholders);
 
         // Assign UUID for current command if needed
         if (commandName != null) {
-            processedBody = processedBody
+            processedValue = processedValue
                     .replace("{{" + UUIDFunction.NAME + "}}", "{{"
                             + UUIDFunction.NAME + ":" + commandName + "}}");
         }
         // Update UUIDs list to add the one assigned for current command
-        this.uuids.putAll(getEveryUUIDs(processedBody));
+        this.uuids.putAll(getEveryUUIDs(processedValue));
 
-        processedBody = applyFunctions(processedBody);
-        return processedBody;
+        processedValue = applyFunctions(processedValue,
+                jsonEscapeFunctionResult);
+        return processedValue;
     }
 
     public Object processPlaceholders(Object expected) throws ParseException {
         if (expected instanceof String) {
-            return processPlaceholdersInString(expected.toString());
+            return processPlaceholdersInString((String) expected);
         } else if (expected instanceof Json) {
-            Json expectedObject = (Json) expected;
-            return new Json(
-                    processPlaceholdersInString(expectedObject.toString()));
+            return processPlaceholdersInJSON((Json) expected);
         } else if (expected instanceof Boolean) {
             return expected;
         } else if (expected instanceof Long) {

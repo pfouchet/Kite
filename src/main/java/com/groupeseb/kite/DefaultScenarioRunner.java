@@ -30,7 +30,8 @@ public class DefaultScenarioRunner implements IScenarioRunner {
         log.info("Testing : " + scenario.getDescription() + "...");
 
         for (Map.Entry<String, Object> entry : scenario.getVariables().entrySet()) {
-            creationLog.addVariable(entry.getKey(), creationLog.applyFunctions(entry.getValue().toString()));
+            creationLog.addVariable(entry.getKey(), creationLog.applyFunctions(
+                    entry.getValue().toString(), false));
         }
 
         for (Command command : scenario.getCommands()) {
