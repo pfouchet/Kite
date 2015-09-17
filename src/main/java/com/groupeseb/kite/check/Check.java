@@ -1,10 +1,12 @@
 package com.groupeseb.kite.check;
 
-import com.groupeseb.kite.CreationLog;
-import com.groupeseb.kite.Json;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
 import org.json.simple.parser.ParseException;
+
+import com.groupeseb.kite.CreationLog;
+import com.groupeseb.kite.Json;
 
 @Getter
 @Slf4j
@@ -32,7 +34,7 @@ public class Check {
         operatorName = (checkSpecification.getString("operator") == null) ? "equals" : checkSpecification.getString("operator");
         expectedValue = creationLog.processPlaceholders(checkSpecification.getObject("expected"));
         parameters = checkSpecification.get("parameters");
-        foreach = checkSpecification.getBooleanOrDefault("foreach", fieldName.contains("*"));
+		foreach = checkSpecification.getBooleanOrDefault("foreach", false);
         mustMatch = checkSpecification.getBooleanOrDefault("mustMatch", foreach);
         skip = checkSpecification.getBooleanOrDefault("skip", false);
     }
