@@ -4,7 +4,6 @@ import com.groupeseb.kite.CreationLog;
 import com.groupeseb.kite.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Random;
@@ -19,10 +18,11 @@ public class RandomInteger extends Function {
 	}
 
 	public String apply(List<String> parameters, CreationLog creationLog) {
-		if (CollectionUtils.isEmpty(parameters)) {
-			return Integer.toString(randomGenerator.nextInt());
-		} else {
-			return Integer.toString(randomGenerator.nextInt(Integer.parseInt(parameters.get(0))));
+		int intGenerated = randomGenerator.nextInt();
+		while (intGenerated < 0) {
+			intGenerated = randomGenerator.nextInt();
 		}
+
+		return Integer.toString(intGenerated);
 	}
 }

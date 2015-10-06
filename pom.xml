@@ -4,7 +4,7 @@
 
     <groupId>com.groupeseb</groupId>
     <artifactId>kite</artifactId>
-    <version>3.3-SNAPSHOT</version>
+    <version>3.2-SNAPSHOT</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
