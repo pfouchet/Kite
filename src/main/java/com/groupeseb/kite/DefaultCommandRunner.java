@@ -7,10 +7,8 @@ import com.groupeseb.kite.function.Function;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
-
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -21,15 +19,14 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
+import org.apache.http.util.EntityUtils;
 import org.json.simple.parser.ParseException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
@@ -215,7 +212,7 @@ public class DefaultCommandRunner implements ICommandRunner {
 		             (int) command.getExpectedStatus(), response.getStatusLine().getStatusCode());
 
 		try {
-			String body = handler.handleResponse(response);
+			String body = EntityUtils.toString(response.getEntity());
 			creationLog.addBody("%", body);
 			if (command.getName() != null) {
 				creationLog.addBody(command.getName(), body);
