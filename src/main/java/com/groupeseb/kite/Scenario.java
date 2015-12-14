@@ -9,7 +9,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 @Getter
 public class Scenario {
@@ -18,12 +21,12 @@ public class Scenario {
     public static final String COMMANDS_KEY = "commands";
     public static final String DEPENDENCIES_KEY = "dependencies";
 
-    protected final Collection<Command> commands = new ArrayList<>();
-    protected final List<Scenario> dependencies = new ArrayList<>();
-    protected String description;
-    protected Map<String, Object> variables;
+    private final Collection<Command> commands = new ArrayList<>();
+    private final List<Scenario> dependencies = new ArrayList<>();
+    private String description;
+    private Map<String, Object> variables;
 
-    protected final String filename;
+    private final String filename;
 
     /**
      * @param filename The (class)path to the scenario file.
@@ -51,7 +54,7 @@ public class Scenario {
 
     private void parseScenario(String scenario) throws IOException, ParseException {
         Json jsonScenario = new Json(scenario);
-        jsonScenario.checkExistence(new String[]{DESCRIPTION_KEY, COMMANDS_KEY});
+        jsonScenario.checkExistence(DESCRIPTION_KEY, COMMANDS_KEY);
 
         this.description = jsonScenario.getString(DESCRIPTION_KEY);
         this.variables = (Map<String, Object>) jsonScenario.getMap(VARIABLE_KEY);
@@ -68,6 +71,6 @@ public class Scenario {
 
     @Override
     public String toString() {
-        return this.getFilename() + ":" + this.getDescription();
+        return this.getFilename() + ':' + this.getDescription();
     }
 }

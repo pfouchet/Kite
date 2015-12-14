@@ -11,11 +11,12 @@ import java.util.Collection;
 public class LengthMethod implements ICheckMethod {
     @Override
     public Boolean match(String name) {
-        return name.equalsIgnoreCase("length");
+        return "length".equalsIgnoreCase(name);
     }
 
     @Override
     public Object apply(Object o, Json parameters) {
+        //noinspection ResultOfMethodCallIgnored
         Preconditions.checkNotNull(o, "The input collection of the 'length' method cannot be null! Does the field exists ?");
 
         Preconditions.checkArgument(

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 public class ContainsMethod implements ICheckMethod {
     @Override
     public Boolean match(String name) {
-        return name.equalsIgnoreCase("contains");
+        return "contains".equalsIgnoreCase(name);
     }
 
     @Override
@@ -28,7 +28,7 @@ public class ContainsMethod implements ICheckMethod {
                    if (!(Boolean) apply(obj, parameters.get(i))) {
                        return false;
                    }
-               } catch(ClassCastException e) {
+               } catch(ClassCastException ignored) {
                    // This is a primitive type
                    Object item = parameters.getObject(i);
                    if(! ((JSONArray) obj).contains(item)) {

@@ -16,16 +16,16 @@ import java.util.Map;
  * This Helper class was written to make testing Json output easier.
  * Because I write methods lazily, feel free to add new ones if required for your tests
  */
-@SuppressWarnings({"UnusedDeclaration"})
+@SuppressWarnings("UnusedDeclaration")
 public class Json {
-    private JSONParser parser = new JSONParser();
+    private final JSONParser parser = new JSONParser();
     private JSONObject rootObject;
     private JSONArray rootArray;
     private String json;
 
     /**
      * @param r The response to parse
-     * @throws org.json.simple.parser.ParseException
+     * @throws ParseException
      */
     public Json(Response r) throws ParseException {
         this.json = r.prettyPrint();
@@ -40,7 +40,7 @@ public class Json {
 
     /**
      * @param json The json to parse
-     * @throws org.json.simple.parser.ParseException
+     * @throws ParseException
      */
     public Json(String json) throws ParseException {
         this.json = json;
@@ -87,7 +87,8 @@ public class Json {
 
         if (subTree instanceof JSONObject) {
             return new Json((JSONObject) subTree);
-        } else if (subTree instanceof JSONArray) {
+        }
+        if (subTree instanceof JSONArray) {
             return new Json((JSONArray) subTree);
         }
 
@@ -182,6 +183,7 @@ public class Json {
     /**
      * Get the JSON string
      */
+    @Override
     public String toString() {
         if (rootObject != null) {
             return rootObject.toJSONString();
@@ -190,7 +192,7 @@ public class Json {
         }
     }
 
-    public void checkExistence(String[] keys) {
+    public void checkExistence(String... keys) {
         for (String key : keys) {
             if (!this.exists(key)) {
                 throw new RuntimeException("Key not found: " + key);
@@ -210,7 +212,7 @@ public class Json {
         return defaultValue;
     }
 
-    public Boolean isIterable() {
+    public boolean isIterable() {
         return rootArray != null;
     }
 

@@ -15,6 +15,7 @@ public class DefaultScenarioRunner implements IScenarioRunner {
     private final ApplicationContext context = new ClassPathXmlApplicationContext("META-INF/default-beans.xml");
     private final ICommandRunner commandRunner = new DefaultCommandRunner();
 
+    @Override
     public void execute(Scenario scenario) throws Exception {
         execute(scenario, new CreationLog(context.getBeansOfType(Function.class).values()));
     }

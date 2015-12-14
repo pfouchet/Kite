@@ -13,10 +13,12 @@ import java.util.Random;
 public class RandomInteger extends Function {
 	private final Random randomGenerator = new Random();
 
+	@Override
 	public String getName() {
 		return "RandomInteger";
 	}
 
+	@Override
 	public String apply(List<String> parameters, CreationLog creationLog) {
 		int intGenerated = randomGenerator.nextInt();
 		while (intGenerated < 0) {

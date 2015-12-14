@@ -31,10 +31,10 @@ class Command {
 
 	private final Json commandSpecification;
 
-	public Command(Json commandSpecification) {
+	Command(Json commandSpecification) {
 		this.commandSpecification = commandSpecification;
 
-		commandSpecification.checkExistence(new String[]{VERB_KEY, URI_KEY});
+		commandSpecification.checkExistence(VERB_KEY, URI_KEY);
 
 		name = commandSpecification.getString("name");
 		description = commandSpecification.getString("description");
@@ -44,8 +44,8 @@ class Command {
 		body = commandSpecification.get("body");
 		disabled = commandSpecification.getBooleanOrDefault("disabled", false);
 		expectedStatus = commandSpecification.getIntegerOrDefault("expectedStatus", getExpectedStatusByVerb(verb));
-		automaticCheck = commandSpecification.getBooleanOrDefault("automaticCheck",
-		                                                          expectedStatus.toString().startsWith("2") ? true : false);
+		boolean isOk = expectedStatus.toString().startsWith("2");
+		automaticCheck = commandSpecification.getBooleanOrDefault("automaticCheck", isOk);
 		debug = commandSpecification.getBooleanOrDefault("debug", false);
 
 		if (commandSpecification.exists("pagination")) {
@@ -64,7 +64,7 @@ class Command {
 		return checks;
 	}
 
-	private Integer getExpectedStatusByVerb(String string) {
+	private static Integer getExpectedStatusByVerb(String string) {
 		switch (string) {
 			case "POST":
 				return HttpStatus.SC_CREATED;
@@ -84,15 +84,15 @@ class Command {
 	}
 
 	String getProcessedURI(CreationLog creationLog) {
-        return creationLog.processPlaceholders(getName(), getUri(), false);
+		return creationLog.processPlaceholders(getName(), getUri(), false);
 	}
 
 	String getProcessedBody(CreationLog creationLog) {
 		if (getBody() == null) {
 			return "";
 		}
-        return creationLog.processPlaceholders(getName(), getBody().toString(),
-                true);
+		return creationLog.processPlaceholders(getName(), getBody().toString(),
+			true);
 	}
 
 	Map<String, String> getProcessedHeaders(CreationLog creationLog) {
@@ -100,8 +100,8 @@ class Command {
 
 		for (Map.Entry<String, String> entry : processedHeaders.entrySet()) {
 			processedHeaders.put(entry.getKey(),
-                    creationLog.processPlaceholders(getName(),
-                            processedHeaders.get(entry.getKey()), false));
+				creationLog.processPlaceholders(getName(),
+					processedHeaders.get(entry.getKey()), false));
 		}
 
 		if (!processedHeaders.containsKey("Accept")) {

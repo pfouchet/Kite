@@ -22,7 +22,7 @@ public class Check {
     private final Boolean skip;
 
     public Check(Json checkSpecification, CreationLog creationLog) throws ParseException {
-        checkSpecification.checkExistence(new String[]{"field", "expected"});
+        checkSpecification.checkExistence("field", "expected");
 
         if (!checkSpecification.exists("description")) {
             log.warn("'description' field is missing in one of your check.");

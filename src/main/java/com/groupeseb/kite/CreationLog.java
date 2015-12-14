@@ -13,7 +13,13 @@ import org.json.simple.parser.ParseException;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,17 +68,17 @@ public class CreationLog {
                 + ":(.+?)\\}\\}");
         Matcher uuidMatcher = uuidPattern.matcher(scenario);
 
-        Map<String, String> uuids = new HashMap<>();
+        Map<String, String> localUuids = new HashMap<>();
 
         while (uuidMatcher.find()) {
             String name = uuidMatcher.group(1);
 
             if (!this.getUuids().containsKey(name)) {
-                uuids.put(name, UUID.randomUUID().toString());
+                localUuids.put(name, UUID.randomUUID().toString());
             }
         }
 
-        return uuids;
+        return localUuids;
     }
 
     public Function getFunction(String name) {
@@ -162,7 +168,7 @@ public class CreationLog {
      */
     String applyFunctions(String valueWithPlaceholders,
             boolean jsonEscapeFunctionResult) {
-        String processedValue = new String(valueWithPlaceholders);
+        String processedValue = valueWithPlaceholders;
 
         for (Function availableFunction : availableFunctions) {
             processedValue = executeFunctions(availableFunction.getName(),
@@ -245,13 +251,13 @@ public class CreationLog {
      */
     public String processPlaceholders(String commandName,
             String valueWithPlaceholders, boolean jsonEscapeFunctionResult) {
-        String processedValue = new String(valueWithPlaceholders);
+        String processedValue = valueWithPlaceholders;
 
         // Assign UUID for current command if needed
         if (commandName != null) {
             processedValue = processedValue
                     .replace("{{" + UUIDFunction.NAME + "}}", "{{"
-                            + UUIDFunction.NAME + ":" + commandName + "}}");
+                            + UUIDFunction.NAME + ':' + commandName + "}}");
         }
         // Update UUIDs list to add the one assigned for current command
         this.uuids.putAll(getEveryUUIDs(processedValue));
@@ -266,11 +272,7 @@ public class CreationLog {
             return processPlaceholdersInString((String) expected);
         } else if (expected instanceof Json) {
             return processPlaceholdersInJSON((Json) expected);
-        } else if (expected instanceof Boolean) {
-            return expected;
-        } else if (expected instanceof Long) {
-            return expected;
-        } else if (expected instanceof Double) {
+        } else if (expected instanceof Boolean || expected instanceof Long || expected instanceof Double) {
             return expected;
         } else {
             throw new NotImplementedException();

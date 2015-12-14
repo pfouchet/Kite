@@ -8,7 +8,7 @@ import org.springframework.context.ApplicationContext;
 
 @Slf4j
 public class DefaultCheckRunner implements ICheckRunner {
-    private ICheckOperator getMatchingOperator(String operatorName, ApplicationContext factory) {
+    private static ICheckOperator getMatchingOperator(String operatorName, ApplicationContext factory) {
         ICheckOperator match = null;
         Integer matchCount = 0;
 
@@ -19,18 +19,18 @@ public class DefaultCheckRunner implements ICheckRunner {
             }
 
             if (matchCount > 1) {
-                throw new UnsupportedOperationException("Several (" + matchCount.toString() + ") operators match but only one is allowed.");
+                throw new UnsupportedOperationException("Several (" + matchCount + ") operators match but only one is allowed.");
             }
         }
 
         if (matchCount == 0) {
-            throw new IndexOutOfBoundsException("No matching operator found for '" + operatorName + "'");
+            throw new IndexOutOfBoundsException("No matching operator found for '" + operatorName + '\'');
         }
 
         return match;
     }
 
-    private ICheckMethod getMatchingMethod(String methodName, ApplicationContext factory) {
+    private static ICheckMethod getMatchingMethod(String methodName, ApplicationContext factory) {
         ICheckMethod match = null;
         Integer matchCount = 0;
 
@@ -41,12 +41,12 @@ public class DefaultCheckRunner implements ICheckRunner {
             }
 
             if (matchCount > 1) {
-                throw new UnsupportedOperationException("Several (" + matchCount.toString() + ") operators match but only one match is allowed.");
+                throw new UnsupportedOperationException("Several (" + matchCount + ") operators match but only one match is allowed.");
             }
         }
 
         if (matchCount == 0) {
-            throw new IndexOutOfBoundsException("No matching method found for '" + methodName + "'");
+            throw new IndexOutOfBoundsException("No matching method found for '" + methodName + '\'');
         }
 
         return match;
@@ -57,7 +57,7 @@ public class DefaultCheckRunner implements ICheckRunner {
         log.info("Checking " + check.getDescription() + "...");
 
         if (check.getSkip()) {
-            log.warn("Check skipped (" + check.getDescription() + ")");
+            log.warn("Check skipped (" + check.getDescription() + ')');
             return;
         }
 
@@ -87,7 +87,7 @@ public class DefaultCheckRunner implements ICheckRunner {
         }
     }
 
-    private Object parseExpectedValue(Object expectedValue, String responseBody) {
+    private static Object parseExpectedValue(Object expectedValue, String responseBody) {
 //        if (String.class.isAssignableFrom(expectedValue.getClass())) {
 //            Pattern lookupPattern = Pattern.compile("\\{\\{Lookup\\:%\\.(.+)\\}\\}");
 //            Matcher matcher = lookupPattern.matcher(expectedValue.toString());

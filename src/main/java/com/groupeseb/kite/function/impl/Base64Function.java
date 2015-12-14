@@ -12,18 +12,18 @@ import java.util.List;
 @Slf4j
 @Component
 public class Base64Function extends Function {
-    @Override
-    public String getName() {
-        return "Base64";
-    }
+	@Override
+	public String getName() {
+		return "Base64";
+	}
 
-    @Override
-    public String apply(List<String> parameters, CreationLog creationLog) {
-        Preconditions.checkArgument(parameters.size() == 1, "Exactly one parameter is needed");
+	@Override
+	public String apply(List<String> parameters, CreationLog creationLog) {
+		Preconditions.checkArgument(parameters.size() == 1, "Exactly one parameter is needed");
 
-        String variableValue = creationLog.getVariableValue(parameters.get(0));
-        Preconditions.checkNotNull(variableValue, "Variables are not defined or parameter is null");
+		String variableValue = creationLog.getVariableValue(parameters.get(0));
+		variableValue = Preconditions.checkNotNull(variableValue, "Variables are not defined or parameter is null");
 
-        return new BASE64Encoder().encode(variableValue.getBytes());
-    }
+		return new BASE64Encoder().encode(variableValue.getBytes());
+	}
 }

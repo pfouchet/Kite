@@ -21,7 +21,7 @@ import com.groupeseb.kite.check.ICheckOperator;
 public class GreaterThanOperator implements ICheckOperator {
     @Override
     public Boolean match(String name) {
-        return name.equalsIgnoreCase("gt");
+        return "gt".equalsIgnoreCase(name);
     }
 
     @Override

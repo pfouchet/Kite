@@ -16,13 +16,15 @@ import static org.testng.Assert.fail;
 @Slf4j
 @Component
 public class LookupFunction extends Function {
+    @Override
     public String getName() {
         return "Lookup";
     }
 
+    @Override
     public String apply(List<String> parameters, CreationLog creationLog) {
         String objectName = parameters.get(0).split("\\.")[0];
-        String field = parameters.get(0).replace(objectName + ".", "");
+        String field = parameters.get(0).replace(objectName + '.', "");
 
         if (creationLog.getBody(objectName) == null) {
             fail(String

@@ -10,11 +10,9 @@ import com.jayway.restassured.response.Response;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.ContentType;
-import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.params.BasicHttpParams;
@@ -40,7 +38,7 @@ import static org.testng.AssertJUnit.fail;
 public class DefaultCommandRunner implements ICommandRunner {
 	private static final String UTF_8_ENCODING = "UTF-8";
 	private static final String JSON_UTF8 = ContentType.create(
-			ContentType.APPLICATION_JSON.getMimeType(), UTF_8_ENCODING).toString();
+		ContentType.APPLICATION_JSON.getMimeType(), UTF_8_ENCODING).toString();
 	private static final String POST = "POST";
 	private static final String PUT = "PUT";
 	private static final String DELETE = "DELETE";
@@ -86,26 +84,26 @@ public class DefaultCommandRunner implements ICommandRunner {
 				throw new RuntimeException(String.format("Verbe %s is not supported", command.getVerb().toUpperCase()));
 		}
 
-		log.info("[" + command.getName() + "] OK");
+		log.info('[' + command.getName() + "] OK");
 	}
 
 	void post(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException {
-		log.info("["
-		         + command.getName()
-		         + "] POST "
-		         + command.getProcessedURI(creationLog)
-		         + " (expecting "
-		         + command.getExpectedStatus()
-		         + ")");
+		log.info('['
+			         + command.getName()
+			         + "] POST "
+			         + command.getProcessedURI(creationLog)
+			         + " (expecting "
+			         + command.getExpectedStatus()
+			         + ')');
 
 		if (command.getDebug()) {
-			log.info("[" + command.getName() + "] " + command.getProcessedBody(creationLog));
+			log.info('[' + command.getName() + "] " + command.getProcessedBody(creationLog));
 		}
 
 		Response postResponse = given()
-				.contentType(JSON_UTF8).headers(command.getProcessedHeaders(creationLog))
-				.body(getProcessedBodyBytes(command, creationLog))
-				.when().post(command.getProcessedURI(creationLog));
+			                        .contentType(JSON_UTF8).headers(command.getProcessedHeaders(creationLog))
+			                        .body(getProcessedBodyBytes(command, creationLog))
+			                        .when().post(command.getProcessedURI(creationLog));
 
 		String response = postResponse.prettyPrint();
 		log.info(response);
@@ -116,17 +114,17 @@ public class DefaultCommandRunner implements ICommandRunner {
 		}
 
 		assertEquals("Unexpected response status",
-		             command.getExpectedStatus(),
-		             new Integer(postResponse.getStatusCode()));
+			command.getExpectedStatus(),
+			Integer.valueOf(postResponse.getStatusCode()));
 		runChecks(command.getChecks(creationLog), response, context);
 
 		if (command.getAutomaticCheck()) {
 			String location = postResponse.getHeader("Location");
 			log.info("Checking resource: " + location + "...");
 			given().header("Accept-Encoding", UTF_8_ENCODING)
-					.headers(command.getProcessedHeaders(creationLog))
-					.expect().statusCode(HttpStatus.SC_OK)
-					.when().get(location);
+				.headers(command.getProcessedHeaders(creationLog))
+				.expect().statusCode(HttpStatus.SC_OK)
+				.when().get(location);
 
 			if (command.getName() != null) {
 				creationLog.addLocation(command.getName(), location);
@@ -135,22 +133,22 @@ public class DefaultCommandRunner implements ICommandRunner {
 	}
 
 	void patch(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException {
-		log.info("["
-		         + command.getName()
-		         + "] PATCH "
-		         + command.getProcessedURI(creationLog)
-		         + " (expecting "
-		         + command.getExpectedStatus()
-		         + ")");
+		log.info('['
+			         + command.getName()
+			         + "] PATCH "
+			         + command.getProcessedURI(creationLog)
+			         + " (expecting "
+			         + command.getExpectedStatus()
+			         + ')');
 
 		if (command.getDebug()) {
-			log.info("[" + command.getName() + "] " + command.getProcessedBody(creationLog));
+			log.info('[' + command.getName() + "] " + command.getProcessedBody(creationLog));
 		}
 
 		Response patchResponse = given()
-				.contentType(JSON_UTF8).headers(command.getProcessedHeaders(creationLog))
-				.body(getProcessedBodyBytes(command, creationLog))
-				.when().patch(command.getProcessedURI(creationLog));
+			                         .contentType(JSON_UTF8).headers(command.getProcessedHeaders(creationLog))
+			                         .body(getProcessedBodyBytes(command, creationLog))
+			                         .when().patch(command.getProcessedURI(creationLog));
 
 		String response = patchResponse.prettyPrint();
 		log.info(response);
@@ -161,17 +159,17 @@ public class DefaultCommandRunner implements ICommandRunner {
 		}
 
 		assertEquals("Unexpected response status",
-		             command.getExpectedStatus(),
-		             new Integer(patchResponse.getStatusCode()));
+			command.getExpectedStatus(),
+			Integer.valueOf(patchResponse.getStatusCode()));
 		runChecks(command.getChecks(creationLog), response, context);
 
 		if (command.getAutomaticCheck()) {
 			String location = patchResponse.getHeader("Location");
 			log.info("Checking resource: " + location + "...");
 			given().header("Accept-Encoding", UTF_8_ENCODING)
-					.headers(command.getProcessedHeaders(creationLog))
-					.expect().statusCode(HttpStatus.SC_OK)
-					.when().get(location);
+				.headers(command.getProcessedHeaders(creationLog))
+				.expect().statusCode(HttpStatus.SC_OK)
+				.when().get(location);
 
 			if (command.getName() != null) {
 				creationLog.addLocation(command.getName(), location);
@@ -179,47 +177,47 @@ public class DefaultCommandRunner implements ICommandRunner {
 		}
 	}
 
-	private String performGetRequest(Command command, CreationLog creationLog, ApplicationContext context, @Nullable HttpParams params) throws IOException {
-		CloseableHttpClient httpClient = HttpClients.createDefault();
+	private static String performGetRequest(Command command, CreationLog creationLog, ApplicationContext context, @Nullable HttpParams params) throws IOException {
+		try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
 
-		String requestURI = command.getProcessedURI(creationLog);
-		if (!command.getProcessedURI(creationLog).contains("http://") && !command.getProcessedURI(creationLog).contains(
+			String requestURI = command.getProcessedURI(creationLog);
+			if (!command.getProcessedURI(creationLog).contains("http://") && !command.getProcessedURI(creationLog).contains(
 				"https://")) {
-			requestURI = RestAssured.baseURI + ":" + RestAssured.port + RestAssured.basePath + command.getProcessedURI(
+				requestURI = RestAssured.baseURI + ':' + RestAssured.port + RestAssured.basePath + command.getProcessedURI(
 					creationLog);
-		}
+			}
 
-		HttpGet httpget = new HttpGet(requestURI);
+			HttpGet httpget = new HttpGet(requestURI);
 
-		if (params != null) {
-			httpget.setParams(httpget.getParams());
-		}
+			if (params != null) {
+				httpget.setParams(httpget.getParams());
+			}
 
-		httpget.addHeader("Content-Type", "application/json");
-		for (Map.Entry<String, String> header : command.getProcessedHeaders(creationLog).entrySet()) {
-			httpget.addHeader(header.getKey(), header.getValue());
-		}
+			httpget.addHeader("Content-Type", "application/json");
+			for (Map.Entry<String, String> header : command.getProcessedHeaders(creationLog).entrySet()) {
+				httpget.addHeader(header.getKey(), header.getValue());
+			}
 
-		CloseableHttpResponse response = httpClient.execute(httpget);
-		ResponseHandler<String> handler = new BasicResponseHandler();
+			String body;
+			try (CloseableHttpResponse response = httpClient.execute(httpget)) {
 
-		assertEquals(command.getDescription()
-		             + " | "
-		             + command.getExpectedStatus()
-		             + " expected but "
-		             + response.getStatusLine().getStatusCode()
-		             + " received.",
-		             (int) command.getExpectedStatus(), response.getStatusLine().getStatusCode());
+				assertEquals(command.getDescription()
+					             + " | "
+					             + command.getExpectedStatus()
+					             + " expected but "
+					             + response.getStatusLine().getStatusCode()
+					             + " received.",
+					(int) command.getExpectedStatus(), response.getStatusLine().getStatusCode());
 
-		try {
-			String body = EntityUtils.toString(response.getEntity());
+				body = EntityUtils.toString(response.getEntity());
+			}
 			creationLog.addBody("%", body);
 			if (command.getName() != null) {
 				creationLog.addBody(command.getName(), body);
 			}
 
 			return body;
-		} catch (Exception e) {
+		} catch (RuntimeException ignored) {
 			return "";
 		}
 	}
@@ -234,7 +232,7 @@ public class DefaultCommandRunner implements ICommandRunner {
 	}
 
 	void paginatedGet(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException, IOException {
-		log.info("GET " + command.getProcessedURI(creationLog) + " (expecting " + command.getExpectedStatus() + ")");
+		log.info("GET " + command.getProcessedURI(creationLog) + " (expecting " + command.getExpectedStatus() + ')');
 
 		Integer currentPage = command.getPagination().getStartPage();
 		Integer totalPages = currentPage;
@@ -253,23 +251,23 @@ public class DefaultCommandRunner implements ICommandRunner {
 	}
 
 	void put(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException {
-		log.info("["
-		         + command.getName()
-		         + "] PUT "
-		         + command.getProcessedURI(creationLog)
-		         + " (expecting "
-		         + command.getExpectedStatus()
-		         + ")");
+		log.info('['
+			         + command.getName()
+			         + "] PUT "
+			         + command.getProcessedURI(creationLog)
+			         + " (expecting "
+			         + command.getExpectedStatus()
+			         + ')');
 
 		if (command.getDebug()) {
-			log.info("[" + command.getName() + "] " + command.getProcessedBody(creationLog));
+			log.info('[' + command.getName() + "] " + command.getProcessedBody(creationLog));
 		}
 
 		Response putResponse = given()
-				.contentType(JSON_UTF8).headers(command.getProcessedHeaders(creationLog))
-				.body(getProcessedBodyBytes(command, creationLog)).log().everything(true)
-				.expect().statusCode(command.getExpectedStatus())
-				.when().put(command.getProcessedURI(creationLog));
+			                       .contentType(JSON_UTF8).headers(command.getProcessedHeaders(creationLog))
+			                       .body(getProcessedBodyBytes(command, creationLog)).log().everything(true)
+			                       .expect().statusCode(command.getExpectedStatus())
+			                       .when().put(command.getProcessedURI(creationLog));
 
 		String response = putResponse.prettyPrint();
 		log.info(response);
@@ -283,11 +281,11 @@ public class DefaultCommandRunner implements ICommandRunner {
 	}
 
 	void delete(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException {
-		log.info("DELETE " + command.getProcessedURI(creationLog) + " (expecting " + command.getExpectedStatus() + ")");
+		log.info("DELETE " + command.getProcessedURI(creationLog) + " (expecting " + command.getExpectedStatus() + ')');
 		Response r = given().contentType(JSON_UTF8).headers(command.getProcessedHeaders(creationLog))
-				.body(getProcessedBodyBytes(command, creationLog)).log().everything(true)
-				.expect().statusCode(command.getExpectedStatus())
-				.when().delete(command.getProcessedURI(creationLog));
+			             .body(getProcessedBodyBytes(command, creationLog)).log().everything(true)
+			             .expect().statusCode(command.getExpectedStatus())
+			             .when().delete(command.getProcessedURI(creationLog));
 
 		runChecks(command.getChecks(creationLog), r.prettyPrint(), context);
 
@@ -295,8 +293,8 @@ public class DefaultCommandRunner implements ICommandRunner {
 
 		if (command.getAutomaticCheck()) {
 			given().contentType(JSON_UTF8)
-					.expect().statusCode(HttpStatus.SC_NOT_FOUND)
-					.when().get(command.getProcessedURI(creationLog));
+				.expect().statusCode(HttpStatus.SC_NOT_FOUND)
+				.when().get(command.getProcessedURI(creationLog));
 		}
 	}
 
@@ -312,25 +310,23 @@ public class DefaultCommandRunner implements ICommandRunner {
 
 	/**
 	 * Processes and encodes the body of the request using UTF-8 {@link Charset}.
-	 * <p>
+	 * <p/>
 	 * Processing is done using {@link Command#getProcessedBody(CreationLog)} prior encoding to
 	 * bytes.
-	 * 
-	 * @param command
-	 *            the command to get body from, not null
-	 * @param creationLog
-	 *            the creation log related to the command, not null
+	 *
+	 * @param command     the command to get body from, not null
+	 * @param creationLog the creation log related to the command, not null
 	 * @return the body of the request, with placeholders processed and encoded in UTF-8
 	 */
-    private byte[] getProcessedBodyBytes(Command command,
-            CreationLog creationLog) {
-        try {
-            return command.getProcessedBody(creationLog).getBytes(
-                    Charset.forName(UTF_8_ENCODING));
-        } catch (RuntimeException e) {
-            fail("Command [" + command.getDescription() + "] failed : "
-                    + e.getMessage());
-            throw e;
-        }
-    }
+	private static byte[] getProcessedBodyBytes(Command command,
+	                                            CreationLog creationLog) {
+		try {
+			return command.getProcessedBody(creationLog).getBytes(
+				Charset.forName(UTF_8_ENCODING));
+		} catch (RuntimeException e) {
+			fail("Command [" + command.getDescription() + "] failed : "
+				     + e.getMessage());
+			throw e;
+		}
+	}
 }

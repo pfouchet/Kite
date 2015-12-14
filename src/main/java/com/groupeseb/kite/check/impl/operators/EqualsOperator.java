@@ -17,7 +17,7 @@ import com.groupeseb.kite.check.ICheckOperator;
 public class EqualsOperator implements ICheckOperator {
     @Override
     public Boolean match(String name) {
-        return name.equalsIgnoreCase("equals");
+        return "equals".equalsIgnoreCase(name);
     }
 
 	@Override
@@ -31,7 +31,7 @@ public class EqualsOperator implements ICheckOperator {
         } else if (Number.class.isAssignableFrom(value.getClass())) {
             try {
                 assertEquals(((Number) value).doubleValue(), Double.valueOf(expected.toString()), description);
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException ignored) {
                 assertEquals(value, expected, description);
             }
         } else {

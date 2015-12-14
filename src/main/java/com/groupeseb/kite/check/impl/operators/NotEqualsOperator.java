@@ -19,7 +19,7 @@ import com.groupeseb.kite.check.ICheckOperator;
 public class NotEqualsOperator implements ICheckOperator {
     @Override
     public Boolean match(String name) {
-        return name.equalsIgnoreCase("notequals");
+        return "notequals".equalsIgnoreCase(name);
     }
 
 

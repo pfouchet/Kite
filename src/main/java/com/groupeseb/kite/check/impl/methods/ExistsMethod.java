@@ -9,11 +9,11 @@ import org.springframework.stereotype.Component;
 public class ExistsMethod implements ICheckMethod {
     @Override
     public Boolean match(String name) {
-        return name.equalsIgnoreCase("exists");
+        return "exists".equalsIgnoreCase(name);
     }
 
     @Override
     public Object apply(Object obj, Json parameters) {
-        return obj == null ? false : true;
+        return obj != null;
     }
 }
