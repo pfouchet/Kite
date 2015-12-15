@@ -7,29 +7,24 @@ import com.groupeseb.kite.function.Function;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
-
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.apache.http.HttpStatus;
-import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.ContentType;
-import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
+import org.apache.http.util.EntityUtils;
 import org.json.simple.parser.ParseException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
@@ -89,20 +84,20 @@ public class DefaultCommandRunner implements ICommandRunner {
 				throw new RuntimeException(String.format("Verbe %s is not supported", command.getVerb().toUpperCase()));
 		}
 
-		log.info("[" + command.getName() + "] OK");
+		log.info('[' + command.getName() + "] OK");
 	}
 
 	void post(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException {
-		log.info("["
+		log.info('['
 		         + command.getName()
 		         + "] POST "
 		         + command.getProcessedURI(creationLog)
 		         + " (expecting "
 		         + command.getExpectedStatus()
-		         + ")");
+		         + ')');
 
 		if (command.getDebug()) {
-			log.info("[" + command.getName() + "] " + command.getProcessedBody(creationLog));
+			log.info('[' + command.getName() + "] " + command.getProcessedBody(creationLog));
 		}
 
 		Response postResponse = given()
@@ -120,7 +115,7 @@ public class DefaultCommandRunner implements ICommandRunner {
 
 		assertEquals("Unexpected response status",
 		             command.getExpectedStatus(),
-		             new Integer(postResponse.getStatusCode()));
+				Integer.valueOf(postResponse.getStatusCode()));
 		runChecks(command.getChecks(creationLog), response, context);
 
 		if (command.getAutomaticCheck()) {
@@ -138,16 +133,16 @@ public class DefaultCommandRunner implements ICommandRunner {
 	}
 
 	void patch(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException {
-		log.info("["
+		log.info('['
 		         + command.getName()
 		         + "] PATCH "
 		         + command.getProcessedURI(creationLog)
 		         + " (expecting "
 		         + command.getExpectedStatus()
-		         + ")");
+		         + ')');
 
 		if (command.getDebug()) {
-			log.info("[" + command.getName() + "] " + command.getProcessedBody(creationLog));
+			log.info('[' + command.getName() + "] " + command.getProcessedBody(creationLog));
 		}
 
 		Response patchResponse = given()
@@ -165,7 +160,7 @@ public class DefaultCommandRunner implements ICommandRunner {
 
 		assertEquals("Unexpected response status",
 		             command.getExpectedStatus(),
-		             new Integer(patchResponse.getStatusCode()));
+				Integer.valueOf(patchResponse.getStatusCode()));
 		runChecks(command.getChecks(creationLog), response, context);
 
 		if (command.getAutomaticCheck()) {
@@ -182,13 +177,13 @@ public class DefaultCommandRunner implements ICommandRunner {
 		}
 	}
 
-	private String performGetRequest(Command command, CreationLog creationLog, ApplicationContext context, @Nullable HttpParams params) throws IOException {
+	private static String performGetRequest(Command command, CreationLog creationLog, ApplicationContext context, @Nullable HttpParams params) throws IOException {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
 		String requestURI = command.getProcessedURI(creationLog);
 		if (!command.getProcessedURI(creationLog).contains("http://") && !command.getProcessedURI(creationLog).contains(
 				"https://")) {
-			requestURI = RestAssured.baseURI + ":" + RestAssured.port + RestAssured.basePath + command.getProcessedURI(
+			requestURI = RestAssured.baseURI + ':' + RestAssured.port + RestAssured.basePath + command.getProcessedURI(
 					creationLog);
 		}
 
@@ -204,7 +199,6 @@ public class DefaultCommandRunner implements ICommandRunner {
 		}
 
 		CloseableHttpResponse response = httpClient.execute(httpget);
-		ResponseHandler<String> handler = new BasicResponseHandler();
 
 		assertEquals(command.getDescription()
 		             + " | "
@@ -215,14 +209,14 @@ public class DefaultCommandRunner implements ICommandRunner {
 		             (int) command.getExpectedStatus(), response.getStatusLine().getStatusCode());
 
 		try {
-			String body = handler.handleResponse(response);
+			String body = EntityUtils.toString(response.getEntity());
 			creationLog.addBody("%", body);
 			if (command.getName() != null) {
 				creationLog.addBody(command.getName(), body);
 			}
 
 			return body;
-		} catch (Exception e) {
+		} catch (Exception ignored) {
 			return "";
 		}
 	}
@@ -237,7 +231,7 @@ public class DefaultCommandRunner implements ICommandRunner {
 	}
 
 	void paginatedGet(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException, IOException {
-		log.info("GET " + command.getProcessedURI(creationLog) + " (expecting " + command.getExpectedStatus() + ")");
+		log.info("GET " + command.getProcessedURI(creationLog) + " (expecting " + command.getExpectedStatus() + ')');
 
 		Integer currentPage = command.getPagination().getStartPage();
 		Integer totalPages = currentPage;
@@ -256,16 +250,16 @@ public class DefaultCommandRunner implements ICommandRunner {
 	}
 
 	void put(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException {
-		log.info("["
+		log.info('['
 		         + command.getName()
 		         + "] PUT "
 		         + command.getProcessedURI(creationLog)
 		         + " (expecting "
 		         + command.getExpectedStatus()
-		         + ")");
+		         + ')');
 
 		if (command.getDebug()) {
-			log.info("[" + command.getName() + "] " + command.getProcessedBody(creationLog));
+			log.info('[' + command.getName() + "] " + command.getProcessedBody(creationLog));
 		}
 
 		Response putResponse = given()
@@ -286,7 +280,7 @@ public class DefaultCommandRunner implements ICommandRunner {
 	}
 
 	void delete(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException {
-		log.info("DELETE " + command.getProcessedURI(creationLog) + " (expecting " + command.getExpectedStatus() + ")");
+		log.info("DELETE " + command.getProcessedURI(creationLog) + " (expecting " + command.getExpectedStatus() + ')');
 		Response r = given().contentType(JSON_UTF8).headers(command.getProcessedHeaders(creationLog))
 				.body(getProcessedBodyBytes(command, creationLog)).log().everything(true)
 				.expect().statusCode(command.getExpectedStatus())
@@ -325,8 +319,8 @@ public class DefaultCommandRunner implements ICommandRunner {
 	 *            the creation log related to the command, not null
 	 * @return the body of the request, with placeholders processed and encoded in UTF-8
 	 */
-    private byte[] getProcessedBodyBytes(Command command,
-            CreationLog creationLog) {
+    private static byte[] getProcessedBodyBytes(Command command,
+                                                CreationLog creationLog) {
         try {
             return command.getProcessedBody(creationLog).getBytes(
                     Charset.forName(UTF_8_ENCODING));
