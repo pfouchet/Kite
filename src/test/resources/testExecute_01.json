@@ -1,0 +1,24 @@
+{
+  "description": "test a simple POST",
+  "commands": [
+	{
+	  "verb": "POST",
+	  "uri": "/resource/resource123",
+	  "automaticCheck": false,
+	  "headers": {
+		"Accept": "text/xml"
+	  },
+	  "name": "getCmd",
+	  "body": {
+		"content": "message-1234-message"
+	  },
+	  "checks": [
+		{
+		  "description": "Check the result",
+		  "field": "$",
+		  "expected": "Some content"
+		}
+	  ]
+	}
+  ]
+}
