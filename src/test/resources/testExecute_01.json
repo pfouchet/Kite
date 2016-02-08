@@ -1,24 +1,24 @@
 {
   "description": "test a simple POST",
+  "variables": {
+	"marketKey": "GS_FR",
+	"languageKey": "fr",
+	"size": "500",
+	"topRecipeUid": "{{RANDOMSTRING}}",
+	"recipe1Uid": "{{RANDOMSTRING}}"
+  },
   "commands": [
 	{
 	  "verb": "POST",
-	  "uri": "/resource/resource123",
+	  "uri": "/resource/resource01",
 	  "automaticCheck": false,
 	  "headers": {
 		"Accept": "text/xml"
 	  },
-	  "name": "getCmd",
+	  "name": "postCmd01",
 	  "body": {
-		"content": "message-1234-message"
-	  },
-	  "checks": [
-		{
-		  "description": "Check the result",
-		  "field": "$",
-		  "expected": "Some content"
-		}
-	  ]
+		"date":"{{nowDate:yyyy-MM-dd hh:mm:ss}}"
+	  }
 	}
   ]
 }

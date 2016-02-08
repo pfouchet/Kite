@@ -1,0 +1,20 @@
+{
+  "description": "test a simple POST",
+  "dependencies": [
+	"testExecute_01.json"
+  ],
+  "commands": [
+	{
+	  "verb": "POST",
+	  "uri": "/resource/resource02",
+	  "automaticCheck": false,
+	  "headers": {
+		"Accept": "text/xml"
+	  },
+	  "name": "postCmd02",
+	  "body": {
+		"date":"{{Lookup:postCmd01.$:dateformat:yyyy-mm-dd:mm-dd-yyyy}}"
+	  }
+	}
+  ]
+}
