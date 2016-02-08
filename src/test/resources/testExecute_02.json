@@ -13,7 +13,7 @@
 	  },
 	  "name": "postCmd02",
 	  "body": {
-		"date":"{{Lookup:postCmd01.$:dateformat:yyyy-mm-dd:mm-dd-yyyy}}"
+		"date":"{{Lookup:postCmd01.$:dateformat:[yyyy-mm-dd]:[mm-dd-yyyy]}}"
 	  }
 	}
   ]

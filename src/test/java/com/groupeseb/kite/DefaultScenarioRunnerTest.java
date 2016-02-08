@@ -1,10 +1,11 @@
 package com.groupeseb.kite;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.jayway.restassured.RestAssured;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -20,19 +21,31 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 public class DefaultScenarioRunnerTest {
 	protected static final int SERVICE_PORT = 8089;
 	protected static final String SERVICE_URI = "/myService";
 
-	@Rule
-	public WireMockRule wireMockRule = new WireMockRule(SERVICE_PORT);
+	private WireMockServer wireMockServer;
+	private WireMock wireMock;
 
-	@BeforeClass
-	public static void configureRestClient() {
+	@BeforeMethod
+	@SuppressWarnings("AssignmentToStaticFieldFromInstanceMethod")
+	void start(){
+		wireMockServer = new WireMockServer(wireMockConfig().port(SERVICE_PORT));
+		wireMockServer.start();
+		WireMock.configureFor("localhost", SERVICE_PORT);
+		wireMock = new WireMock("localhost", SERVICE_PORT);
+
 		RestAssured.baseURI = "http://localhost";
 		RestAssured.basePath = SERVICE_URI;
 		RestAssured.port = SERVICE_PORT;
+	}
+
+	@AfterMethod
+	void stop(){
+		wireMockServer.stop();
 	}
 
 	/**
