@@ -1,0 +1,11 @@
+{
+  "description": "test a simple POST",
+  "commands": [
+	{
+	  "verb": "POST",
+	  "uri": "/muUrl01",
+	  "automaticCheck": false,
+	  "name": "test01"
+	}
+  ]
+}

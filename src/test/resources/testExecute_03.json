@@ -1,0 +1,17 @@
+{
+  "description": "test javascript, test01 will return 'myString00000123' and the script will do 123+1 -> 124",
+  "dependencies": [
+	"testExecute_01.json"
+  ],
+  "commands": [
+	{
+	  "verb": "POST",
+	  "uri": "/muUrl02",
+	  "automaticCheck": false,
+	  "name": "test02",
+	  "body": {
+		"field":"{{Lookup:test01.$:jsFile:subStringAndAdd.js}}"
+	  }
+	}
+  ]
+}

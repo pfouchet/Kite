@@ -14,7 +14,7 @@ import java.util.List;
  * escaped in strings with respect to JSON specification. These characters are :
  * /,\, ", \b, \f, \n, \r, \t, unicode character with u{4 digit hexa} notation
  * </ul>
- * 
+ *
  * @author jcanquelain
  *
  */
