@@ -10,7 +10,7 @@
 	  "automaticCheck": false,
 	  "name": "test02",
 	  "body": {
-		"field":"{{Lookup:test01.$:js:outputValue=parseInt(inputValue.substring(13,16))+1}}"
+		"field":"{{Lookup:test01.$:jsFile:subStringAndAdd.js}}"
 	  }
 	}
   ]

@@ -1,20 +1,16 @@
 package com.groupeseb.kite;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.jayway.restassured.RestAssured;
+import com.sun.istack.internal.Nullable;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
-import static com.github.tomakehurst.wiremock.client.WireMock.notMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
@@ -32,7 +28,7 @@ public class DefaultScenarioRunnerTest {
 
 	@BeforeMethod
 	@SuppressWarnings("AssignmentToStaticFieldFromInstanceMethod")
-	void start(){
+	void start() {
 		wireMockServer = new WireMockServer(wireMockConfig().port(SERVICE_PORT));
 		wireMockServer.start();
 		WireMock.configureFor("localhost", SERVICE_PORT);
@@ -44,57 +40,44 @@ public class DefaultScenarioRunnerTest {
 	}
 
 	@AfterMethod
-	void stop(){
+	void stop() {
 		wireMockServer.stop();
 	}
 
-	/**
-	 * test nowDate function
-	 */
-	@Test
-	public void testExecute_01() throws Exception {
-		stubFor(post(urlEqualTo(SERVICE_URI + "/resource/resource01"))
-				.withHeader("Accept", equalTo("text/xml"))
-				.willReturn(aResponse()
-						.withStatus(201)
-						.withBody("Some content")));
 
-		new DefaultScenarioRunner().execute(new Scenario("testExecute_01.json"));
-
-		String strDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-
-		verify(postRequestedFor(urlMatching("/myService/resource/[a-z0-9]+"))
-				.withRequestBody(matching(".*" + strDate + ".*"))
-				.withHeader("Content-Type", notMatching("text/xml")));
+	private static void stubForUrlAndBody(String url, int returnCode, @Nullable String retrunBody) {
+		ResponseDefinitionBuilder responseDefBuilder = aResponse().withStatus(returnCode);
+		if (retrunBody != null) {
+			responseDefBuilder.withBody(retrunBody);
+		}
+		stubFor(post(urlEqualTo(url)).willReturn(responseDefBuilder));
 	}
 
 	/**
-	 * test loockup date transformation
+	 * test js function
 	 */
 	@Test
 	public void testExecute_02() throws Exception {
-		String strServerDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-
-		stubFor(post(urlEqualTo(SERVICE_URI + "/resource/resource01"))
-				.withHeader("Accept", equalTo("text/xml"))
-				.willReturn(aResponse()
-						.withStatus(201)
-						.withBody(strServerDate)));
-
-		stubFor(post(urlEqualTo(SERVICE_URI + "/resource/resource02"))
-				.withHeader("Accept", equalTo("text/xml"))
-				.willReturn(aResponse()
-						.withStatus(201)
-						.withBody("Some content")));
-
+		stubForUrlAndBody(SERVICE_URI + "/muUrl01", 201, "myString00000123");
+		stubForUrlAndBody(SERVICE_URI + "/muUrl02", 201, "OK");
 
 		new DefaultScenarioRunner().execute(new Scenario("testExecute_02.json"));
 
-		String expectedDate = new SimpleDateFormat("MM-dd-yyyy", Locale.getDefault()).format(new Date());
+		verify(postRequestedFor(urlMatching("/myService/muUrl02"))
+				.withRequestBody(matching(".*124.*")));
+	}
 
+	/**
+	 * test js file function
+	 */
+	@Test
+	public void testExecute_03() throws Exception {
+		stubForUrlAndBody(SERVICE_URI + "/muUrl01", 201, "myString00000123");
+		stubForUrlAndBody(SERVICE_URI + "/muUrl02", 201, "OK");
 
-		verify(postRequestedFor(urlMatching("/myService/resource/resource02"))
-				.withRequestBody(matching(".*" + expectedDate + ".*"))
-				.withHeader("Content-Type", notMatching("text/xml")));
+		new DefaultScenarioRunner().execute(new Scenario("testExecute_02.json"));
+
+		verify(postRequestedFor(urlMatching("/myService/muUrl02"))
+				.withRequestBody(matching(".*124.*")));
 	}
 }
