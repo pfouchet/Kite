@@ -4,7 +4,7 @@
 
     <groupId>com.groupeseb</groupId>
     <artifactId>kite</artifactId>
-    <version>3.5</version>
+    <version>3.6-SNAPSHOT</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -26,7 +26,7 @@
 
     <scm>
         <developerConnection>scm:git:https://github.com/groupeseb/Kite.git</developerConnection>
-      <tag>kite-3.5</tag>
+      <tag>kite-3.2</tag>
   </scm>
 
     <repositories>
