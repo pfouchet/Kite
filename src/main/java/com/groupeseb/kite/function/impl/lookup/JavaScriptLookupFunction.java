@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 
 /**
  * Class to excude javascript code.
+ * The script can use the var 'inputValue' and must produce the var 'outputValue'.
  */
 @Component
 class JavaScriptLookupFunction extends AdditionalLookupFunction {

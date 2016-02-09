@@ -70,6 +70,7 @@ public class LookupFunction extends Function {
 				return additionalLookupFunction.apply(input, additionalParameter);
 			}
 		}
-		return input;
+		fail("Cannot find AdditionalLookupFunction for : " + additionalParameter);
+		return null;
 	}
 }

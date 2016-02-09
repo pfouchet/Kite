@@ -10,8 +10,11 @@ import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.testng.Assert.fail;
+
 /**
- * Class to load javascript file and excude code.
+ * Class to load javascript file and execute code.
+ * The script can use the var 'inputValue' and must produce the var 'outputValue'.
  */
 @Component
 class JavaScriptFileLookupFunction extends AdditionalLookupFunction {
@@ -29,11 +32,11 @@ class JavaScriptFileLookupFunction extends AdditionalLookupFunction {
 		matcher.matches();
 		String jsFile = matcher.group(1);
 		URL url = Resources.getResource(jsFile);
-		String js;
+		String js = null;
 		try {
 			js = Resources.toString(url, Charsets.UTF_8);
 		} catch (IOException e) {
-			throw new IllegalStateException("Cannot load file : " + jsFile, e);
+			fail("Cannot load file : " + jsFile, e);
 		}
 		return JavaScriptHelper.eval(js, input);
 	}

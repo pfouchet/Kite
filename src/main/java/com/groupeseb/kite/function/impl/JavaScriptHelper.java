@@ -25,7 +25,7 @@ public final class JavaScriptHelper {
 			engine.eval(script);
 		} catch (ScriptException e) {
 			String message = String.format("Error to excute script : %s\n with inputValue : %s", script, inputValue);
-			throw new IllegalStateException(message, e);
+			fail(message, e);
 		}
 		Object outputValue = engine.get("outputValue");
 		if (outputValue == null) {
