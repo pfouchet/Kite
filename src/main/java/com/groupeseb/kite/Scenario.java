@@ -14,19 +14,35 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Possible root values :
+ * <p/>
+ * commands:[CommandObject]
+ * dependencies:["urlToAnotherTest"]
+ * description:"Description"
+ * variables: {
+ * "variableName":"variableValue"
+ * }
+ * objectVariables: {
+ * "jwtVariableName":{jwtVariableValueAsJsonObject}
+ * }
+ * <p/>
+ * For variables use, see {@link com.groupeseb.kite.function.impl.VariableFunction}
+ * For objectVariables use, see {@link com.groupeseb.kite.function.impl.JwtFunction}
+ */
 @Getter
 public class Scenario {
 	public static final String DESCRIPTION_KEY = "description";
 	public static final String VARIABLE_KEY = "variables";
 	public static final String COMMANDS_KEY = "commands";
 	public static final String DEPENDENCIES_KEY = "dependencies";
-	public static final String JWT_KEY = "jwt";
+	public static final String OBJECTS_KEY = "objectVariables";
 
 	private final Collection<Command> commands = new ArrayList<>();
 	private final List<Scenario> dependencies = new ArrayList<>();
 	private String description;
 	private Map<String, Object> variables;
-	private Map<String, Object> jwts;
+	private Map<String, Object> objectVariables;
 
 	private final String filename;
 
@@ -61,7 +77,7 @@ public class Scenario {
 		this.description = jsonScenario.getString(DESCRIPTION_KEY);
 		this.variables = (Map<String, Object>) jsonScenario.getMap(VARIABLE_KEY);
 
-		this.jwts = (Map<String, Object>) jsonScenario.getMap(JWT_KEY);
+		this.objectVariables = (Map<String, Object>) jsonScenario.getMap(OBJECTS_KEY);
 
 		for (String dependency : jsonScenario.<String>getIterable(DEPENDENCIES_KEY)) {
 			dependencies.add(new Scenario(dependency));

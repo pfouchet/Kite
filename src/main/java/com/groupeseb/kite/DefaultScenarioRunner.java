@@ -35,7 +35,7 @@ public class DefaultScenarioRunner implements IScenarioRunner {
 					entry.getValue().toString(), false));
 		}
 
-		creationLog.getJwts().putAll(scenario.getJwts());
+		creationLog.getObjectVariables().putAll(scenario.getObjectVariables());
 
 		for (Command command : scenario.getCommands()) {
 			commandRunner.execute(command, creationLog, context);

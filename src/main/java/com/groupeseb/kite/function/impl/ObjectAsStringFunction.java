@@ -3,9 +3,7 @@
  */
 package com.groupeseb.kite.function.impl;
 
-import com.google.common.base.Charsets;
 import com.groupeseb.kite.CreationLog;
-import org.apache.commons.codec.binary.Base64;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Component;
 
@@ -16,25 +14,17 @@ import org.springframework.stereotype.Component;
  * JWT is not signed and use HS256 algorithm.
  */
 @Component
-public class JwtFunction extends ObjectFunction {
-
-	/**
-	 * There is no easy way to passe from a string representation of a json to its JWT representation (frameworks use map --> string).
-	 * So we build it manually.
-	 */
-	private static final String JWT_HS256_HEADERS = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.";
+public class ObjectAsStringFunction extends ObjectFunction {
 
 	@Override
 	public String getName() {
-		return "JWT";
+		return "asString";
 	}
 
 	@Override
 	protected String innerApply(JSONObject untransformedJsonObject, CreationLog creationLog) {
 		String json = untransformedJsonObject.toJSONString();
-		json = creationLog.processPlaceholdersInString(json);
-
-		return JWT_HS256_HEADERS + new String(new Base64().encode(json.getBytes(Charsets.UTF_8)), Charsets.UTF_8);
+		return creationLog.processPlaceholdersInString(json);
 	}
 
 }

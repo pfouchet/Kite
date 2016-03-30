@@ -27,7 +27,7 @@ public class CreationLog {
 	private final Map<String, String> locations = new HashMap<>();
 	private final Map<String, String> variables = new HashMap<>();
 	private final Map<String, String> bodies = new HashMap<>();
-	private final Map<String, Object> jwts = new HashMap<>();
+	private final Map<String, Object> objectVariables = new HashMap<>();
 
 	private Collection<Function> availableFunctions;
 
@@ -39,7 +39,7 @@ public class CreationLog {
 		this.uuids.putAll(creationLog.uuids);
 		this.locations.putAll(creationLog.locations);
 		this.variables.putAll(creationLog.variables);
-		this.jwts.putAll(creationLog.jwts);
+		this.objectVariables.putAll(creationLog.objectVariables);
 	}
 
 	public void addLocation(String name, String location) {
@@ -54,8 +54,8 @@ public class CreationLog {
 		this.variables.put(key, value);
 	}
 
-	public Object getRawJWT(String jwtName) {
-		return this.jwts.get(jwtName);
+	public Object getObjectVariable(String objectName) {
+		return this.objectVariables.get(objectName);
 	}
 
 	public String getVariableValue(String variableName) {
