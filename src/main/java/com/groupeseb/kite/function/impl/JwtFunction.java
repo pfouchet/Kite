@@ -17,13 +17,18 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Function that replaces {{JWT:variableName}} placeholders by the JWT value corresponding
+ * Function that replaces {{JWT:jwtVariableName}} placeholders by the JWT value corresponding
  * to the object declared in the JWT section of the test.
  * It supports nested placeholders.
+ * JWT is not signed and use HS256 algorithm.
  */
 @Component
 public class JwtFunction extends Function {
 
+	/**
+	 * There is no easy way to passe from a string representation of a json to its JWT representation (frameworks use map --> string).
+	 * So we build it manually.
+	 */
 	private static final String JWT_HS256_HEADERS = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.";
 
 	@Override
