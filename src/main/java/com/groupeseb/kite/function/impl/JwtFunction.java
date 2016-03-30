@@ -17,10 +17,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Function that replaces {{JWT:variableName}} placeholders by the value the variable named
- * "variableName" in the creationLog
- *
- * @author jcanquelain
+ * Function that replaces {{JWT:variableName}} placeholders by the JWT value corresponding
+ * to the object declared in the JWT section of the test.
+ * It supports nested placeholders.
  */
 @Component
 public class JwtFunction extends Function {
