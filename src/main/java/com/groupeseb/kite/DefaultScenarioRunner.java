@@ -12,32 +12,34 @@ import java.util.Map;
 @Slf4j
 @NoArgsConstructor
 public class DefaultScenarioRunner implements IScenarioRunner {
-    private final ApplicationContext context = new ClassPathXmlApplicationContext("META-INF/default-beans.xml");
-    private final ICommandRunner commandRunner = new DefaultCommandRunner();
+	private final ApplicationContext context = new ClassPathXmlApplicationContext("META-INF/default-beans.xml");
+	private final ICommandRunner commandRunner = new DefaultCommandRunner();
 
-    public void execute(Scenario scenario) throws Exception {
-        execute(scenario, new CreationLog(context.getBeansOfType(Function.class).values()));
-    }
+	public void execute(Scenario scenario) throws Exception {
+		execute(scenario, new CreationLog(context.getBeansOfType(Function.class).values()));
+	}
 
-    private CreationLog execute(Scenario scenario, CreationLog creationLog) throws Exception {
-        log.info("Parsing {}...", scenario.getFilename());
+	private CreationLog execute(Scenario scenario, CreationLog creationLog) throws Exception {
+		log.info("Parsing {}...", scenario.getFilename());
 
-        for (Scenario dependency : scenario.getDependencies()) {
-            creationLog.extend(execute(dependency, creationLog));
-        }
+		for (Scenario dependency : scenario.getDependencies()) {
+			creationLog.extend(execute(dependency, creationLog));
+		}
 
-        log.info("Executing {}...", scenario.getFilename());
-        log.info("Testing : " + scenario.getDescription() + "...");
+		log.info("Executing {}...", scenario.getFilename());
+		log.info("Testing : " + scenario.getDescription() + "...");
 
-        for (Map.Entry<String, Object> entry : scenario.getVariables().entrySet()) {
-            creationLog.addVariable(entry.getKey(), creationLog.applyFunctions(
-                    entry.getValue().toString(), false));
-        }
+		for (Map.Entry<String, Object> entry : scenario.getVariables().entrySet()) {
+			creationLog.addVariable(entry.getKey(), creationLog.applyFunctions(
+					entry.getValue().toString(), false));
+		}
 
-        for (Command command : scenario.getCommands()) {
-            commandRunner.execute(command, creationLog, context);
-        }
+		creationLog.getJwts().putAll(scenario.getJwts());
 
-        return creationLog;
-    }
+		for (Command command : scenario.getCommands()) {
+			commandRunner.execute(command, creationLog, context);
+		}
+
+		return creationLog;
+	}
 }

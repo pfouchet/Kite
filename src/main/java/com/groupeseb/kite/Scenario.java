@@ -9,65 +9,72 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 @Getter
 public class Scenario {
-    public static final String DESCRIPTION_KEY = "description";
-    public static final String VARIABLE_KEY = "variables";
-    public static final String COMMANDS_KEY = "commands";
-    public static final String DEPENDENCIES_KEY = "dependencies";
+	public static final String DESCRIPTION_KEY = "description";
+	public static final String VARIABLE_KEY = "variables";
+	public static final String COMMANDS_KEY = "commands";
+	public static final String DEPENDENCIES_KEY = "dependencies";
+	public static final String JWT_KEY = "jwt";
 
-    protected final Collection<Command> commands = new ArrayList<>();
-    protected final List<Scenario> dependencies = new ArrayList<>();
-    protected String description;
-    protected Map<String, Object> variables;
+	private final Collection<Command> commands = new ArrayList<>();
+	private final List<Scenario> dependencies = new ArrayList<>();
+	private String description;
+	private Map<String, Object> variables;
+	private Map<String, Object> jwts;
 
-    protected final String filename;
+	private final String filename;
 
-    /**
-     * @param filename The (class)path to the scenario file.
-     * @throws IOException
-     * @throws ParseException
-     */
-    public Scenario(String filename) throws IOException, ParseException {
-        this.filename = filename;
-        parseScenario(readFixture(filename));
-    }
+	/**
+	 * @param filename The (class)path to the scenario file.
+	 * @throws IOException
+	 * @throws ParseException
+	 */
+	public Scenario(String filename) throws IOException, ParseException {
+		this.filename = filename;
+		parseScenario(readFixture(filename));
+	}
 
-    protected static String readFixture(String filename) throws IOException {
-        ClassPathResource resource = new ClassPathResource(filename);
+	protected static String readFixture(String filename) throws IOException {
+		ClassPathResource resource = new ClassPathResource(filename);
 
-        if (!resource.exists()) {
-            throw new FileNotFoundException(filename);
-        }
+		if (!resource.exists()) {
+			throw new FileNotFoundException(filename);
+		}
 
-        InputStream inputStream = resource.getInputStream();
-        StringWriter writer = new StringWriter();
-        IOUtils.copy(inputStream, writer);
+		InputStream inputStream = resource.getInputStream();
+		StringWriter writer = new StringWriter();
+		IOUtils.copy(inputStream, writer);
 
-        return writer.toString();
-    }
+		return writer.toString();
+	}
 
-    private void parseScenario(String scenario) throws IOException, ParseException {
-        Json jsonScenario = new Json(scenario);
-        jsonScenario.checkExistence(new String[]{DESCRIPTION_KEY, COMMANDS_KEY});
+	private void parseScenario(String scenario) throws IOException, ParseException {
+		Json jsonScenario = new Json(scenario);
+		jsonScenario.checkExistence(new String[]{DESCRIPTION_KEY, COMMANDS_KEY});
 
-        this.description = jsonScenario.getString(DESCRIPTION_KEY);
-        this.variables = (Map<String, Object>) jsonScenario.getMap(VARIABLE_KEY);
+		this.description = jsonScenario.getString(DESCRIPTION_KEY);
+		this.variables = (Map<String, Object>) jsonScenario.getMap(VARIABLE_KEY);
 
-        for (String dependency : jsonScenario.<String>getIterable(DEPENDENCIES_KEY)) {
-            dependencies.add(new Scenario(dependency));
-        }
+		this.jwts = (Map<String, Object>) jsonScenario.getMap(JWT_KEY);
 
-        Integer commandCount = jsonScenario.getLength(COMMANDS_KEY);
-        for (Integer i = 0; i < commandCount; ++i) {
-            commands.add(new Command(jsonScenario.get(COMMANDS_KEY).get(i)));
-        }
-    }
+		for (String dependency : jsonScenario.<String>getIterable(DEPENDENCIES_KEY)) {
+			dependencies.add(new Scenario(dependency));
+		}
 
-    @Override
-    public String toString() {
-        return this.getFilename() + ":" + this.getDescription();
-    }
+		Integer commandCount = jsonScenario.getLength(COMMANDS_KEY);
+		for (Integer i = 0; i < commandCount; ++i) {
+			commands.add(new Command(jsonScenario.get(COMMANDS_KEY).get(i)));
+		}
+	}
+
+	@Override
+	public String toString() {
+		return this.getFilename() + ':' + this.getDescription();
+	}
 }
