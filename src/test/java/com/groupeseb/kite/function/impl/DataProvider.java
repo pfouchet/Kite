@@ -10,7 +10,6 @@ public class DataProvider {
 		CreationLog creationLog = new CreationLog(Arrays.asList(new Base64Function(),
 		                                                        new JwtFunction(),
 		                                                        new LocationFunction(),
-		                                                        new ObjectAsStringFunction(),
 		                                                        new RandomInteger(),
 		                                                        new RandomString(),
 		                                                        new UUIDFunction(),
