@@ -11,6 +11,7 @@ import java.util.Collections;
 import static com.groupeseb.kite.function.impl.DataProvider.getCreationLog;
 import static org.testng.Assert.assertEquals;
 
+@SuppressWarnings("unchecked")
 public class ObjectAsStringFunctionTest {
 
 	private static final String SIMPLE_VALUE = "simpleValue";
