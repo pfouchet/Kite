@@ -1,0 +1,26 @@
+{
+	"description": "Use JWT token based on objectVariables in headers",
+	"objectVariables": {
+		"authorization": {
+			"profileUid": "{{Variable:variableUid}}",
+			"domains": [
+				{
+					"key": "domain2"
+				}
+			]
+		}
+	},
+	"variables": {
+		"variableUid": "firstUid"
+	},
+	"commands": [
+		{
+			"verb": "POST",
+			"uri": "/urlUsingJwtHeader",
+			"automaticCheck": false,
+			"headers": {
+				"Authorization": "Bearer {{JWT:authorization}}"
+			}
+		}
+	]
+}
