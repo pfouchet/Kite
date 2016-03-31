@@ -4,7 +4,10 @@ import com.groupeseb.kite.CreationLog;
 
 import java.util.Arrays;
 
-public class DataProvider {
+public final class DataProvider {
+
+	private DataProvider() {
+	}
 
 	public static CreationLog getCreationLog() {
 		CreationLog creationLog = new CreationLog(Arrays.asList(new Base64Function(),
