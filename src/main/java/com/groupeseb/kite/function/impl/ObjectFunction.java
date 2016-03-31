@@ -30,13 +30,20 @@ public abstract class ObjectFunction extends Function {
 		                                              variableName);
 
 		if (untransformedJsonObject instanceof JSONObject) {
-			return innerApply((JSONObject) untransformedJsonObject, creationLog);
+			return innerApplyOnObject((JSONObject) untransformedJsonObject, creationLog);
+		}
+		if (untransformedJsonObject instanceof String) {
+			return innerApplyOnString((String) untransformedJsonObject, creationLog);
 		}
 
 		throw new NotYetSupportedException("Class not yet supported in ObjectAsStringFunction "
 		                                   + untransformedJsonObject.getClass().getSimpleName());
 	}
 
-	protected abstract String innerApply(JSONObject untransformedJsonObject, CreationLog creationLog);
+	protected abstract String innerApplyOnObject(JSONObject untransformedJsonObject, CreationLog creationLog);
+
+	protected String innerApplyOnString(String rawString, CreationLog creationLog) {
+		return creationLog.processPlaceholdersInString(rawString);
+	}
 
 }

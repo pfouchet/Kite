@@ -8,10 +8,10 @@ import org.json.simple.JSONObject;
 import org.springframework.stereotype.Component;
 
 /**
- * Function that replaces {{JWT:jwtVariableName}} placeholders by the JWT value corresponding
+ * Function that replaces {{asString:ObjectVariableName}} placeholders by the value corresponding
  * to the object declared in the objectVariables section of the test.
- * It supports nested placeholders.
- * JWT is not signed and use HS256 algorithm.
+ * It supports nested placeholders, and will transform json into their string representation.
+ * Raw String are also supported.
  */
 @Component
 public class ObjectAsStringFunction extends ObjectFunction {
@@ -22,7 +22,7 @@ public class ObjectAsStringFunction extends ObjectFunction {
 	}
 
 	@Override
-	protected String innerApply(JSONObject untransformedJsonObject, CreationLog creationLog) {
+	protected String innerApplyOnObject(JSONObject untransformedJsonObject, CreationLog creationLog) {
 		String json = untransformedJsonObject.toJSONString();
 		return creationLog.processPlaceholdersInString(json);
 	}
