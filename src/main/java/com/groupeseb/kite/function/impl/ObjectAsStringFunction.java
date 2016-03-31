@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Function that replaces {{JWT:jwtVariableName}} placeholders by the JWT value corresponding
- * to the object declared in the JWT section of the test.
+ * to the object declared in the objectVariables section of the test.
  * It supports nested placeholders.
  * JWT is not signed and use HS256 algorithm.
  */
