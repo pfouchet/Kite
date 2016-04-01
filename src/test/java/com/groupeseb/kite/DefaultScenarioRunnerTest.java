@@ -65,7 +65,7 @@ public class DefaultScenarioRunnerTest {
 		new DefaultScenarioRunner().execute(new Scenario("testExecute_02.json"));
 
 		verify(postRequestedFor(urlMatching("/myService/muUrl02"))
-				.withRequestBody(matching(".*124.*")));
+				       .withRequestBody(matching(".*124.*")));
 	}
 
 	/**
@@ -76,9 +76,19 @@ public class DefaultScenarioRunnerTest {
 		stubForUrlAndBody(SERVICE_URI + "/muUrl01", 201, "myString00000123");
 		stubForUrlAndBody(SERVICE_URI + "/muUrl02", 201, "OK");
 
-		new DefaultScenarioRunner().execute(new Scenario("testExecute_02.json"));
+		new DefaultScenarioRunner().execute(new Scenario("testExecute_03.json"));
 
 		verify(postRequestedFor(urlMatching("/myService/muUrl02"))
-				.withRequestBody(matching(".*124.*")));
+				       .withRequestBody(matching(".*124.*")));
+	}
+
+	@Test
+	public void testJWTFunction() throws Exception {
+		stubForUrlAndBody(SERVICE_URI + "/urlUsingJwtHeader", 201, "myString00000123");
+
+		new DefaultScenarioRunner().execute(new Scenario("testExecute_04.json"));
+
+		verify(postRequestedFor(urlMatching(SERVICE_URI + "/urlUsingJwtHeader"))
+				       .withHeader("Authorization", matching("Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkb21haW5zIjpbeyJrZXkiOiJkb21haW4yIn1dLCJwcm9maWxlVWlkIjoiZmlyc3RVaWQifQ==")));
 	}
 }
