@@ -70,6 +70,7 @@ public class Scenario {
 		return writer.toString();
 	}
 
+	@SuppressWarnings("unchecked")
 	private void parseScenario(String scenario) throws IOException, ParseException {
 		Json jsonScenario = new Json(scenario);
 		jsonScenario.checkExistence(new String[]{DESCRIPTION_KEY, COMMANDS_KEY});

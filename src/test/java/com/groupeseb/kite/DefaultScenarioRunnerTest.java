@@ -89,6 +89,6 @@ public class DefaultScenarioRunnerTest {
 		new DefaultScenarioRunner().execute(new Scenario("testExecute_04.json"));
 
 		verify(postRequestedFor(urlMatching(SERVICE_URI + "/urlUsingJwtHeader"))
-				       .withHeader("Authorization", matching("Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9\\..*")));
+				       .withHeader("Authorization", matching("Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkb21haW5zIjpbeyJrZXkiOiJkb21haW4yIn1dLCJwcm9maWxlVWlkIjoiZmlyc3RVaWQifQ==")));
 	}
 }
