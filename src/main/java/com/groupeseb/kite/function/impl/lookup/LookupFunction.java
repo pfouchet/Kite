@@ -45,12 +45,16 @@ public class LookupFunction extends Function {
 
 		if (creationLog.getBody(objectName) == null) {
 			fail(String
-					.format("No payload found for %s. Are you sure any request name %s was performed ?",
-							objectName, objectName));
+					     .format("No payload found for %s. Are you sure any request name %s was performed ?",
+					             objectName, objectName));
 		}
 
 		try {
-			String fieldValue = JsonPath.read(creationLog.getBody(objectName), field).toString();
+			Object readField = JsonPath.read(creationLog.getBody(objectName), field);
+			if (readField == null) {
+				fail(String.format("Lookup : Could not get field [%s] for object %s", field, objectName));
+			}
+			String fieldValue = readField.toString();
 			if (hasAdditinalFunction) {
 				String additionalParameter = matcher.group(2);
 				return applyAddtionalFunction(fieldValue, additionalParameter);
