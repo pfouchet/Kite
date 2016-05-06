@@ -1,23 +1,28 @@
 package com.groupeseb.kite;
 
 import com.groupeseb.kite.function.Function;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.Map;
 
 
 @Slf4j
-@NoArgsConstructor
-public class DefaultScenarioRunner implements IScenarioRunner {
-	private final ApplicationContext context = new ClassPathXmlApplicationContext("kite-beans.xml");
-	private final ICommandRunner commandRunner = new DefaultCommandRunner();
+@Component
+public class DefaultScenarioRunner {
+	private final ICommandRunner commandRunner;
+	private final Collection<Function> functions;
 
-	@Override
-	public void execute(Scenario scenario) throws Exception {
-		execute(scenario, new CreationLog(context.getBeansOfType(Function.class).values()));
+	@Autowired
+	DefaultScenarioRunner(Collection<Function> functions, ICommandRunner commandRunner) {
+		this.functions = functions;
+		this.commandRunner = commandRunner;
+	}
+
+	void execute(Scenario scenario) throws Exception {
+		execute(scenario, new CreationLog(functions));
 	}
 
 	private CreationLog execute(Scenario scenario, CreationLog creationLog) throws Exception {
@@ -38,7 +43,7 @@ public class DefaultScenarioRunner implements IScenarioRunner {
 		creationLog.getObjectVariables().putAll(scenario.getObjectVariables());
 
 		for (Command command : scenario.getCommands()) {
-			commandRunner.execute(command, creationLog, context);
+			commandRunner.execute(command, creationLog);
 		}
 
 		return creationLog;

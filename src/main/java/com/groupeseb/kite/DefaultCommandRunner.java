@@ -1,13 +1,10 @@
 package com.groupeseb.kite;
 
 import com.groupeseb.kite.check.Check;
-import com.groupeseb.kite.check.DefaultCheckRunner;
 import com.groupeseb.kite.check.ICheckRunner;
-import com.groupeseb.kite.function.Function;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -19,7 +16,7 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.parser.ParseException;
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
@@ -33,7 +30,6 @@ import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.fail;
 
 @Slf4j
-@NoArgsConstructor
 @Component
 public class DefaultCommandRunner implements ICommandRunner {
 	private static final String UTF_8_ENCODING = "UTF-8";
@@ -44,11 +40,15 @@ public class DefaultCommandRunner implements ICommandRunner {
 	private static final String DELETE = "DELETE";
 	private static final String GET = "GET";
 	private static final String PATCH = "PATCH";
-	private final ICheckRunner checkRunner = new DefaultCheckRunner();
+	private final ICheckRunner checkRunner;
+
+	@Autowired
+	DefaultCommandRunner(ICheckRunner checkRunner) {
+		this.checkRunner = checkRunner;
+	}
 
 	@Override
-	public void execute(Command command, CreationLog creationLog, ApplicationContext context) throws Exception {
-		creationLog.setAvailableFunctions(context.getBeansOfType(Function.class).values());
+	public void execute(Command command, CreationLog creationLog) throws Exception {
 
 		if (command.getDescription() != null) {
 			log.info(command.getDescription() + "...");
@@ -66,19 +66,19 @@ public class DefaultCommandRunner implements ICommandRunner {
 
 		switch (command.getVerb().toUpperCase()) {
 			case POST:
-				post(command, creationLog, context);
+				post(command, creationLog);
 				break;
 			case GET:
-				get(command, creationLog, context);
+				get(command, creationLog);
 				break;
 			case PUT:
-				put(command, creationLog, context);
+				put(command, creationLog);
 				break;
 			case DELETE:
-				delete(command, creationLog, context);
+				delete(command, creationLog);
 				break;
 			case PATCH:
-				patch(command, creationLog, context);
+				patch(command, creationLog);
 				break;
 			default:
 				throw new RuntimeException(String.format("Verbe %s is not supported", command.getVerb().toUpperCase()));
@@ -87,14 +87,14 @@ public class DefaultCommandRunner implements ICommandRunner {
 		log.info('[' + command.getName() + "] OK");
 	}
 
-	void post(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException {
+	void post(Command command, CreationLog creationLog) throws ParseException {
 		log.info('['
-		         + command.getName()
-		         + "] POST "
-		         + command.getProcessedURI(creationLog)
-		         + " (expecting "
-		         + command.getExpectedStatus()
-		         + ')');
+				+ command.getName()
+				+ "] POST "
+				+ command.getProcessedURI(creationLog)
+				+ " (expecting "
+				+ command.getExpectedStatus()
+				+ ')');
 
 		if (command.getDebug()) {
 			log.info('[' + command.getName() + "] " + command.getProcessedBody(creationLog));
@@ -114,9 +114,9 @@ public class DefaultCommandRunner implements ICommandRunner {
 		}
 
 		assertEquals("Unexpected response status",
-		             command.getExpectedStatus(),
+				command.getExpectedStatus(),
 				Integer.valueOf(postResponse.getStatusCode()));
-		runChecks(command.getChecks(creationLog), response, context);
+		runChecks(command.getChecks(creationLog), response);
 
 		if (command.getAutomaticCheck()) {
 			String location = postResponse.getHeader("Location");
@@ -132,14 +132,14 @@ public class DefaultCommandRunner implements ICommandRunner {
 		}
 	}
 
-	void patch(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException {
+	void patch(Command command, CreationLog creationLog) throws ParseException {
 		log.info('['
-		         + command.getName()
-		         + "] PATCH "
-		         + command.getProcessedURI(creationLog)
-		         + " (expecting "
-		         + command.getExpectedStatus()
-		         + ')');
+				+ command.getName()
+				+ "] PATCH "
+				+ command.getProcessedURI(creationLog)
+				+ " (expecting "
+				+ command.getExpectedStatus()
+				+ ')');
 
 		if (command.getDebug()) {
 			log.info('[' + command.getName() + "] " + command.getProcessedBody(creationLog));
@@ -159,9 +159,9 @@ public class DefaultCommandRunner implements ICommandRunner {
 		}
 
 		assertEquals("Unexpected response status",
-		             command.getExpectedStatus(),
+				command.getExpectedStatus(),
 				Integer.valueOf(patchResponse.getStatusCode()));
-		runChecks(command.getChecks(creationLog), response, context);
+		runChecks(command.getChecks(creationLog), response);
 
 		if (command.getAutomaticCheck()) {
 			String location = patchResponse.getHeader("Location");
@@ -177,7 +177,7 @@ public class DefaultCommandRunner implements ICommandRunner {
 		}
 	}
 
-	private static String performGetRequest(Command command, CreationLog creationLog, ApplicationContext context, @Nullable HttpParams params) throws IOException {
+	private static String performGetRequest(Command command, CreationLog creationLog, @Nullable HttpParams params) throws IOException {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
 		String requestURI = command.getProcessedURI(creationLog);
@@ -201,12 +201,12 @@ public class DefaultCommandRunner implements ICommandRunner {
 		CloseableHttpResponse response = httpClient.execute(httpget);
 
 		assertEquals(command.getDescription()
-		             + " | "
-		             + command.getExpectedStatus()
-		             + " expected but "
-		             + response.getStatusLine().getStatusCode()
-		             + " received.",
-		             (int) command.getExpectedStatus(), response.getStatusLine().getStatusCode());
+						+ " | "
+						+ command.getExpectedStatus()
+						+ " expected but "
+						+ response.getStatusLine().getStatusCode()
+						+ " received.",
+				(int) command.getExpectedStatus(), response.getStatusLine().getStatusCode());
 
 		try {
 			String body = EntityUtils.toString(response.getEntity());
@@ -221,16 +221,16 @@ public class DefaultCommandRunner implements ICommandRunner {
 		}
 	}
 
-	void get(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException, IOException {
+	void get(Command command, CreationLog creationLog) throws ParseException, IOException {
 		if (command.getPagination() != null) {
-			paginatedGet(command, creationLog, context);
+			paginatedGet(command, creationLog);
 		} else {
-			String responseBody = performGetRequest(command, creationLog, context, null);
-			runChecks(command.getChecks(creationLog), responseBody, context);
+			String responseBody = performGetRequest(command, creationLog, null);
+			runChecks(command.getChecks(creationLog), responseBody);
 		}
 	}
 
-	void paginatedGet(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException, IOException {
+	void paginatedGet(Command command, CreationLog creationLog) throws ParseException, IOException {
 		log.info("GET " + command.getProcessedURI(creationLog) + " (expecting " + command.getExpectedStatus() + ')');
 
 		Integer currentPage = command.getPagination().getStartPage();
@@ -241,22 +241,22 @@ public class DefaultCommandRunner implements ICommandRunner {
 			params.setParameter(command.getPagination().getPageParameterName(), command.getPagination().getStartPage());
 			params.setParameter(command.getPagination().getSizeParameterName(), command.getPagination().getSize());
 
-			String responseBody = performGetRequest(command, creationLog, context, params);
+			String responseBody = performGetRequest(command, creationLog, params);
 			totalPages = JsonPath.read(responseBody, command.getPagination().getTotalPagesField());
 
-			runChecks(command.getChecks(creationLog), responseBody, context);
+			runChecks(command.getChecks(creationLog), responseBody);
 			currentPage++;
 		}
 	}
 
-	void put(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException {
+	void put(Command command, CreationLog creationLog) throws ParseException {
 		log.info('['
-		         + command.getName()
-		         + "] PUT "
-		         + command.getProcessedURI(creationLog)
-		         + " (expecting "
-		         + command.getExpectedStatus()
-		         + ')');
+				+ command.getName()
+				+ "] PUT "
+				+ command.getProcessedURI(creationLog)
+				+ " (expecting "
+				+ command.getExpectedStatus()
+				+ ')');
 
 		if (command.getDebug()) {
 			log.info('[' + command.getName() + "] " + command.getProcessedBody(creationLog));
@@ -276,17 +276,17 @@ public class DefaultCommandRunner implements ICommandRunner {
 			creationLog.addBody(command.getName(), response);
 		}
 
-		runChecks(command.getChecks(creationLog), response, context);
+		runChecks(command.getChecks(creationLog), response);
 	}
 
-	void delete(Command command, CreationLog creationLog, ApplicationContext context) throws ParseException {
+	void delete(Command command, CreationLog creationLog) throws ParseException {
 		log.info("DELETE " + command.getProcessedURI(creationLog) + " (expecting " + command.getExpectedStatus() + ')');
 		Response r = given().contentType(JSON_UTF8).headers(command.getProcessedHeaders(creationLog))
 				.body(getProcessedBodyBytes(command, creationLog)).log().everything(true)
 				.expect().statusCode(command.getExpectedStatus())
 				.when().delete(command.getProcessedURI(creationLog));
 
-		runChecks(command.getChecks(creationLog), r.prettyPrint(), context);
+		runChecks(command.getChecks(creationLog), r.prettyPrint());
 
 		log.info("Checking resource: " + command.getProcessedURI(creationLog) + "...");
 
@@ -297,10 +297,10 @@ public class DefaultCommandRunner implements ICommandRunner {
 		}
 	}
 
-	void runChecks(Collection<Check> checks, String responseBody, ApplicationContext context) throws ParseException {
+	void runChecks(Collection<Check> checks, String responseBody) throws ParseException {
 		for (Check check : checks) {
 			try {
-				checkRunner.verify(check, responseBody, context);
+				checkRunner.verify(check, responseBody);
 			} catch (RuntimeException e) {
 				fail("Check [" + check.getDescription() + "] failed : " + e.getMessage());
 			}
@@ -312,22 +312,20 @@ public class DefaultCommandRunner implements ICommandRunner {
 	 * <p>
 	 * Processing is done using {@link Command#getProcessedBody(CreationLog)} prior encoding to
 	 * bytes.
-	 * 
-	 * @param command
-	 *            the command to get body from, not null
-	 * @param creationLog
-	 *            the creation log related to the command, not null
+	 *
+	 * @param command     the command to get body from, not null
+	 * @param creationLog the creation log related to the command, not null
 	 * @return the body of the request, with placeholders processed and encoded in UTF-8
 	 */
-    private static byte[] getProcessedBodyBytes(Command command,
-                                                CreationLog creationLog) {
-        try {
-            return command.getProcessedBody(creationLog).getBytes(
-                    Charset.forName(UTF_8_ENCODING));
-        } catch (RuntimeException e) {
-            fail("Command [" + command.getDescription() + "] failed : "
-                    + e.getMessage());
-            throw e;
-        }
-    }
+	private static byte[] getProcessedBodyBytes(Command command,
+	                                            CreationLog creationLog) {
+		try {
+			return command.getProcessedBody(creationLog).getBytes(
+					Charset.forName(UTF_8_ENCODING));
+		} catch (RuntimeException e) {
+			fail("Command [" + command.getDescription() + "] failed : "
+					+ e.getMessage());
+			throw e;
+		}
+	}
 }

@@ -4,88 +4,101 @@ import com.google.common.base.Preconditions;
 import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.parser.ParseException;
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.Collection;
 
 @Slf4j
+@Component
 public class DefaultCheckRunner implements ICheckRunner {
-    private ICheckOperator getMatchingOperator(String operatorName, ApplicationContext factory) {
-        ICheckOperator match = null;
-        Integer matchCount = 0;
+	private final Collection<ICheckOperator> checkOperators;
+	private final Collection<ICheckMethod> checkMethods;
 
-        for (ICheckOperator operator : factory.getBeansOfType(ICheckOperator.class).values()) {
-            if (operator.match(operatorName)) {
-                match = operator;
-                matchCount++;
-            }
+	@Autowired
+	DefaultCheckRunner(Collection<ICheckOperator> checkOperators, Collection<ICheckMethod> checkMethods) {
+		this.checkOperators = checkOperators;
+		this.checkMethods = checkMethods;
+	}
 
-            if (matchCount > 1) {
-                throw new UnsupportedOperationException("Several (" + matchCount.toString() + ") operators match but only one is allowed.");
-            }
-        }
+	private ICheckOperator getMatchingOperator(String operatorName) {
+		ICheckOperator match = null;
+		Integer matchCount = 0;
 
-        if (matchCount == 0) {
-            throw new IndexOutOfBoundsException("No matching operator found for '" + operatorName + "'");
-        }
+		for (ICheckOperator operator : checkOperators) {
+			if (operator.match(operatorName)) {
+				match = operator;
+				matchCount++;
+			}
 
-        return match;
-    }
+			if (matchCount > 1) {
+				throw new UnsupportedOperationException("Several (" + matchCount + ") operators match but only one is allowed.");
+			}
+		}
 
-    private ICheckMethod getMatchingMethod(String methodName, ApplicationContext factory) {
-        ICheckMethod match = null;
-        Integer matchCount = 0;
+		if (matchCount == 0) {
+			throw new IndexOutOfBoundsException("No matching operator found for '" + operatorName + "'");
+		}
 
-        for (ICheckMethod operator : factory.getBeansOfType(ICheckMethod.class).values()) {
-            if (operator.match(methodName)) {
-                match = operator;
-                matchCount++;
-            }
+		return match;
+	}
 
-            if (matchCount > 1) {
-                throw new UnsupportedOperationException("Several (" + matchCount.toString() + ") operators match but only one match is allowed.");
-            }
-        }
+	private ICheckMethod getMatchingMethod(String methodName) {
+		ICheckMethod match = null;
+		Integer matchCount = 0;
 
-        if (matchCount == 0) {
-            throw new IndexOutOfBoundsException("No matching method found for '" + methodName + "'");
-        }
+		for (ICheckMethod operator : checkMethods) {
+			if (operator.match(methodName)) {
+				match = operator;
+				matchCount++;
+			}
 
-        return match;
-    }
+			if (matchCount > 1) {
+				throw new UnsupportedOperationException("Several (" + matchCount + ") operators match but only one match is allowed.");
+			}
+		}
 
-    @Override
-    public void verify(Check check, String responseBody, ApplicationContext context) throws ParseException {
-        log.info("Checking " + check.getDescription() + "...");
+		if (matchCount == 0) {
+			throw new IndexOutOfBoundsException("No matching method found for '" + methodName + "'");
+		}
 
-        if (check.getSkip()) {
-            log.warn("Check skipped (" + check.getDescription() + ")");
-            return;
-        }
+		return match;
+	}
 
-        ICheckOperator operator = getMatchingOperator(check.getOperatorName(), context);
-        ICheckMethod method = getMatchingMethod(check.getMethodName(), context);
+	@Override
+	public void verify(Check check, String responseBody) throws ParseException {
+		log.info("Checking " + check.getDescription() + "...");
 
-        Object node = JsonPath.read(responseBody, check.getFieldName());
-        if (check.getForeach()) {
-            Preconditions.checkArgument(node instanceof Iterable, "Using 'forEach' mode for check requires an iterable node.");
+		if (check.getSkip()) {
+			log.warn("Check skipped (" + check.getDescription() + ")");
+			return;
+		}
 
-            @SuppressWarnings({"unchecked", "ConstantConditions"})
-            Iterable nodeList = (Iterable) node;
+		ICheckOperator operator = getMatchingOperator(check.getOperatorName());
+		ICheckMethod method = getMatchingMethod(check.getMethodName());
 
-            if (check.getMustMatch()) {
-                Preconditions.checkArgument(nodeList.iterator().hasNext(), check.getDescription() + " (No match found but 'mustMatch' was set to true)");
-            }
+		Object node = JsonPath.read(responseBody, check.getFieldName());
+		if (check.getForeach()) {
+			Preconditions.checkArgument(node instanceof Iterable, "Using 'forEach' mode for check requires an iterable node.");
 
-            for (Object o : nodeList) {
+			@SuppressWarnings({"unchecked", "ConstantConditions"})
+			Iterable nodeList = (Iterable) node;
+
+			if (check.getMustMatch()) {
+				Preconditions.checkArgument(nodeList.iterator().hasNext(), check.getDescription() + " (No match found but 'mustMatch' was set to true)");
+			}
+
+			for (Object o : nodeList) {
 				operator.apply(method.apply(o, check.getParameters()),
 						parseExpectedValue(check.getExpectedValue(), responseBody),
 						check.getDescription(), check.getParameters());
-            }
-        } else {
+			}
+		} else {
 			operator.apply(method.apply(node, check.getParameters()),
 					parseExpectedValue(check.getExpectedValue(), responseBody),
 					check.getDescription(), check.getParameters());
-        }
-    }
+		}
+	}
 
     private Object parseExpectedValue(Object expectedValue, String responseBody) {
 //        if (String.class.isAssignableFrom(expectedValue.getClass())) {
