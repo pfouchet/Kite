@@ -1,7 +1,7 @@
 package com.groupeseb.kite;
 
 import com.groupeseb.kite.check.Check;
-import com.groupeseb.kite.check.ICheckRunner;
+import com.groupeseb.kite.check.DefaultCheckRunner;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
@@ -31,7 +31,7 @@ import static org.testng.AssertJUnit.fail;
 
 @Slf4j
 @Component
-public class DefaultCommandRunner implements ICommandRunner {
+public class DefaultCommandRunner {
 	private static final String UTF_8_ENCODING = "UTF-8";
 	private static final String JSON_UTF8 = ContentType.create(
 			ContentType.APPLICATION_JSON.getMimeType(), UTF_8_ENCODING).toString();
@@ -40,15 +40,14 @@ public class DefaultCommandRunner implements ICommandRunner {
 	private static final String DELETE = "DELETE";
 	private static final String GET = "GET";
 	private static final String PATCH = "PATCH";
-	private final ICheckRunner checkRunner;
+	private final DefaultCheckRunner defaultCheckRunner;
 
 	@Autowired
-	DefaultCommandRunner(ICheckRunner checkRunner) {
-		this.checkRunner = checkRunner;
+	DefaultCommandRunner(DefaultCheckRunner defaultCheckRunner) {
+		this.defaultCheckRunner = defaultCheckRunner;
 	}
 
-	@Override
-	public void execute(Command command, KiteContext kiteContext) throws Exception {
+	void execute(Command command, KiteContext kiteContext) throws Exception {
 
 		if (command.getDescription() != null) {
 			log.info(command.getDescription() + "...");
@@ -300,7 +299,7 @@ public class DefaultCommandRunner implements ICommandRunner {
 	void runChecks(Collection<Check> checks, String responseBody) throws ParseException {
 		for (Check check : checks) {
 			try {
-				checkRunner.verify(check, responseBody);
+				defaultCheckRunner.verify(check, responseBody);
 			} catch (RuntimeException e) {
 				fail("Check [" + check.getDescription() + "] failed : " + e.getMessage());
 			}

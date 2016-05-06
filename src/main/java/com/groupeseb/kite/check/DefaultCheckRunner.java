@@ -11,7 +11,7 @@ import java.util.Collection;
 
 @Slf4j
 @Component
-public class DefaultCheckRunner implements ICheckRunner {
+public class DefaultCheckRunner {
 	private final Collection<ICheckOperator> checkOperators;
 	private final Collection<ICheckMethod> checkMethods;
 
@@ -65,7 +65,6 @@ public class DefaultCheckRunner implements ICheckRunner {
 		return match;
 	}
 
-	@Override
 	public void verify(Check check, String responseBody) throws ParseException {
 		log.info("Checking " + check.getDescription() + "...");
 
@@ -100,7 +99,7 @@ public class DefaultCheckRunner implements ICheckRunner {
 		}
 	}
 
-    private Object parseExpectedValue(Object expectedValue, String responseBody) {
+	private Object parseExpectedValue(Object expectedValue, String responseBody) {
 //        if (String.class.isAssignableFrom(expectedValue.getClass())) {
 //            Pattern lookupPattern = Pattern.compile("\\{\\{Lookup\\:%\\.(.+)\\}\\}");
 //            Matcher matcher = lookupPattern.matcher(expectedValue.toString());
@@ -111,6 +110,6 @@ public class DefaultCheckRunner implements ICheckRunner {
 //            }
 //        }
 
-        return expectedValue;
-    }
+		return expectedValue;
+	}
 }

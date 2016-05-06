@@ -12,13 +12,13 @@ import java.util.Map;
 @Slf4j
 @Component
 public class DefaultScenarioRunner {
-	private final ICommandRunner commandRunner;
+	private final DefaultCommandRunner defaultCommandRunner;
 	private final Collection<Function> functions;
 
 	@Autowired
-	DefaultScenarioRunner(Collection<Function> functions, ICommandRunner commandRunner) {
+	DefaultScenarioRunner(Collection<Function> functions, DefaultCommandRunner defaultCommandRunner) {
 		this.functions = functions;
-		this.commandRunner = commandRunner;
+		this.defaultCommandRunner = defaultCommandRunner;
 	}
 
 	KiteContext execute(Scenario scenario) throws Exception {
@@ -47,7 +47,7 @@ public class DefaultScenarioRunner {
 		kiteContext.getObjectVariables().putAll(scenario.getObjectVariables());
 
 		for (Command command : scenario.getCommands()) {
-			commandRunner.execute(command, kiteContext);
+			defaultCommandRunner.execute(command, kiteContext);
 		}
 
 		return kiteContext;
