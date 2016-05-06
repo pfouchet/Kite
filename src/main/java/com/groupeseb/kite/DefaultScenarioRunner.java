@@ -22,14 +22,18 @@ public class DefaultScenarioRunner {
 	}
 
 	KiteContext execute(Scenario scenario) throws Exception {
-		return execute(scenario, new KiteContext(functions));
+		return executeWithContext(scenario, new KiteContext(functions));
 	}
 
-	private KiteContext execute(Scenario scenario, KiteContext kiteContext) throws Exception {
+	KiteContext execute(Scenario scenario, KiteContext kiteContext) throws Exception {
+		return executeWithContext(scenario, kiteContext);
+	}
+
+	private KiteContext executeWithContext(Scenario scenario, KiteContext kiteContext) throws Exception {
 		log.info("Parsing {}...", scenario.getFilename());
 
 		for (Scenario dependency : scenario.getDependencies()) {
-			kiteContext.extend(execute(dependency, kiteContext));
+			kiteContext.extend(executeWithContext(dependency, kiteContext));
 		}
 
 		log.info("Executing {}...", scenario.getFilename());
