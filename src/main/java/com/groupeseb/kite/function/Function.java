@@ -1,6 +1,6 @@
 package com.groupeseb.kite.function;
 
-import com.groupeseb.kite.CreationLog;
+import com.groupeseb.kite.KiteContext;
 
 import java.util.List;
 
@@ -27,5 +27,5 @@ public abstract class Function {
     public abstract String getName();
 
     public abstract String apply(List<String> parameters,
-            CreationLog creationLog);
+            KiteContext kiteContext);
 }

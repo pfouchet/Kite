@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 
 @NoArgsConstructor
 @Data
-public class CreationLog {
+public class KiteContext {
 	private final Map<String, String> uuids = new HashMap<>();
 	private final Map<String, String> locations = new HashMap<>();
 	private final Map<String, String> variables = new HashMap<>();
@@ -31,15 +31,15 @@ public class CreationLog {
 
 	private Collection<Function> availableFunctions;
 
-	public CreationLog(Collection<Function> availableFunctions) {
+	public KiteContext(Collection<Function> availableFunctions) {
 		this.availableFunctions = availableFunctions;
 	}
 
-	public void extend(CreationLog creationLog) {
-		this.uuids.putAll(creationLog.uuids);
-		this.locations.putAll(creationLog.locations);
-		this.variables.putAll(creationLog.variables);
-		this.objectVariables.putAll(creationLog.objectVariables);
+	public void extend(KiteContext kiteContext) {
+		this.uuids.putAll(kiteContext.uuids);
+		this.locations.putAll(kiteContext.locations);
+		this.variables.putAll(kiteContext.variables);
+		this.objectVariables.putAll(kiteContext.objectVariables);
 	}
 
 	public void addLocation(String name, String location) {

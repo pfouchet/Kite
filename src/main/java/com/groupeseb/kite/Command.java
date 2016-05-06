@@ -55,10 +55,10 @@ class Command {
 		headers = commandSpecification.getMap("headers");
 	}
 
-	public List<Check> getChecks(CreationLog creationLog) throws ParseException {
+	public List<Check> getChecks(KiteContext kiteContext) throws ParseException {
 		List<Check> checks = new ArrayList<>();
 		for (Integer i = 0; i < commandSpecification.getLength("checks"); ++i) {
-			checks.add(new Check(commandSpecification.get("checks").get(i), creationLog));
+			checks.add(new Check(commandSpecification.get("checks").get(i), kiteContext));
 		}
 
 		return checks;
@@ -83,24 +83,24 @@ class Command {
 		}
 	}
 
-	String getProcessedURI(CreationLog creationLog) {
-        return creationLog.processPlaceholders(getName(), getUri(), false);
+	String getProcessedURI(KiteContext kiteContext) {
+        return kiteContext.processPlaceholders(getName(), getUri(), false);
 	}
 
-	String getProcessedBody(CreationLog creationLog) {
+	String getProcessedBody(KiteContext kiteContext) {
 		if (getBody() == null) {
 			return "";
 		}
-        return creationLog.processPlaceholders(getName(), getBody().toString(),
+        return kiteContext.processPlaceholders(getName(), getBody().toString(),
                 true);
 	}
 
-	Map<String, String> getProcessedHeaders(CreationLog creationLog) {
+	Map<String, String> getProcessedHeaders(KiteContext kiteContext) {
 		Map<String, String> processedHeaders = new HashMap<>(getHeaders());
 
 		for (Map.Entry<String, String> entry : processedHeaders.entrySet()) {
 			processedHeaders.put(entry.getKey(),
-                    creationLog.processPlaceholders(getName(),
+                    kiteContext.processPlaceholders(getName(),
                             processedHeaders.get(entry.getKey()), false));
 		}
 

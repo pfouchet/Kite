@@ -21,31 +21,31 @@ public class DefaultScenarioRunner {
 		this.commandRunner = commandRunner;
 	}
 
-	void execute(Scenario scenario) throws Exception {
-		execute(scenario, new CreationLog(functions));
+	KiteContext execute(Scenario scenario) throws Exception {
+		return execute(scenario, new KiteContext(functions));
 	}
 
-	private CreationLog execute(Scenario scenario, CreationLog creationLog) throws Exception {
+	private KiteContext execute(Scenario scenario, KiteContext kiteContext) throws Exception {
 		log.info("Parsing {}...", scenario.getFilename());
 
 		for (Scenario dependency : scenario.getDependencies()) {
-			creationLog.extend(execute(dependency, creationLog));
+			kiteContext.extend(execute(dependency, kiteContext));
 		}
 
 		log.info("Executing {}...", scenario.getFilename());
 		log.info("Testing : " + scenario.getDescription() + "...");
 
 		for (Map.Entry<String, Object> entry : scenario.getVariables().entrySet()) {
-			creationLog.addVariable(entry.getKey(), creationLog.applyFunctions(
+			kiteContext.addVariable(entry.getKey(), kiteContext.applyFunctions(
 					entry.getValue().toString(), false));
 		}
 
-		creationLog.getObjectVariables().putAll(scenario.getObjectVariables());
+		kiteContext.getObjectVariables().putAll(scenario.getObjectVariables());
 
 		for (Command command : scenario.getCommands()) {
-			commandRunner.execute(command, creationLog);
+			commandRunner.execute(command, kiteContext);
 		}
 
-		return creationLog;
+		return kiteContext;
 	}
 }

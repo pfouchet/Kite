@@ -1,6 +1,6 @@
 package com.groupeseb.kite.function.impl.lookup;
 
-import com.groupeseb.kite.CreationLog;
+import com.groupeseb.kite.KiteContext;
 import com.groupeseb.kite.function.Function;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
@@ -32,7 +32,7 @@ public class LookupFunction extends Function {
 	}
 
 	@Override
-	public String apply(List<String> parameters, CreationLog creationLog) {
+	public String apply(List<String> parameters, KiteContext kiteContext) {
 		String parameter = parameters.get(0);
 		Matcher matcher = ADDITINAL_FUNCTION_PATTERN.matcher(parameter);
 		boolean hasAdditinalFunction = matcher.matches();
@@ -43,14 +43,14 @@ public class LookupFunction extends Function {
 		String objectName = parameter.split("\\.")[0];
 		String field = parameter.replace(objectName + '.', "");
 
-		if (creationLog.getBody(objectName) == null) {
+		if (kiteContext.getBody(objectName) == null) {
 			fail(String
 					     .format("No payload found for %s. Are you sure any request name %s was performed ?",
 					             objectName, objectName));
 		}
 
 		try {
-			Object readField = JsonPath.read(creationLog.getBody(objectName), field);
+			Object readField = JsonPath.read(kiteContext.getBody(objectName), field);
 			if (readField == null) {
 				fail(String.format("Lookup : Could not get field [%s] for object %s", field, objectName));
 			}

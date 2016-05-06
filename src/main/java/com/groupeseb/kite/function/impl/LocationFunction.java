@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.google.common.base.Preconditions;
-import com.groupeseb.kite.CreationLog;
+import com.groupeseb.kite.KiteContext;
 import com.groupeseb.kite.function.Function;
 
 /**
@@ -23,11 +23,11 @@ public class LocationFunction extends Function {
 	}
 
 	@Override
-	public String apply(List<String> parameters, CreationLog creationLog) {
+	public String apply(List<String> parameters, KiteContext kiteContext) {
 		Preconditions.checkArgument(parameters.size() == 1,
 				"objetName parameter is needed for [%s] function", getName());
 		String objectName = parameters.get(0);
-		String locationURI = creationLog.getLocations().get(objectName);
+		String locationURI = kiteContext.getLocations().get(objectName);
 		Preconditions.checkNotNull(locationURI, "No location corresponds to object named [%s]",
 				objectName);
 		return locationURI;

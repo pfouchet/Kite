@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.json.simple.parser.ParseException;
 
-import com.groupeseb.kite.CreationLog;
+import com.groupeseb.kite.KiteContext;
 import com.groupeseb.kite.Json;
 
 @Getter
@@ -21,7 +21,7 @@ public class Check {
     private final Boolean mustMatch;
     private final Boolean skip;
 
-    public Check(Json checkSpecification, CreationLog creationLog) throws ParseException {
+    public Check(Json checkSpecification, KiteContext kiteContext) throws ParseException {
         checkSpecification.checkExistence(new String[]{"field", "expected"});
 
         if (!checkSpecification.exists("description")) {
@@ -32,7 +32,7 @@ public class Check {
         fieldName = checkSpecification.getString("field");
         methodName = (checkSpecification.getString("method") == null) ? "nop" : checkSpecification.getString("method");
         operatorName = (checkSpecification.getString("operator") == null) ? "equals" : checkSpecification.getString("operator");
-        expectedValue = creationLog.processPlaceholders(checkSpecification.getObject("expected"));
+        expectedValue = kiteContext.processPlaceholders(checkSpecification.getObject("expected"));
         parameters = checkSpecification.get("parameters");
 		foreach = checkSpecification.getBooleanOrDefault("foreach", false);
         mustMatch = checkSpecification.getBooleanOrDefault("mustMatch", foreach);

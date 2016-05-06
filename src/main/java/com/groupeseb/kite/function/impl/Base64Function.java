@@ -1,7 +1,7 @@
 package com.groupeseb.kite.function.impl;
 
 import com.google.common.base.Charsets;
-import com.groupeseb.kite.CreationLog;
+import com.groupeseb.kite.KiteContext;
 import com.groupeseb.kite.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
@@ -24,10 +24,10 @@ public class Base64Function extends Function {
 	}
 
 	@Override
-	public String apply(List<String> parameters, CreationLog creationLog) {
+	public String apply(List<String> parameters, KiteContext kiteContext) {
 		checkArgument(parameters.size() == 1, "Exactly one parameter is needed");
 
-		String variableValue = checkNotNull(creationLog.getVariableValue(parameters.get(0)),
+		String variableValue = checkNotNull(kiteContext.getVariableValue(parameters.get(0)),
 		                                    "Variables are not defined or parameter is null");
 
 		return new String(new Base64().encode(variableValue.getBytes(Charsets.UTF_8)), Charsets.UTF_8);

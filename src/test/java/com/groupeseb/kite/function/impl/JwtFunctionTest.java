@@ -1,7 +1,7 @@
 package com.groupeseb.kite.function.impl;
 
 import com.google.common.base.Charsets;
-import com.groupeseb.kite.CreationLog;
+import com.groupeseb.kite.KiteContext;
 import com.groupeseb.kite.Json;
 import com.groupeseb.kite.function.Function;
 import org.apache.commons.codec.binary.Base64;
@@ -29,13 +29,13 @@ public class JwtFunctionTest {
 
 	@Test
 	public void testSimpleObject() throws ParseException {
-		CreationLog creationLog = getCreationLog();
+		KiteContext kiteContext = getCreationLog();
 
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put(PROFILE_UID, SIMPLE_VALUE);
-		creationLog.getObjectVariables().put(ROOT_OBJECT_NAME, jsonObject);
+		kiteContext.getObjectVariables().put(ROOT_OBJECT_NAME, jsonObject);
 
-		String authorization = function.apply(Collections.singletonList(ROOT_OBJECT_NAME), creationLog);
+		String authorization = function.apply(Collections.singletonList(ROOT_OBJECT_NAME), kiteContext);
 
 		assertEquals(decodeAndExtract(authorization, PROFILE_UID), SIMPLE_VALUE);
 	}
@@ -43,14 +43,14 @@ public class JwtFunctionTest {
 	@Test
 	public void withPlaceholders() throws ParseException {
 
-		CreationLog creationLog = getCreationLog();
+		KiteContext kiteContext = getCreationLog();
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put(PROFILE_UID, "{{Variable:profileVariable}}");
-		creationLog.getObjectVariables().put(ROOT_OBJECT_NAME, jsonObject);
+		kiteContext.getObjectVariables().put(ROOT_OBJECT_NAME, jsonObject);
 
-		creationLog.addVariable("profileVariable", SIMPLE_VALUE);
+		kiteContext.addVariable("profileVariable", SIMPLE_VALUE);
 
-		String authorization = function.apply(Collections.singletonList(ROOT_OBJECT_NAME), creationLog);
+		String authorization = function.apply(Collections.singletonList(ROOT_OBJECT_NAME), kiteContext);
 
 		assertEquals(decodeAndExtract(authorization, PROFILE_UID), SIMPLE_VALUE);
 	}
