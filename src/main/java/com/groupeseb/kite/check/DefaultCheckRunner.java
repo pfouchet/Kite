@@ -31,17 +31,17 @@ public class DefaultCheckRunner {
 				matchCount++;
 			}
 
-			if (matchCount > 1) {
-				throw new UnsupportedOperationException("Several (" + matchCount + ") operators match but only one is allowed.");
-			}
-		}
+            if (matchCount > 1) {
+                throw new UnsupportedOperationException("Several (" + matchCount + ") operators match but only one is allowed.");
+            }
+        }
 
-		if (matchCount == 0) {
-			throw new IndexOutOfBoundsException("No matching operator found for '" + operatorName + "'");
-		}
+        if (matchCount == 0) {
+            throw new IndexOutOfBoundsException("No matching operator found for '" + operatorName + "'");
+        }
 
-		return match;
-	}
+        return match;
+    }
 
 	private ICheckMethod getMatchingMethod(String methodName) {
 		ICheckMethod match = null;
@@ -53,63 +53,49 @@ public class DefaultCheckRunner {
 				matchCount++;
 			}
 
-			if (matchCount > 1) {
-				throw new UnsupportedOperationException("Several (" + matchCount + ") operators match but only one match is allowed.");
-			}
-		}
+            if (matchCount > 1) {
+                throw new UnsupportedOperationException("Several (" + matchCount.toString() + ") operators match but only one match is allowed.");
+            }
+        }
 
-		if (matchCount == 0) {
-			throw new IndexOutOfBoundsException("No matching method found for '" + methodName + "'");
-		}
+        if (matchCount == 0) {
+            throw new IndexOutOfBoundsException("No matching method found for '" + methodName + "'");
+        }
 
-		return match;
-	}
+        return match;
+    }
 
 	public void verify(Check check, String responseBody) throws ParseException {
 		log.info("Checking " + check.getDescription() + "...");
 
-		if (check.getSkip()) {
-			log.warn("Check skipped (" + check.getDescription() + ")");
-			return;
-		}
+        if (check.getSkip()) {
+            log.warn("Check skipped (" + check.getDescription() + ")");
+            return;
+        }
 
 		ICheckOperator operator = getMatchingOperator(check.getOperatorName());
 		ICheckMethod method = getMatchingMethod(check.getMethodName());
 
-		Object node = JsonPath.read(responseBody, check.getFieldName());
-		if (check.getForeach()) {
-			Preconditions.checkArgument(node instanceof Iterable, "Using 'forEach' mode for check requires an iterable node.");
+        Object node = JsonPath.read(responseBody, check.getFieldName());
+        if (check.getForeach()) {
+            Preconditions.checkArgument(node instanceof Iterable, "Using 'forEach' mode for check requires an iterable node.");
 
-			@SuppressWarnings({"unchecked", "ConstantConditions"})
-			Iterable nodeList = (Iterable) node;
+            @SuppressWarnings({"unchecked", "ConstantConditions"})
+            Iterable nodeList = (Iterable) node;
 
-			if (check.getMustMatch()) {
-				Preconditions.checkArgument(nodeList.iterator().hasNext(), check.getDescription() + " (No match found but 'mustMatch' was set to true)");
-			}
+            if (check.getMustMatch()) {
+                Preconditions.checkArgument(nodeList.iterator().hasNext(), check.getDescription() + " (No match found but 'mustMatch' was set to true)");
+            }
 
-			for (Object o : nodeList) {
-				operator.apply(method.apply(o, check.getParameters()),
-						parseExpectedValue(check.getExpectedValue(), responseBody),
+            for (Object o : nodeList) {
+	            operator.apply(method.apply(o, check.getParameters()),
+			            check.getExpectedValue(),
 						check.getDescription(), check.getParameters());
-			}
-		} else {
-			operator.apply(method.apply(node, check.getParameters()),
-					parseExpectedValue(check.getExpectedValue(), responseBody),
+            }
+        } else {
+	        operator.apply(method.apply(node, check.getParameters()),
+			        check.getExpectedValue(),
 					check.getDescription(), check.getParameters());
-		}
-	}
-
-	private Object parseExpectedValue(Object expectedValue, String responseBody) {
-//        if (String.class.isAssignableFrom(expectedValue.getClass())) {
-//            Pattern lookupPattern = Pattern.compile("\\{\\{Lookup\\:%\\.(.+)\\}\\}");
-//            Matcher matcher = lookupPattern.matcher(expectedValue.toString());
-//
-//            if (matcher.find()) {
-//                String path = matcher.group(1);
-//                return JsonPath.read(responseBody, path);
-//            }
-//        }
-
-		return expectedValue;
-	}
+        }
+    }
 }

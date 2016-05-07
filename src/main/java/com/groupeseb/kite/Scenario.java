@@ -73,7 +73,7 @@ public class Scenario {
 	@SuppressWarnings("unchecked")
 	private void parseScenario(String scenario) throws IOException, ParseException {
 		Json jsonScenario = new Json(scenario);
-		jsonScenario.checkExistence(new String[]{DESCRIPTION_KEY, COMMANDS_KEY});
+		jsonScenario.checkExistence(DESCRIPTION_KEY, COMMANDS_KEY);
 
 		this.description = jsonScenario.getString(DESCRIPTION_KEY);
 		this.variables = (Map<String, Object>) jsonScenario.getMap(VARIABLE_KEY);

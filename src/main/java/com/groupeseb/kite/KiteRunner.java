@@ -29,7 +29,7 @@ public final class KiteRunner {
 				}
 				return bean.execute(new Scenario(filename), kiteContext);
 			} catch (Exception e) {
-				throw new IllegalStateException("Error on excute kite senario", e);
+				throw new IllegalStateException(e.getMessage(), e);
 			}
 		}
 	}

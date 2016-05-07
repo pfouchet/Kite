@@ -20,7 +20,7 @@ class Command {
 	private final Boolean disabled;
 	private final String verb;
 	private final String uri;
-	private final Json body;
+	private final String body;
 	private final Integer expectedStatus;
 	private final Integer wait;
 	private final Boolean automaticCheck;
@@ -31,21 +31,21 @@ class Command {
 
 	private final Json commandSpecification;
 
-	public Command(Json commandSpecification) {
+	Command(Json commandSpecification) {
 		this.commandSpecification = commandSpecification;
 
-		commandSpecification.checkExistence(new String[]{VERB_KEY, URI_KEY});
+		commandSpecification.checkExistence(VERB_KEY, URI_KEY);
 
 		name = commandSpecification.getString("name");
 		description = commandSpecification.getString("description");
 		verb = commandSpecification.getString(VERB_KEY);
 		uri = commandSpecification.getString(URI_KEY);
 		wait = commandSpecification.getIntegerOrDefault("wait", 0);
-		body = commandSpecification.get("body");
+		body = commandSpecification.formatFieldToString("body");
 		disabled = commandSpecification.getBooleanOrDefault("disabled", false);
 		expectedStatus = commandSpecification.getIntegerOrDefault("expectedStatus", getExpectedStatusByVerb(verb));
 		automaticCheck = commandSpecification.getBooleanOrDefault("automaticCheck",
-		                                                          expectedStatus.toString().startsWith("2") ? true : false);
+				expectedStatus.toString().startsWith("2"));
 		debug = commandSpecification.getBooleanOrDefault("debug", false);
 
 		if (commandSpecification.exists("pagination")) {
@@ -64,7 +64,7 @@ class Command {
 		return checks;
 	}
 
-	private Integer getExpectedStatusByVerb(String string) {
+	private static int getExpectedStatusByVerb(String string) {
 		switch (string) {
 			case "POST":
 				return HttpStatus.SC_CREATED;
@@ -91,7 +91,7 @@ class Command {
 		if (getBody() == null) {
 			return "";
 		}
-        return kiteContext.processPlaceholders(getName(), getBody().toString(),
+        return kiteContext.processPlaceholders(getName(), getBody(),
                 true);
 	}
 

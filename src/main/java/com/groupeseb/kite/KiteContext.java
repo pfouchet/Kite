@@ -10,6 +10,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -68,7 +69,7 @@ public class KiteContext {
 
 	private Map<String, String> getEveryUUIDs(String scenario) {
 		Pattern uuidPattern = Pattern.compile("\\{\\{" + UUIDFunction.NAME
-		                                      + ":(.+?)\\}\\}");
+				+ ":(.+?)\\}\\}");
 		Matcher uuidMatcher = uuidPattern.matcher(scenario);
 
 		Map<String, String> localUuids = new HashMap<>();
@@ -108,7 +109,7 @@ public class KiteContext {
 	private String executeFunctions(String name, String valueWithPlaceHolders,
 	                                boolean jsonEscapeFunctionResult) {
 		Pattern withoutParameters = Pattern.compile("\\{\\{" + name + "\\}\\}",
-		                                            Pattern.CASE_INSENSITIVE);
+				Pattern.CASE_INSENSITIVE);
 
 		if (withoutParameters.matcher(valueWithPlaceHolders).find()) {
 			valueWithPlaceHolders = withoutParameters.matcher(
@@ -116,7 +117,7 @@ public class KiteContext {
 					getFunction(name).apply(new ArrayList<String>(), this));
 		} else {
 			Pattern pattern = Pattern.compile("\\{\\{" + name
-			                                  + "\\:(.+?)\\}\\}", Pattern.CASE_INSENSITIVE);
+					+ "\\:(.+?)\\}\\}", Pattern.CASE_INSENSITIVE);
 			Matcher matcher = pattern.matcher(valueWithPlaceHolders);
 
 			while (matcher.find()) {
@@ -129,12 +130,12 @@ public class KiteContext {
 					// It is necessary to unecape them before using
 					// them in the function
 					String paramValue = StringEscapeUtils.unescapeJson(matcher
-							                                                   .group(i));
+							.group(i));
 					parameters.add(paramValue);
 				}
 
 				String functionResult = getFunction(name).apply(parameters,
-				                                                this);
+						this);
 				if (jsonEscapeFunctionResult) {
 					functionResult = JSONObject.escape(functionResult);
 				}
@@ -170,7 +171,7 @@ public class KiteContext {
 
 		for (Function availableFunction : availableFunctions) {
 			processedValue = executeFunctions(availableFunction.getName(),
-			                                  processedValue, jsonEscapeFunctionResult);
+					processedValue, jsonEscapeFunctionResult);
 		}
 
 		// 'Timestamp' is not implemented like other functions, because that
@@ -184,7 +185,7 @@ public class KiteContext {
 			currentDateString = JSONObject.escape(currentDateString);
 		}
 		processedValue = processedValue.replace("{{Timestamp:Now}}",
-		                                        currentDateString);
+				currentDateString);
 		return processedValue;
 	}
 
@@ -241,38 +242,39 @@ public class KiteContext {
 	 * @return the copy of initial valueWithPlaceholders with function's
 	 * placehoders replaced
 	 */
-	public String processPlaceholders(String commandName,
+	public String processPlaceholders(@Nullable String commandName,
 	                                  String valueWithPlaceholders, boolean jsonEscapeFunctionResult) {
-		String processedValue = new String(valueWithPlaceholders);
+		String processedValue = valueWithPlaceholders;
 
 		// Assign UUID for current command if needed
 		if (commandName != null) {
 			processedValue = processedValue
 					.replace("{{" + UUIDFunction.NAME + "}}", "{{"
-					                                          + UUIDFunction.NAME + ":" + commandName + "}}");
+							+ UUIDFunction.NAME + ":" + commandName + "}}");
 		}
 		// Update UUIDs list to add the one assigned for current command
 		this.uuids.putAll(getEveryUUIDs(processedValue));
 
 		processedValue = applyFunctions(processedValue,
-		                                jsonEscapeFunctionResult);
+				jsonEscapeFunctionResult);
 		return processedValue;
 	}
 
 	public Object processPlaceholders(Object expected) throws ParseException {
 		if (expected instanceof String) {
 			return processPlaceholdersInString((String) expected);
-		} else if (expected instanceof Json) {
-			return processPlaceholdersInJSON((Json) expected);
-		} else if (expected instanceof Boolean) {
-			return expected;
-		} else if (expected instanceof Long) {
-			return expected;
-		} else if (expected instanceof Double) {
-			return expected;
-		} else {
-			throw new NotImplementedException();
 		}
+
+		if (expected instanceof Json) {
+			return processPlaceholdersInJSON((Json) expected);
+		}
+
+		if (expected instanceof Boolean ||
+				expected instanceof Long ||
+				expected instanceof Double) {
+			return expected;
+		}
+		throw new NotImplementedException();
 	}
 
 	public void addBody(String name, String response) {

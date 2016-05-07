@@ -316,15 +316,15 @@ public class DefaultCommandRunner {
 	 * @param kiteContext the creation log related to the command, not null
 	 * @return the body of the request, with placeholders processed and encoded in UTF-8
 	 */
-	private static byte[] getProcessedBodyBytes(Command command,
-	                                            KiteContext kiteContext) {
-		try {
-			return command.getProcessedBody(kiteContext).getBytes(
-					Charset.forName(UTF_8_ENCODING));
-		} catch (RuntimeException e) {
-			fail("Command [" + command.getDescription() + "] failed : "
-					+ e.getMessage());
-			throw e;
-		}
-	}
+    private static byte[] getProcessedBodyBytes(Command command,
+                                                KiteContext kiteContext) {
+        try {
+            return command.getProcessedBody(kiteContext).getBytes(
+                    Charset.forName(UTF_8_ENCODING));
+        } catch (RuntimeException e) {
+            fail("Command [" + command.getDescription() + "] failed : "
+                    + e.getMessage());
+            throw e;
+        }
+    }
 }

@@ -19,6 +19,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class DefaultScenarioRunnerTest {
 	protected static final int SERVICE_PORT = 8089;
@@ -65,7 +66,7 @@ public class DefaultScenarioRunnerTest {
 		KiteRunner.execute("testExecute_02.json");
 
 		verify(postRequestedFor(urlMatching("/myService/muUrl02"))
-				       .withRequestBody(matching(".*124.*")));
+				.withRequestBody(matching(".*124.*")));
 	}
 
 	/**
@@ -79,16 +80,39 @@ public class DefaultScenarioRunnerTest {
 		KiteRunner.execute("testExecute_03.json");
 
 		verify(postRequestedFor(urlMatching("/myService/muUrl02"))
-				       .withRequestBody(matching(".*124.*")));
+				.withRequestBody(matching(".*124.*")));
 	}
 
 	@Test
-	public void testJWTFunction() throws Exception {
+	public void testJWTFunction_04() throws Exception {
 		stubForUrlAndBody(SERVICE_URI + "/urlUsingJwtHeader", 201, "myString00000123");
 
 		KiteRunner.execute("testExecute_04.json");
 
 		verify(postRequestedFor(urlMatching(SERVICE_URI + "/urlUsingJwtHeader"))
-				       .withHeader("Authorization", matching("Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkb21haW5zIjpbeyJrZXkiOiJkb21haW4yIn1dLCJwcm9maWxlVWlkIjoiZmlyc3RVaWQifQ==")));
+				.withHeader("Authorization", matching("Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkb21haW5zIjpbeyJrZXkiOiJkb21haW4yIn1dLCJwcm9maWxlVWlkIjoiZmlyc3RVaWQifQ==")));
+	}
+
+	/**
+	 * update kite context between 2 tests
+	 */
+	@Test
+	public void testKiteContext_05() throws Exception {
+		String myFirstValue = "myString00000123";
+
+		stubForUrlAndBody(SERVICE_URI + "/myFirstUrl", 201, myFirstValue);
+
+		KiteContext kiteContext = KiteRunner.execute("testExecute_05_A.json");
+
+		assertThat(kiteContext.getBody("cmdA")).isEqualTo(myFirstValue);
+
+		String mySecondeValue = "myString00000999";
+		kiteContext.addBody("cmdA", mySecondeValue);
+
+		stubForUrlAndBody(SERVICE_URI + "/mySecondeUrl", 201, myFirstValue);
+		KiteRunner.execute("testExecute_05_B.json", kiteContext);
+
+		verify(postRequestedFor(urlMatching(SERVICE_URI + "/mySecondeUrl"))
+				.withRequestBody(matching(mySecondeValue)));
 	}
 }

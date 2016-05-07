@@ -1,0 +1,11 @@
+{
+	"description": "get http operation",
+	"commands": [
+		{
+			"verb": "POST",
+			"uri": "/myFirstUrl",
+			"automaticCheck": false,
+		  "name":"cmdA"
+		}
+	]
+}

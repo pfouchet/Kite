@@ -33,39 +33,15 @@ public class LookupFunction extends Function {
 
 	@Override
 	public String apply(List<String> parameters, KiteContext kiteContext) {
-		String parameter = parameters.get(0);
-		Matcher matcher = ADDITINAL_FUNCTION_PATTERN.matcher(parameter);
+		String input = parameters.get(0);
+		Matcher matcher = ADDITINAL_FUNCTION_PATTERN.matcher(input);
 		boolean hasAdditinalFunction = matcher.matches();
+		String parameter = hasAdditinalFunction ? matcher.group(1) : input;
+		String fieldValue = getFieldValue(kiteContext, parameter);
 		if (hasAdditinalFunction) {
-			parameter = matcher.group(1);
+			return applyAddtionalFunction(fieldValue, matcher.group(2));
 		}
-
-		String objectName = parameter.split("\\.")[0];
-		String field = parameter.replace(objectName + '.', "");
-
-		if (kiteContext.getBody(objectName) == null) {
-			fail(String
-					     .format("No payload found for %s. Are you sure any request name %s was performed ?",
-					             objectName, objectName));
-		}
-
-		try {
-			Object readField = JsonPath.read(kiteContext.getBody(objectName), field);
-			if (readField == null) {
-				fail(String.format("Lookup : Could not get field [%s] for object %s", field, objectName));
-			}
-			String fieldValue = readField.toString();
-			if (hasAdditinalFunction) {
-				String additionalParameter = matcher.group(2);
-				return applyAddtionalFunction(fieldValue, additionalParameter);
-			}
-			return fieldValue;
-		} catch (PathNotFoundException e) {
-			throw new IllegalArgumentException(
-					String.format(
-							"Cannot apply [LookupFunction]: path not found [%s], on object named [%s]",
-							field, objectName), e);
-		}
+		return fieldValue;
 	}
 
 	private String applyAddtionalFunction(String input, String additionalParameter) {
@@ -74,7 +50,33 @@ public class LookupFunction extends Function {
 				return additionalLookupFunction.apply(input, additionalParameter);
 			}
 		}
-		fail("Cannot find AdditionalLookupFunction for : " + additionalParameter);
-		return null;
+		throw new IllegalArgumentException("Cannot find AdditionalLookupFunction for : " + additionalParameter);
+	}
+
+	static String getFieldValue(KiteContext kiteContext, String parameter) {
+		String objectName = parameter.split("\\.")[0];
+		String body = kiteContext.getBody(objectName);
+		if (body == null) {
+			fail(String
+					.format("No payload found for %s. Are you sure any request name %s was performed ?",
+							objectName, objectName));
+		}
+		if (!parameter.contains(".")) {
+			return body;
+		}
+		String field = parameter.replace(objectName + '.', "");
+
+		try {
+			 Object readField = JsonPath.read(body, field);
+			if (readField == null) {
+				fail(String.format("Lookup : Could not get field [%s] for object %s", field, objectName));
+			}
+			return readField.toString();
+		} catch (PathNotFoundException e) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Cannot apply [LookupFunction]: path not found [%s], on object named [%s]",
+							field, objectName), e);
+		}
 	}
 }
