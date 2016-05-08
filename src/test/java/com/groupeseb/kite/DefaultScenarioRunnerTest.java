@@ -1,9 +1,13 @@
 package com.groupeseb.kite;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.jayway.restassured.RestAssured;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -24,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class DefaultScenarioRunnerTest {
 	protected static final int SERVICE_PORT = 8089;
 	protected static final String SERVICE_URI = "/myService";
+	private static final ObjectMapper OBJECT_MAPPER = KiteContext.initObjectMapper();
 
 	private WireMockServer wireMockServer;
 	private WireMock wireMock;
@@ -47,10 +52,10 @@ public class DefaultScenarioRunnerTest {
 	}
 
 
-	private static void stubForUrlAndBody(String url, int returnCode, @Nullable String retrunBody) {
+	private static void stubForUrlAndBody(String url, int returnCode, @Nullable Object retrunBody) throws JsonProcessingException {
 		ResponseDefinitionBuilder responseDefBuilder = aResponse().withStatus(returnCode);
 		if (retrunBody != null) {
-			responseDefBuilder.withBody(retrunBody);
+			responseDefBuilder.withBody(OBJECT_MAPPER.writeValueAsString(retrunBody));
 		}
 		stubFor(post(urlEqualTo(url)).willReturn(responseDefBuilder));
 	}
@@ -98,21 +103,30 @@ public class DefaultScenarioRunnerTest {
 	 */
 	@Test
 	public void testKiteContext_05() throws Exception {
-		String myFirstValue = "myString00000123";
+		String value1 = "myString00000123";
 
-		stubForUrlAndBody(SERVICE_URI + "/myFirstUrl", 201, myFirstValue);
+		stubForUrlAndBody(SERVICE_URI + "/myFirstUrl", 201, new FieldClass(value1));
 
 		KiteContext kiteContext = KiteRunner.execute("testExecute_05_A.json");
 
-		assertThat(kiteContext.getBody("cmdA")).isEqualTo(myFirstValue);
+		assertThat(kiteContext.getBodyAs("cmdA", FieldClass.class).getField()).isEqualTo(value1);
 
-		String mySecondeValue = "myString00000999";
-		kiteContext.addBody("cmdA", mySecondeValue);
+		String value2 = "myString00000999";
+		kiteContext.addBody("cmdA", value2);
 
-		stubForUrlAndBody(SERVICE_URI + "/mySecondeUrl", 201, myFirstValue);
+		String value3 = "myString00000324";
+		kiteContext.addBodyAsJsonString("cmdAA", new FieldClass(value3));
+
+		stubForUrlAndBody(SERVICE_URI + "/mySecondeUrl", 201, value1);
 		KiteRunner.execute("testExecute_05_B.json", kiteContext);
 
 		verify(postRequestedFor(urlMatching(SERVICE_URI + "/mySecondeUrl"))
-				.withRequestBody(matching(mySecondeValue)));
+				.withRequestBody(matching(value2 + value3)));
+	}
+
+	@AllArgsConstructor
+	@Data
+	static class FieldClass {
+		private final Object field;
 	}
 }

@@ -1,8 +1,12 @@
 package com.groupeseb.kite;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,6 +18,13 @@ public class KiteContext {
 	private final Map<String, String> variables = new HashMap<>();
 	private final Map<String, String> bodies = new HashMap<>();
 	private final Map<String, Object> objectVariables = new HashMap<>();
+	private static final ObjectMapper OBJECT_MAPPER = initObjectMapper();
+
+	static ObjectMapper initObjectMapper() {
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+		return objectMapper;
+	}
 
 	public void extend(KiteContext kiteContext) {
 		this.uuids.putAll(kiteContext.uuids);
@@ -46,7 +57,15 @@ public class KiteContext {
 		return this.bodies.get(objectName);
 	}
 
+	public <T> T getBodyAs(String objectName, Class<T> clazz) throws IOException {
+		return OBJECT_MAPPER.readValue(this.bodies.get(objectName), clazz);
+	}
+
 	public void addBody(String name, String response) {
 		this.bodies.put(name, response);
+	}
+
+	public void addBodyAsJsonString(String name, Object object) throws JsonProcessingException {
+		this.bodies.put(name, OBJECT_MAPPER.writeValueAsString(object));
 	}
 }
