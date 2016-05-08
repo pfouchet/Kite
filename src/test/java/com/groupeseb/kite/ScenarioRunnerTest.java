@@ -25,7 +25,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DefaultScenarioRunnerTest {
+public class ScenarioRunnerTest {
 	protected static final int SERVICE_PORT = 8089;
 	protected static final String SERVICE_URI = "/myService";
 	private static final ObjectMapper OBJECT_MAPPER = KiteContext.initObjectMapper();
@@ -68,7 +68,7 @@ public class DefaultScenarioRunnerTest {
 		stubForUrlAndBody(SERVICE_URI + "/muUrl01", 201, "myString00000123");
 		stubForUrlAndBody(SERVICE_URI + "/muUrl02", 201, "OK");
 
-		KiteRunner.execute("testExecute_02.json");
+		KiteRunner.getInstance().execute("testExecute_02.json");
 
 		verify(postRequestedFor(urlMatching("/myService/muUrl02"))
 				.withRequestBody(matching(".*124.*")));
@@ -82,7 +82,7 @@ public class DefaultScenarioRunnerTest {
 		stubForUrlAndBody(SERVICE_URI + "/muUrl01", 201, "myString00000123");
 		stubForUrlAndBody(SERVICE_URI + "/muUrl02", 201, "OK");
 
-		KiteRunner.execute("testExecute_03.json");
+		KiteRunner.getInstance().execute("testExecute_03.json");
 
 		verify(postRequestedFor(urlMatching("/myService/muUrl02"))
 				.withRequestBody(matching(".*124.*")));
@@ -92,7 +92,7 @@ public class DefaultScenarioRunnerTest {
 	public void testJWTFunction_04() throws Exception {
 		stubForUrlAndBody(SERVICE_URI + "/urlUsingJwtHeader", 201, "myString00000123");
 
-		KiteRunner.execute("testExecute_04.json");
+		KiteRunner.getInstance().execute("testExecute_04.json");
 
 		verify(postRequestedFor(urlMatching(SERVICE_URI + "/urlUsingJwtHeader"))
 				.withHeader("Authorization", matching("Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkb21haW5zIjpbeyJrZXkiOiJkb21haW4yIn1dLCJwcm9maWxlVWlkIjoiZmlyc3RVaWQifQ==")));
@@ -107,7 +107,8 @@ public class DefaultScenarioRunnerTest {
 
 		stubForUrlAndBody(SERVICE_URI + "/myFirstUrl", 201, new FieldClass(value1));
 
-		KiteContext kiteContext = KiteRunner.execute("testExecute_05_A.json");
+		ScenarioRunner scenarioRunner = KiteRunner.getInstance();
+		KiteContext kiteContext = scenarioRunner.execute("testExecute_05_A.json");
 
 		assertThat(kiteContext.getBodyAs("cmdA", FieldClass.class).getField()).isEqualTo(value1);
 
@@ -118,7 +119,7 @@ public class DefaultScenarioRunnerTest {
 		kiteContext.addBodyAsJsonString("cmdAA", new FieldClass(value3));
 
 		stubForUrlAndBody(SERVICE_URI + "/mySecondeUrl", 201, value1);
-		KiteRunner.execute("testExecute_05_B.json", kiteContext);
+		scenarioRunner.execute("testExecute_05_B.json", kiteContext);
 
 		verify(postRequestedFor(urlMatching(SERVICE_URI + "/mySecondeUrl"))
 				.withRequestBody(matching(value2 + value3)));

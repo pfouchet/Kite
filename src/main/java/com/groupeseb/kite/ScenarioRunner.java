@@ -5,26 +5,29 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 
 
 @Slf4j
 @Component
-public class DefaultScenarioRunner {
+public class ScenarioRunner {
 	private final DefaultCommandRunner defaultCommandRunner;
 	private final Collection<Function> functions;
 
 	@Autowired
-	DefaultScenarioRunner(Collection<Function> functions, DefaultCommandRunner defaultCommandRunner) {
+	ScenarioRunner(Collection<Function> functions, DefaultCommandRunner defaultCommandRunner) {
 		this.functions = functions;
 		this.defaultCommandRunner = defaultCommandRunner;
 	}
 
-	KiteContext execute(Scenario scenario, @Nullable KiteContext kiteContext) throws Exception {
-		KiteContext nonNullKiteContext = kiteContext == null ? new KiteContext() : kiteContext;
-		return executeWithContext(scenario, new ContextProcessor(functions, nonNullKiteContext)).getKiteContext();
+	public KiteContext execute(String fileName, KiteContext kiteContext) throws Exception {
+		ContextProcessor context = new ContextProcessor(functions, kiteContext);
+		return executeWithContext(new Scenario(fileName), context).getKiteContext();
+	}
+
+	public KiteContext execute(String fileName) throws Exception {
+		return execute(fileName, new KiteContext());
 	}
 
 	ContextProcessor executeWithContext(Scenario scenario, ContextProcessor context) throws Exception {
