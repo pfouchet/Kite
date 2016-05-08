@@ -80,7 +80,7 @@ public class DefaultCommandRunner {
 				patch(command, context);
 				break;
 			default:
-				throw new RuntimeException(String.format("Verbe %s is not supported", command.getVerb().toUpperCase()));
+				throw new IllegalArgumentException(String.format("Verbe %s is not supported", command.getVerb().toUpperCase()));
 		}
 
 		log.info('[' + command.getName() + "] OK");
@@ -119,18 +119,22 @@ public class DefaultCommandRunner {
 		runChecks(command.getChecks(context), response);
 
 		if (command.getAutomaticCheck()) {
-			String location = postResponse.getHeader("Location");
-			log.info("Checking resource: " + location + "...");
-			given().header("Accept-Encoding", UTF_8_ENCODING)
-					.headers(command.getProcessedHeaders(context))
-					.expect().statusCode(HttpStatus.SC_OK)
-					.when().get(location);
-
-			if (command.getName() != null) {
-				kiteContext.addLocation(command.getName(), location);
-			}
+			doCheck(command, context, postResponse.getHeader("Location"), kiteContext);
 		}
 	}
+
+	private void doCheck(Command command, ContextProcessor context, String location, KiteContext kiteContext) {
+		log.info("Checking resource: " + location + "...");
+		given().header("Accept-Encoding", UTF_8_ENCODING)
+				.headers(command.getProcessedHeaders(context))
+				.expect().statusCode(HttpStatus.SC_OK)
+				.when().get(location);
+
+		if (command.getName() != null) {
+			kiteContext.addLocation(command.getName(), location);
+		}
+	}
+
 
 	void patch(Command command, ContextProcessor context) throws ParseException {
 		log.info('['
@@ -165,22 +169,11 @@ public class DefaultCommandRunner {
 		runChecks(command.getChecks(context), response);
 
 		if (command.getAutomaticCheck()) {
-			String location = patchResponse.getHeader("Location");
-			log.info("Checking resource: " + location + "...");
-			given().header("Accept-Encoding", UTF_8_ENCODING)
-					.headers(command.getProcessedHeaders(context))
-					.expect().statusCode(HttpStatus.SC_OK)
-					.when().get(location);
-
-			if (command.getName() != null) {
-				kiteContext.addLocation(command.getName(), location);
-			}
+			doCheck(command, context, patchResponse.getHeader("Location"), kiteContext);
 		}
 	}
 
 	private static String performGetRequest(Command command, ContextProcessor context, @Nullable HttpParams params) throws IOException {
-		CloseableHttpClient httpClient = HttpClients.createDefault();
-
 		String requestURI = command.getProcessedURI(context);
 		if (!command.getProcessedURI(context).contains("http://") && !command.getProcessedURI(context).contains(
 				"https://")) {
@@ -199,25 +192,25 @@ public class DefaultCommandRunner {
 			httpget.addHeader(header.getKey(), header.getValue());
 		}
 
-		CloseableHttpResponse response = httpClient.execute(httpget);
+		try (CloseableHttpClient httpClient = HttpClients.createDefault();
+		     CloseableHttpResponse response = httpClient.execute(httpget)) {
 
-		assertEquals(command.getDescription()
-						+ " | "
-						+ command.getExpectedStatus()
-						+ " expected but "
-						+ response.getStatusLine().getStatusCode()
-						+ " received.",
-				(int) command.getExpectedStatus(), response.getStatusLine().getStatusCode());
+			assertEquals(command.getDescription()
+							+ " | "
+							+ command.getExpectedStatus()
+							+ " expected but "
+							+ response.getStatusLine().getStatusCode()
+							+ " received.",
+					(int) command.getExpectedStatus(), response.getStatusLine().getStatusCode());
 
-		try {
 			String body = EntityUtils.toString(response.getEntity());
 			KiteContext kiteContext = context.getKiteContext();
 			kiteContext.addBody("%", body);
 			if (command.getName() != null) {
 				kiteContext.addBody(command.getName(), body);
 			}
-
 			return body;
+
 		} catch (Exception ignored) {
 			return "";
 		}
@@ -316,19 +309,19 @@ public class DefaultCommandRunner {
 	 * Processing is done using {@link Command#getProcessedBody(ContextProcessor)} prior encoding to
 	 * bytes.
 	 *
-	 * @param command     the command to get body from, not null
+	 * @param command the command to get body from, not null
 	 * @param context the creation log related to the command, not null
 	 * @return the body of the request, with placeholders processed and encoded in UTF-8
 	 */
-    private static byte[] getProcessedBodyBytes(Command command,
-                                                ContextProcessor context) {
-        try {
-            return command.getProcessedBody(context).getBytes(
-                    Charset.forName(UTF_8_ENCODING));
-        } catch (RuntimeException e) {
-            fail("Command [" + command.getDescription() + "] failed : "
-                    + e.getMessage());
-            throw e;
-        }
-    }
+	private static byte[] getProcessedBodyBytes(Command command,
+	                                            ContextProcessor context) {
+		try {
+			return command.getProcessedBody(context).getBytes(
+					Charset.forName(UTF_8_ENCODING));
+		} catch (RuntimeException e) {
+			fail("Command [" + command.getDescription() + "] failed : "
+					+ e.getMessage());
+			throw e;
+		}
+	}
 }

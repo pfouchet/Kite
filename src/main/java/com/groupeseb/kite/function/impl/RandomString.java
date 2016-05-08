@@ -11,10 +11,12 @@ import java.util.UUID;
 @Slf4j
 @Component
 public class RandomString extends Function {
+    @Override
     public String getName() {
         return "RandomString";
     }
 
+    @Override
     public String apply(List<String> parameters, ContextProcessor context) {
         return UUID.randomUUID().toString();
     }

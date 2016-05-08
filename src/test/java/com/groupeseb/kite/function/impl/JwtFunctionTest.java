@@ -9,6 +9,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import org.testng.annotations.Test;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 
 import static com.groupeseb.kite.DataProvider.newInternalContext;
@@ -22,6 +23,7 @@ public class JwtFunctionTest {
 	private static final String ROOT_OBJECT_NAME = "authorization";
 	private final Function function = new JwtFunction();
 
+	@Nullable
 	private static String decodeAndExtract(String jwt, String key) throws ParseException {
 		return new Json(new String(new Base64().decode(jwt.split("\\.")[1].getBytes(Charsets.UTF_8)),
 		                           Charsets.UTF_8)).getString(key);

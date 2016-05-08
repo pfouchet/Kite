@@ -1,5 +1,5 @@
 {
-	"description": "get http operation",
+	"description": "POST http operation (1)",
 	"commands": [
 		{
 			"verb": "POST",

@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
+
 @Getter
 class Command {
 	private static final String VERB_KEY = "verb";
@@ -27,7 +29,7 @@ class Command {
 	private final Boolean debug;
 	private final Map<String, String> headers;
 
-	private Pagination pagination;
+	private Pagination pagination = null;
 
 	private final Json commandSpecification;
 
@@ -38,7 +40,7 @@ class Command {
 
 		name = commandSpecification.getString("name");
 		description = commandSpecification.getString("description");
-		verb = commandSpecification.getString(VERB_KEY);
+		verb = requireNonNull(commandSpecification.getString(VERB_KEY));
 		uri = commandSpecification.getString(URI_KEY);
 		wait = commandSpecification.getIntegerOrDefault("wait", 0);
 		body = commandSpecification.formatFieldToString("body");
@@ -49,7 +51,7 @@ class Command {
 		debug = commandSpecification.getBooleanOrDefault("debug", false);
 
 		if (commandSpecification.exists("pagination")) {
-			pagination = new Pagination(commandSpecification.get("pagination"));
+			pagination = new Pagination(requireNonNull(commandSpecification.get("pagination")));
 		}
 
 		headers = commandSpecification.getMap("headers");
@@ -58,7 +60,8 @@ class Command {
 	public List<Check> getChecks(ContextProcessor context) throws ParseException {
 		List<Check> checks = new ArrayList<>();
 		for (Integer i = 0; i < commandSpecification.getLength("checks"); ++i) {
-			checks.add(new Check(commandSpecification.get("checks").get(i), context));
+			Json json = requireNonNull(commandSpecification.get("checks"));
+			checks.add(new Check(json.get(i), context));
 		}
 
 		return checks;
@@ -84,15 +87,15 @@ class Command {
 	}
 
 	String getProcessedURI(ContextProcessor context) {
-        return context.processPlaceholders(getName(), getUri(), false);
+		return context.processPlaceholders(getName(), getUri(), false);
 	}
 
 	String getProcessedBody(ContextProcessor context) {
 		if (getBody() == null) {
 			return "";
 		}
-        return context.processPlaceholders(getName(), getBody(),
-                true);
+		return context.processPlaceholders(getName(), getBody(),
+				true);
 	}
 
 	Map<String, String> getProcessedHeaders(ContextProcessor context) {
@@ -100,8 +103,8 @@ class Command {
 
 		for (Map.Entry<String, String> entry : processedHeaders.entrySet()) {
 			processedHeaders.put(entry.getKey(),
-                    context.processPlaceholders(getName(),
-                            processedHeaders.get(entry.getKey()), false));
+					context.processPlaceholders(getName(),
+							processedHeaders.get(entry.getKey()), false));
 		}
 
 		if (!processedHeaders.containsKey("Accept")) {

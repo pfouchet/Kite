@@ -22,11 +22,11 @@ import static java.util.Objects.requireNonNull;
 public class Json {
 	private final JSONParser parser = new JSONParser();
 	@Nullable
-	private JSONObject rootObject;
+	private JSONObject rootObject = null;
 
 	@Nullable
-	private JSONArray rootArray;
-	private String json;
+	private JSONArray rootArray = null;
+	private String json = null;
 
 	/**
 	 * @param r The response to parse
@@ -235,7 +235,7 @@ public class Json {
 	}
 
 	public <T> Iterator getIterable() {
-		return rootArray.iterator();
+		return getRootArray().iterator();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -257,11 +257,11 @@ public class Json {
 
 
 	public JSONObject getRootObject() {
-		return requireNonNull(rootObject,"rootObject must be not null");
+		return requireNonNull(rootObject, "rootObject must be not null");
 	}
 
 	public JSONArray getRootArray() {
-		return requireNonNull(rootArray,"rootArray must be not null");
+		return requireNonNull(rootArray, "rootArray must be not null");
 	}
 
 	public String getStringOrDefault(String key, String defaultValue) {

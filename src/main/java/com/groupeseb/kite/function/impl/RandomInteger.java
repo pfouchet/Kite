@@ -13,6 +13,7 @@ import java.util.Random;
 public class RandomInteger extends Function {
 	private final Random randomGenerator = new Random();
 
+	@Override
 	public String getName() {
 		return "RandomInteger";
 	}

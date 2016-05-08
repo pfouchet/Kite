@@ -1,12 +1,11 @@
 package com.groupeseb.kite.check.impl.operators;
 
-import static org.testng.Assert.assertTrue;
-
-import org.springframework.stereotype.Component;
-
 import com.google.common.base.Preconditions;
 import com.groupeseb.kite.Json;
 import com.groupeseb.kite.check.ICheckOperator;
+import org.springframework.stereotype.Component;
+
+import static org.testng.Assert.assertTrue;
 
 /**
  * Verifies that 2 objects are different, using natural comparison algorithm (objects must
@@ -18,8 +17,8 @@ import com.groupeseb.kite.check.ICheckOperator;
 @Component
 public class NotEqualsOperator implements ICheckOperator {
     @Override
-    public Boolean match(String name) {
-        return name.equalsIgnoreCase("notequals");
+    public boolean match(String name) {
+        return "notequals".equalsIgnoreCase(name);
     }
 
 

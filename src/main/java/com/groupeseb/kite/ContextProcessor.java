@@ -31,14 +31,13 @@ public class ContextProcessor {
 		this.kiteContext = kiteContext;
 	}
 
-	@Nullable
 	public Function getFunction(String name) {
 		for (Function availableFunction : availableFunctions) {
 			if (availableFunction.match(name)) {
 				return availableFunction;
 			}
 		}
-		return null;
+		throw new IllegalArgumentException("Cannot find function with name :" + name);
 	}
 
 	/**
@@ -56,15 +55,15 @@ public class ContextProcessor {
 	                                boolean jsonEscapeFunctionResult) {
 		Pattern withoutParameters = Pattern.compile("\\{\\{" + name + "\\}\\}",
 				Pattern.CASE_INSENSITIVE);
-
-		if (withoutParameters.matcher(valueWithPlaceHolders).find()) {
-			valueWithPlaceHolders = withoutParameters.matcher(
-					valueWithPlaceHolders).replaceAll(
+		String localValueWithPlaceHolders = valueWithPlaceHolders;
+		if (withoutParameters.matcher(localValueWithPlaceHolders).find()) {
+			localValueWithPlaceHolders = withoutParameters.matcher(
+					localValueWithPlaceHolders).replaceAll(
 					getFunction(name).apply(new ArrayList<String>(), this));
 		} else {
 			Pattern pattern = Pattern.compile("\\{\\{" + name
 					+ "\\:(.+?)\\}\\}", Pattern.CASE_INSENSITIVE);
-			Matcher matcher = pattern.matcher(valueWithPlaceHolders);
+			Matcher matcher = pattern.matcher(localValueWithPlaceHolders);
 
 			while (matcher.find()) {
 				List<String> parameters = new ArrayList<>();
@@ -86,11 +85,11 @@ public class ContextProcessor {
 					functionResult = JSONObject.escape(functionResult);
 				}
 
-				valueWithPlaceHolders = valueWithPlaceHolders.replace(
+				localValueWithPlaceHolders = localValueWithPlaceHolders.replace(
 						matcher.group(0), functionResult);
 			}
 		}
-		return valueWithPlaceHolders;
+		return localValueWithPlaceHolders;
 	}
 
 	/**
@@ -113,7 +112,7 @@ public class ContextProcessor {
 	 */
 	String applyFunctions(String valueWithPlaceholders,
 	                      boolean jsonEscapeFunctionResult) {
-		String processedValue = new String(valueWithPlaceholders);
+		String processedValue = valueWithPlaceholders;
 
 		for (Function availableFunction : availableFunctions) {
 			processedValue = executeFunctions(availableFunction.getName(),
@@ -214,7 +213,7 @@ public class ContextProcessor {
 		if (commandName != null) {
 			processedValue = processedValue
 					.replace("{{" + UUIDFunction.NAME + "}}", "{{"
-							+ UUIDFunction.NAME + ":" + commandName + "}}");
+							+ UUIDFunction.NAME + ':' + commandName + "}}");
 		}
 		// Update UUIDs list to add the one assigned for current command
 		this.kiteContext.getUuids().putAll(getEveryUUIDs(processedValue));

@@ -1,1 +1,1 @@
-outputValue=parseInt(inputValue.substring(13,16))+1
+outputValue=parseInt(inputValue.substring(13,16))+1;

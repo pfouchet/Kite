@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.groupeseb.kite.function.impl;
 
@@ -13,9 +13,8 @@ import java.util.List;
 /**
  * Function that replaces {{Variable:variableName}} placeholders by the value the variable named
  * "variableName" in the creationLog
- * 
- * @author jcanquelain
  *
+ * @author jcanquelain
  */
 @Component
 public class VariableFunction extends Function {
@@ -29,10 +28,9 @@ public class VariableFunction extends Function {
 		Preconditions.checkArgument(parameters.size() == 1,
 				"variableName is needed for [%s] function", getName());
 		String variableName = parameters.get(0);
-		String variableValue =context.getKiteContext().getVariableValue(variableName);
-		Preconditions.checkNotNull(variableValue, "No value corresponds to variable named [%s]",
+		String variableValue = context.getKiteContext().getVariableValue(variableName);
+		return Preconditions.checkNotNull(variableValue, "No value corresponds to variable named [%s]",
 				variableName);
-		return variableValue;
 	}
 
 }

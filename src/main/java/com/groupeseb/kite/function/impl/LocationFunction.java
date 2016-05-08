@@ -10,9 +10,8 @@ import java.util.List;
 /**
  * Function that replaces {{Location:objectName}} placeholders by the full URI of the object
  * identified by <code>objectName</code> in the creationLog
- * 
- * @author jcanquelain
  *
+ * @author jcanquelain
  */
 @Component
 public class LocationFunction extends Function {
@@ -26,9 +25,7 @@ public class LocationFunction extends Function {
 		Preconditions.checkArgument(parameters.size() == 1,
 				"objetName parameter is needed for [%s] function", getName());
 		String objectName = parameters.get(0);
-		String locationURI =context.getKiteContext().getLocations().get(objectName);
-		Preconditions.checkNotNull(locationURI, "No location corresponds to object named [%s]",
-				objectName);
-		return locationURI;
+		String locationURI = context.getKiteContext().getLocations().get(objectName);
+		return Preconditions.checkNotNull(locationURI, "No location corresponds to object named [%s]", objectName);
 	}
 }

@@ -37,7 +37,7 @@ public class DefaultCheckRunner {
         }
 
         if (matchCount == 0) {
-            throw new IndexOutOfBoundsException("No matching operator found for '" + operatorName + "'");
+            throw new IndexOutOfBoundsException("No matching operator found for '" + operatorName + '\'');
         }
 
         return match;
@@ -54,12 +54,12 @@ public class DefaultCheckRunner {
 			}
 
             if (matchCount > 1) {
-                throw new UnsupportedOperationException("Several (" + matchCount.toString() + ") operators match but only one match is allowed.");
+                throw new UnsupportedOperationException("Several (" + matchCount + ") operators match but only one match is allowed.");
             }
         }
 
         if (matchCount == 0) {
-            throw new IndexOutOfBoundsException("No matching method found for '" + methodName + "'");
+            throw new IndexOutOfBoundsException("No matching method found for '" + methodName + '\'');
         }
 
         return match;
@@ -69,7 +69,7 @@ public class DefaultCheckRunner {
 		log.info("Checking " + check.getDescription() + "...");
 
         if (check.getSkip()) {
-            log.warn("Check skipped (" + check.getDescription() + ")");
+            log.warn("Check skipped (" + check.getDescription() + ')');
             return;
         }
 

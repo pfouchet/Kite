@@ -20,10 +20,10 @@ public interface ICheckOperator {
 	 * Verifies if operator name specified in check ({@link Check#getOperatorName()}) matches this
 	 * operator
 	 * 
-	 * @param name
+	 * @param name method name
 	 * @return true if name matches (should be case-insensitive)
 	 */
-    Boolean match(String name);
+    boolean match(String name);
 
 	/**
 	 * Verify assertion with operator

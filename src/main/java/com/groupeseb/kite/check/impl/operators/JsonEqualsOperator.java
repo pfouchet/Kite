@@ -1,11 +1,10 @@
 package com.groupeseb.kite.check.impl.operators;
 
-import java.util.LinkedList;
-import java.util.List;
-
+import com.google.common.base.Preconditions;
+import com.groupeseb.kite.Json;
+import com.groupeseb.kite.check.ICheckOperator;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
-
 import org.apache.commons.lang3.EnumUtils;
 import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -13,9 +12,8 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.stereotype.Component;
 import org.testng.Assert;
 
-import com.google.common.base.Preconditions;
-import com.groupeseb.kite.Json;
-import com.groupeseb.kite.check.ICheckOperator;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * This operator verify similarity between 2 complex JSON objects (<b>ignoring formatting and order
@@ -75,16 +73,16 @@ import com.groupeseb.kite.check.ICheckOperator;
 public class JsonEqualsOperator implements ICheckOperator {
 
 	@Override
-	public Boolean match(String name) {
-		return name.equalsIgnoreCase("jsonEquals");
+	public boolean match(String name) {
+		return "jsonEquals".equalsIgnoreCase(name);
 	}
 
 	@Override
 	public void apply(Object value, Object expected, String description, Json parameters) {
 		try {
-			Object modeString = parameters.getString("mode");
-			Preconditions.checkArgument(modeString != null && modeString instanceof String
-					&& EnumUtils.isValidEnum(JSONCompareMode.class, (String) modeString),
+			String modeString = parameters.getString("mode");
+			Preconditions.checkArgument(modeString != null
+					&& EnumUtils.isValidEnum(JSONCompareMode.class, modeString),
 					"%s check: specify 'mode' for jsonEquals operator. Available modes are: %s",
 					description, getAvailableJSONCompareMode());
 
@@ -111,7 +109,7 @@ public class JsonEqualsOperator implements ICheckOperator {
 			 */
 			JSONAssert.assertEquals(expected.toString(), value.toString(),
 					JSONCompareMode.valueOf((String) modeString));
-		} catch (JSONException e) {
+		} catch (JSONException ignored) {
 			throw new RuntimeException(String.format(
 							"%s check: Malformed JSON to compare. Should never happen (a check is made before). Value: %s , expected: %s ",
 							description, value, expected));
@@ -130,10 +128,9 @@ public class JsonEqualsOperator implements ICheckOperator {
 	 * Returns a list of available JSON compare mode ( {@link JSONCompareMode#values()} cannot be
 	 * used because toString returns specific class attributes instead of enum 'names'
 	 * {@link JSONCompareMode#name()})
-	 * 
-	 * @return
+	 *
 	 */
-	private List<String> getAvailableJSONCompareMode() {
+	private static List<String> getAvailableJSONCompareMode() {
 		List<String> availableMethods = new LinkedList<>();
 		for (JSONCompareMode aMode : JSONCompareMode.values()){
 			availableMethods.add(aMode.name());

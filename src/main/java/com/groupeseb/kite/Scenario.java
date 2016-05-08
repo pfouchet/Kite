@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Possible root values :
@@ -84,9 +85,10 @@ public class Scenario {
 			dependencies.add(new Scenario(dependency));
 		}
 
-		Integer commandCount = jsonScenario.getLength(COMMANDS_KEY);
-		for (Integer i = 0; i < commandCount; ++i) {
-			commands.add(new Command(jsonScenario.get(COMMANDS_KEY).get(i)));
+		int commandCount = jsonScenario.getLength(COMMANDS_KEY);
+		for (int i = 0; i < commandCount; ++i) {
+			Json json = Objects.requireNonNull(jsonScenario.get(COMMANDS_KEY));
+			commands.add(new Command(json.get(i)));
 		}
 	}
 
