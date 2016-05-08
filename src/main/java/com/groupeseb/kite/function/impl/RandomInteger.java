@@ -1,6 +1,6 @@
 package com.groupeseb.kite.function.impl;
 
-import com.groupeseb.kite.KiteContext;
+import com.groupeseb.kite.ContextProcessor;
 import com.groupeseb.kite.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -17,7 +17,8 @@ public class RandomInteger extends Function {
 		return "RandomInteger";
 	}
 
-	public String apply(List<String> parameters, KiteContext kiteContext) {
+	@Override
+	public String apply(List<String> parameters, ContextProcessor context) {
 		int intGenerated = randomGenerator.nextInt();
 		while (intGenerated < 0) {
 			intGenerated = randomGenerator.nextInt();

@@ -47,7 +47,7 @@ public class DefaultCommandRunner {
 		this.defaultCheckRunner = defaultCheckRunner;
 	}
 
-	void execute(Command command, KiteContext kiteContext) throws Exception {
+	void execute(Command command, ContextProcessor context) throws Exception {
 
 		if (command.getDescription() != null) {
 			log.info(command.getDescription() + "...");
@@ -65,19 +65,19 @@ public class DefaultCommandRunner {
 
 		switch (command.getVerb().toUpperCase()) {
 			case POST:
-				post(command, kiteContext);
+				post(command, context);
 				break;
 			case GET:
-				get(command, kiteContext);
+				get(command, context);
 				break;
 			case PUT:
-				put(command, kiteContext);
+				put(command, context);
 				break;
 			case DELETE:
-				delete(command, kiteContext);
+				delete(command, context);
 				break;
 			case PATCH:
-				patch(command, kiteContext);
+				patch(command, context);
 				break;
 			default:
 				throw new RuntimeException(String.format("Verbe %s is not supported", command.getVerb().toUpperCase()));
@@ -86,27 +86,28 @@ public class DefaultCommandRunner {
 		log.info('[' + command.getName() + "] OK");
 	}
 
-	void post(Command command, KiteContext kiteContext) throws ParseException {
+	void post(Command command, ContextProcessor context) throws ParseException {
 		log.info('['
 				+ command.getName()
 				+ "] POST "
-				+ command.getProcessedURI(kiteContext)
+				+ command.getProcessedURI(context)
 				+ " (expecting "
 				+ command.getExpectedStatus()
 				+ ')');
 
 		if (command.getDebug()) {
-			log.info('[' + command.getName() + "] " + command.getProcessedBody(kiteContext));
+			log.info('[' + command.getName() + "] " + command.getProcessedBody(context));
 		}
 
 		Response postResponse = given()
-				.contentType(JSON_UTF8).headers(command.getProcessedHeaders(kiteContext))
-				.body(getProcessedBodyBytes(command, kiteContext))
-				.when().post(command.getProcessedURI(kiteContext));
+				.contentType(JSON_UTF8).headers(command.getProcessedHeaders(context))
+				.body(getProcessedBodyBytes(command, context))
+				.when().post(command.getProcessedURI(context));
 
 		String response = postResponse.prettyPrint();
 		log.info(response);
 
+		KiteContext kiteContext = context.getKiteContext();
 		kiteContext.addBody("%", response);
 		if (command.getName() != null) {
 			kiteContext.addBody(command.getName(), response);
@@ -115,13 +116,13 @@ public class DefaultCommandRunner {
 		assertEquals("Unexpected response status",
 				command.getExpectedStatus(),
 				Integer.valueOf(postResponse.getStatusCode()));
-		runChecks(command.getChecks(kiteContext), response);
+		runChecks(command.getChecks(context), response);
 
 		if (command.getAutomaticCheck()) {
 			String location = postResponse.getHeader("Location");
 			log.info("Checking resource: " + location + "...");
 			given().header("Accept-Encoding", UTF_8_ENCODING)
-					.headers(command.getProcessedHeaders(kiteContext))
+					.headers(command.getProcessedHeaders(context))
 					.expect().statusCode(HttpStatus.SC_OK)
 					.when().get(location);
 
@@ -131,27 +132,28 @@ public class DefaultCommandRunner {
 		}
 	}
 
-	void patch(Command command, KiteContext kiteContext) throws ParseException {
+	void patch(Command command, ContextProcessor context) throws ParseException {
 		log.info('['
 				+ command.getName()
 				+ "] PATCH "
-				+ command.getProcessedURI(kiteContext)
+				+ command.getProcessedURI(context)
 				+ " (expecting "
 				+ command.getExpectedStatus()
 				+ ')');
 
 		if (command.getDebug()) {
-			log.info('[' + command.getName() + "] " + command.getProcessedBody(kiteContext));
+			log.info('[' + command.getName() + "] " + command.getProcessedBody(context));
 		}
 
 		Response patchResponse = given()
-				.contentType(JSON_UTF8).headers(command.getProcessedHeaders(kiteContext))
-				.body(getProcessedBodyBytes(command, kiteContext))
-				.when().patch(command.getProcessedURI(kiteContext));
+				.contentType(JSON_UTF8).headers(command.getProcessedHeaders(context))
+				.body(getProcessedBodyBytes(command, context))
+				.when().patch(command.getProcessedURI(context));
 
 		String response = patchResponse.prettyPrint();
 		log.info(response);
 
+		KiteContext kiteContext = context.getKiteContext();
 		kiteContext.addBody("%", response);
 		if (command.getName() != null) {
 			kiteContext.addBody(command.getName(), response);
@@ -160,13 +162,13 @@ public class DefaultCommandRunner {
 		assertEquals("Unexpected response status",
 				command.getExpectedStatus(),
 				Integer.valueOf(patchResponse.getStatusCode()));
-		runChecks(command.getChecks(kiteContext), response);
+		runChecks(command.getChecks(context), response);
 
 		if (command.getAutomaticCheck()) {
 			String location = patchResponse.getHeader("Location");
 			log.info("Checking resource: " + location + "...");
 			given().header("Accept-Encoding", UTF_8_ENCODING)
-					.headers(command.getProcessedHeaders(kiteContext))
+					.headers(command.getProcessedHeaders(context))
 					.expect().statusCode(HttpStatus.SC_OK)
 					.when().get(location);
 
@@ -176,14 +178,14 @@ public class DefaultCommandRunner {
 		}
 	}
 
-	private static String performGetRequest(Command command, KiteContext kiteContext, @Nullable HttpParams params) throws IOException {
+	private static String performGetRequest(Command command, ContextProcessor context, @Nullable HttpParams params) throws IOException {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 
-		String requestURI = command.getProcessedURI(kiteContext);
-		if (!command.getProcessedURI(kiteContext).contains("http://") && !command.getProcessedURI(kiteContext).contains(
+		String requestURI = command.getProcessedURI(context);
+		if (!command.getProcessedURI(context).contains("http://") && !command.getProcessedURI(context).contains(
 				"https://")) {
 			requestURI = RestAssured.baseURI + ':' + RestAssured.port + RestAssured.basePath + command.getProcessedURI(
-					kiteContext);
+					context);
 		}
 
 		HttpGet httpget = new HttpGet(requestURI);
@@ -193,7 +195,7 @@ public class DefaultCommandRunner {
 		}
 
 		httpget.addHeader("Content-Type", "application/json");
-		for (Map.Entry<String, String> header : command.getProcessedHeaders(kiteContext).entrySet()) {
+		for (Map.Entry<String, String> header : command.getProcessedHeaders(context).entrySet()) {
 			httpget.addHeader(header.getKey(), header.getValue());
 		}
 
@@ -209,6 +211,7 @@ public class DefaultCommandRunner {
 
 		try {
 			String body = EntityUtils.toString(response.getEntity());
+			KiteContext kiteContext = context.getKiteContext();
 			kiteContext.addBody("%", body);
 			if (command.getName() != null) {
 				kiteContext.addBody(command.getName(), body);
@@ -220,17 +223,17 @@ public class DefaultCommandRunner {
 		}
 	}
 
-	void get(Command command, KiteContext kiteContext) throws ParseException, IOException {
+	void get(Command command, ContextProcessor context) throws ParseException, IOException {
 		if (command.getPagination() != null) {
-			paginatedGet(command, kiteContext);
+			paginatedGet(command, context);
 		} else {
-			String responseBody = performGetRequest(command, kiteContext, null);
-			runChecks(command.getChecks(kiteContext), responseBody);
+			String responseBody = performGetRequest(command, context, null);
+			runChecks(command.getChecks(context), responseBody);
 		}
 	}
 
-	void paginatedGet(Command command, KiteContext kiteContext) throws ParseException, IOException {
-		log.info("GET " + command.getProcessedURI(kiteContext) + " (expecting " + command.getExpectedStatus() + ')');
+	void paginatedGet(Command command, ContextProcessor context) throws ParseException, IOException {
+		log.info("GET " + command.getProcessedURI(context) + " (expecting " + command.getExpectedStatus() + ')');
 
 		Integer currentPage = command.getPagination().getStartPage();
 		Integer totalPages = currentPage;
@@ -240,59 +243,60 @@ public class DefaultCommandRunner {
 			params.setParameter(command.getPagination().getPageParameterName(), command.getPagination().getStartPage());
 			params.setParameter(command.getPagination().getSizeParameterName(), command.getPagination().getSize());
 
-			String responseBody = performGetRequest(command, kiteContext, params);
+			String responseBody = performGetRequest(command, context, params);
 			totalPages = JsonPath.read(responseBody, command.getPagination().getTotalPagesField());
 
-			runChecks(command.getChecks(kiteContext), responseBody);
+			runChecks(command.getChecks(context), responseBody);
 			currentPage++;
 		}
 	}
 
-	void put(Command command, KiteContext kiteContext) throws ParseException {
+	void put(Command command, ContextProcessor context) throws ParseException {
 		log.info('['
 				+ command.getName()
 				+ "] PUT "
-				+ command.getProcessedURI(kiteContext)
+				+ command.getProcessedURI(context)
 				+ " (expecting "
 				+ command.getExpectedStatus()
 				+ ')');
 
 		if (command.getDebug()) {
-			log.info('[' + command.getName() + "] " + command.getProcessedBody(kiteContext));
+			log.info('[' + command.getName() + "] " + command.getProcessedBody(context));
 		}
 
 		Response putResponse = given()
-				.contentType(JSON_UTF8).headers(command.getProcessedHeaders(kiteContext))
-				.body(getProcessedBodyBytes(command, kiteContext)).log().everything(true)
+				.contentType(JSON_UTF8).headers(command.getProcessedHeaders(context))
+				.body(getProcessedBodyBytes(command, context)).log().everything(true)
 				.expect().statusCode(command.getExpectedStatus())
-				.when().put(command.getProcessedURI(kiteContext));
+				.when().put(command.getProcessedURI(context));
 
 		String response = putResponse.prettyPrint();
 		log.info(response);
 
+		KiteContext kiteContext = context.getKiteContext();
 		kiteContext.addBody("%", response);
 		if (command.getName() != null) {
 			kiteContext.addBody(command.getName(), response);
 		}
 
-		runChecks(command.getChecks(kiteContext), response);
+		runChecks(command.getChecks(context), response);
 	}
 
-	void delete(Command command, KiteContext kiteContext) throws ParseException {
-		log.info("DELETE " + command.getProcessedURI(kiteContext) + " (expecting " + command.getExpectedStatus() + ')');
-		Response r = given().contentType(JSON_UTF8).headers(command.getProcessedHeaders(kiteContext))
-				.body(getProcessedBodyBytes(command, kiteContext)).log().everything(true)
+	void delete(Command command, ContextProcessor context) throws ParseException {
+		log.info("DELETE " + command.getProcessedURI(context) + " (expecting " + command.getExpectedStatus() + ')');
+		Response r = given().contentType(JSON_UTF8).headers(command.getProcessedHeaders(context))
+				.body(getProcessedBodyBytes(command, context)).log().everything(true)
 				.expect().statusCode(command.getExpectedStatus())
-				.when().delete(command.getProcessedURI(kiteContext));
+				.when().delete(command.getProcessedURI(context));
 
-		runChecks(command.getChecks(kiteContext), r.prettyPrint());
+		runChecks(command.getChecks(context), r.prettyPrint());
 
-		log.info("Checking resource: " + command.getProcessedURI(kiteContext) + "...");
+		log.info("Checking resource: " + command.getProcessedURI(context) + "...");
 
 		if (command.getAutomaticCheck()) {
 			given().contentType(JSON_UTF8)
 					.expect().statusCode(HttpStatus.SC_NOT_FOUND)
-					.when().get(command.getProcessedURI(kiteContext));
+					.when().get(command.getProcessedURI(context));
 		}
 	}
 
@@ -309,17 +313,17 @@ public class DefaultCommandRunner {
 	/**
 	 * Processes and encodes the body of the request using UTF-8 {@link Charset}.
 	 * <p>
-	 * Processing is done using {@link Command#getProcessedBody(KiteContext)} prior encoding to
+	 * Processing is done using {@link Command#getProcessedBody(ContextProcessor)} prior encoding to
 	 * bytes.
 	 *
 	 * @param command     the command to get body from, not null
-	 * @param kiteContext the creation log related to the command, not null
+	 * @param context the creation log related to the command, not null
 	 * @return the body of the request, with placeholders processed and encoded in UTF-8
 	 */
     private static byte[] getProcessedBodyBytes(Command command,
-                                                KiteContext kiteContext) {
+                                                ContextProcessor context) {
         try {
-            return command.getProcessedBody(kiteContext).getBytes(
+            return command.getProcessedBody(context).getBytes(
                     Charset.forName(UTF_8_ENCODING));
         } catch (RuntimeException e) {
             fail("Command [" + command.getDescription() + "] failed : "

@@ -1,12 +1,11 @@
 package com.groupeseb.kite.function.impl;
 
-import java.util.List;
-
+import com.google.common.base.Preconditions;
+import com.groupeseb.kite.ContextProcessor;
+import com.groupeseb.kite.function.Function;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Preconditions;
-import com.groupeseb.kite.KiteContext;
-import com.groupeseb.kite.function.Function;
+import java.util.List;
 
 /**
  * Function that replaces {{Location:objectName}} placeholders by the full URI of the object
@@ -23,11 +22,11 @@ public class LocationFunction extends Function {
 	}
 
 	@Override
-	public String apply(List<String> parameters, KiteContext kiteContext) {
+	public String apply(List<String> parameters, ContextProcessor context) {
 		Preconditions.checkArgument(parameters.size() == 1,
 				"objetName parameter is needed for [%s] function", getName());
 		String objectName = parameters.get(0);
-		String locationURI = kiteContext.getLocations().get(objectName);
+		String locationURI =context.getKiteContext().getLocations().get(objectName);
 		Preconditions.checkNotNull(locationURI, "No location corresponds to object named [%s]",
 				objectName);
 		return locationURI;

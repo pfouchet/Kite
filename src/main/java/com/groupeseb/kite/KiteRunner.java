@@ -23,11 +23,7 @@ public final class KiteRunner {
 		try (ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("kite-beans.xml")) {
 			//noinspection OverlyBroadCatchBlock
 			try {
-				DefaultScenarioRunner bean = context.getBean(DefaultScenarioRunner.class);
-				if (kiteContext == null) {
-					return bean.execute(new Scenario(filename));
-				}
-				return bean.execute(new Scenario(filename), kiteContext);
+				return context.getBean(DefaultScenarioRunner.class).execute(new Scenario(filename), kiteContext);
 			} catch (Exception e) {
 				throw new IllegalStateException(e.getMessage(), e);
 			}

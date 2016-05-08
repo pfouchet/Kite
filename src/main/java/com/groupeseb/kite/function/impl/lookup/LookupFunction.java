@@ -1,5 +1,6 @@
 package com.groupeseb.kite.function.impl.lookup;
 
+import com.groupeseb.kite.ContextProcessor;
 import com.groupeseb.kite.KiteContext;
 import com.groupeseb.kite.function.Function;
 import com.jayway.jsonpath.JsonPath;
@@ -32,12 +33,12 @@ public class LookupFunction extends Function {
 	}
 
 	@Override
-	public String apply(List<String> parameters, KiteContext kiteContext) {
+	public String apply(List<String> parameters, ContextProcessor context) {
 		String input = parameters.get(0);
 		Matcher matcher = ADDITINAL_FUNCTION_PATTERN.matcher(input);
 		boolean hasAdditinalFunction = matcher.matches();
 		String parameter = hasAdditinalFunction ? matcher.group(1) : input;
-		String fieldValue = getFieldValue(kiteContext, parameter);
+		String fieldValue = getFieldValue(context.getKiteContext(), parameter);
 		if (hasAdditinalFunction) {
 			return applyAddtionalFunction(fieldValue, matcher.group(2));
 		}

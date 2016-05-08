@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -21,35 +22,33 @@ public class DefaultScenarioRunner {
 		this.defaultCommandRunner = defaultCommandRunner;
 	}
 
-	KiteContext execute(Scenario scenario) throws Exception {
-		return executeWithContext(scenario, new KiteContext(functions));
+	KiteContext execute(Scenario scenario, @Nullable KiteContext kiteContext) throws Exception {
+		KiteContext nonNullKiteContext = kiteContext == null ? new KiteContext() : kiteContext;
+		return executeWithContext(scenario, new ContextProcessor(functions, nonNullKiteContext)).getKiteContext();
 	}
 
-	KiteContext execute(Scenario scenario, KiteContext kiteContext) throws Exception {
-		return executeWithContext(scenario, kiteContext);
-	}
-
-	private KiteContext executeWithContext(Scenario scenario, KiteContext kiteContext) throws Exception {
+	ContextProcessor executeWithContext(Scenario scenario, ContextProcessor context) throws Exception {
 		log.info("Parsing {}...", scenario.getFilename());
 
+		KiteContext kiteContext = context.getKiteContext();
 		for (Scenario dependency : scenario.getDependencies()) {
-			kiteContext.extend(executeWithContext(dependency, kiteContext));
+			kiteContext.extend(executeWithContext(dependency, context).getKiteContext());
 		}
 
 		log.info("Executing {}...", scenario.getFilename());
 		log.info("Testing : " + scenario.getDescription() + "...");
 
 		for (Map.Entry<String, Object> entry : scenario.getVariables().entrySet()) {
-			kiteContext.addVariable(entry.getKey(), kiteContext.applyFunctions(
+			kiteContext.addVariable(entry.getKey(), context.applyFunctions(
 					entry.getValue().toString(), false));
 		}
 
 		kiteContext.getObjectVariables().putAll(scenario.getObjectVariables());
 
 		for (Command command : scenario.getCommands()) {
-			defaultCommandRunner.execute(command, kiteContext);
+			defaultCommandRunner.execute(command, context);
 		}
 
-		return kiteContext;
+		return context;
 	}
 }

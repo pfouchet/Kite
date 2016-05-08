@@ -3,13 +3,12 @@
  */
 package com.groupeseb.kite.function.impl;
 
-import java.util.List;
-
+import com.google.common.base.Preconditions;
+import com.groupeseb.kite.ContextProcessor;
+import com.groupeseb.kite.function.Function;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Preconditions;
-import com.groupeseb.kite.KiteContext;
-import com.groupeseb.kite.function.Function;
+import java.util.List;
 
 /**
  * Function that replaces {{UUID:objectName}} placeholders by the value of the UUID that was
@@ -29,10 +28,10 @@ public class UUIDFunction extends Function {
 	}
 
 	@Override
-	public String apply(List<String> parameters, KiteContext kiteContext) {
+	public String apply(List<String> parameters, ContextProcessor context) {
         Preconditions.checkArgument(parameters.size() == 1, "objectName is needed for [%s] function", NAME);
         String objectName = parameters.get(0);
-		String objectUUID = kiteContext.getUuids().get(objectName);
+		String objectUUID = context.getKiteContext().getUuids().get(objectName);
         Preconditions.checkNotNull(objectUUID, "No UUID corresponds to object named [%s]", objectName);
 		return objectUUID;
 	}

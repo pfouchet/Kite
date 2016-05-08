@@ -4,7 +4,7 @@
 package com.groupeseb.kite.function.impl;
 
 import com.google.common.base.Charsets;
-import com.groupeseb.kite.KiteContext;
+import com.groupeseb.kite.ContextProcessor;
 import org.apache.commons.codec.binary.Base64;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Component;
@@ -31,9 +31,9 @@ public class JwtFunction extends ObjectFunction {
 	}
 
 	@Override
-	protected String innerApplyOnObject(JSONObject untransformedJsonObject, KiteContext kiteContext) {
+	protected String innerApplyOnObject(JSONObject untransformedJsonObject, ContextProcessor context) {
 		String json = untransformedJsonObject.toJSONString();
-		json = kiteContext.processPlaceholdersInString(json);
+		json = context.processPlaceholdersInString(json);
 
 		return JWT_HS256_HEADERS + new String(new Base64().encode(json.getBytes(Charsets.UTF_8)), Charsets.UTF_8);
 	}

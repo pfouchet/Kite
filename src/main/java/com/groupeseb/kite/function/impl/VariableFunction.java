@@ -3,13 +3,12 @@
  */
 package com.groupeseb.kite.function.impl;
 
-import java.util.List;
-
+import com.google.common.base.Preconditions;
+import com.groupeseb.kite.ContextProcessor;
+import com.groupeseb.kite.function.Function;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Preconditions;
-import com.groupeseb.kite.KiteContext;
-import com.groupeseb.kite.function.Function;
+import java.util.List;
 
 /**
  * Function that replaces {{Variable:variableName}} placeholders by the value the variable named
@@ -26,11 +25,11 @@ public class VariableFunction extends Function {
 	}
 
 	@Override
-	public String apply(List<String> parameters, KiteContext kiteContext) {
+	public String apply(List<String> parameters, ContextProcessor context) {
 		Preconditions.checkArgument(parameters.size() == 1,
 				"variableName is needed for [%s] function", getName());
 		String variableName = parameters.get(0);
-		String variableValue = kiteContext.getVariableValue(variableName);
+		String variableValue =context.getKiteContext().getVariableValue(variableName);
 		Preconditions.checkNotNull(variableValue, "No value corresponds to variable named [%s]",
 				variableName);
 		return variableValue;
