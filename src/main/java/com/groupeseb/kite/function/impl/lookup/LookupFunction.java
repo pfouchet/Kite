@@ -4,7 +4,6 @@ import com.groupeseb.kite.ContextProcessor;
 import com.groupeseb.kite.KiteContext;
 import com.groupeseb.kite.function.Function;
 import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.PathNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -73,10 +72,10 @@ public class LookupFunction extends Function {
 				fail(String.format("Lookup : Could not get field [%s] for object %s", field, objectName));
 			}
 			return readField.toString();
-		} catch (PathNotFoundException e) {
+		} catch (RuntimeException e) {
 			throw new IllegalArgumentException(
 					String.format(
-							"Cannot apply [LookupFunction]: path not found [%s], on object named [%s]",
+							"Cannot apply [LookupFunction]: path not found <%s>, on object named <%s>",
 							field, objectName), e);
 		}
 	}

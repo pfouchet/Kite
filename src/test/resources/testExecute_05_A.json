@@ -5,7 +5,7 @@
 			"verb": "POST",
 			"uri": "/myFirstUrl",
 			"automaticCheck": false,
-		  "name":"cmdA"
+			"name": "cmdA"
 		}
 	]
 }

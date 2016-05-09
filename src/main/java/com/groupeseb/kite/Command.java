@@ -94,8 +94,7 @@ class Command {
 		if (getBody() == null) {
 			return "";
 		}
-		return context.processPlaceholders(getName(), getBody(),
-				true);
+		return context.processPlaceholders(getName(), getBody(), true);
 	}
 
 	Map<String, String> getProcessedHeaders(ContextProcessor context) {

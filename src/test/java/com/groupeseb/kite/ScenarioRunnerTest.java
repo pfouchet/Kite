@@ -3,7 +3,9 @@ package com.groupeseb.kite;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.client.UrlMatchingStrategy;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.jayway.restassured.RestAssured;
 import lombok.AllArgsConstructor;
@@ -15,14 +17,18 @@ import org.testng.annotations.Test;
 import javax.annotation.Nullable;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static com.groupeseb.kite.ScenarioRunnerTest.HttpCmdEnum.POST;
+import static com.groupeseb.kite.ScenarioRunnerTest.HttpCmdEnum.PUT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ScenarioRunnerTest {
@@ -51,13 +57,30 @@ public class ScenarioRunnerTest {
 		wireMockServer.stop();
 	}
 
+	enum HttpCmdEnum {
+		POST, PUT, GET
+	}
 
-	private static void stubForUrlAndBody(String url, int returnCode, @Nullable Object retrunBody) throws JsonProcessingException {
+
+	private static void stubForUrlAndBody(HttpCmdEnum httpCmd, String url, int returnCode, @Nullable Object retrunBody) throws JsonProcessingException {
 		ResponseDefinitionBuilder responseDefBuilder = aResponse().withStatus(returnCode);
 		if (retrunBody != null) {
 			responseDefBuilder.withBody(OBJECT_MAPPER.writeValueAsString(retrunBody));
 		}
-		stubFor(post(urlEqualTo(url)).willReturn(responseDefBuilder));
+		MappingBuilder cmdBuilder = getMappingBuilder(httpCmd, urlEqualTo(SERVICE_URI + url));
+		stubFor(cmdBuilder.willReturn(responseDefBuilder));
+	}
+
+	private static MappingBuilder getMappingBuilder(HttpCmdEnum httpCmd, UrlMatchingStrategy urlEqualTo) {
+		switch (httpCmd) {
+			case POST:
+				return post(urlEqualTo);
+			case PUT:
+				return put(urlEqualTo);
+			case GET:
+				return get(urlEqualTo);
+		}
+		throw new IllegalArgumentException("Incorrect HttpCmdEnum : " + httpCmd);
 	}
 
 	/**
@@ -65,8 +88,8 @@ public class ScenarioRunnerTest {
 	 */
 	@Test
 	public void testExecute_02() throws Exception {
-		stubForUrlAndBody(SERVICE_URI + "/muUrl01", 201, "myString00000123");
-		stubForUrlAndBody(SERVICE_URI + "/muUrl02", 201, "OK");
+		stubForUrlAndBody(POST, "/muUrl01", 201, "myString00000123");
+		stubForUrlAndBody(POST, "/muUrl02", 201, "OK");
 
 		KiteRunner.getInstance().execute("testExecute_02.json");
 
@@ -79,8 +102,8 @@ public class ScenarioRunnerTest {
 	 */
 	@Test
 	public void testExecute_03() throws Exception {
-		stubForUrlAndBody(SERVICE_URI + "/muUrl01", 201, "myString00000123");
-		stubForUrlAndBody(SERVICE_URI + "/muUrl02", 201, "OK");
+		stubForUrlAndBody(POST, "/muUrl01", 201, "myString00000123");
+		stubForUrlAndBody(POST, "/muUrl02", 201, "OK");
 
 		KiteRunner.getInstance().execute("testExecute_03.json");
 
@@ -90,7 +113,7 @@ public class ScenarioRunnerTest {
 
 	@Test
 	public void testJWTFunction_04() throws Exception {
-		stubForUrlAndBody(SERVICE_URI + "/urlUsingJwtHeader", 201, "myString00000123");
+		stubForUrlAndBody(POST, "/urlUsingJwtHeader", 201, "myString00000123");
 
 		KiteRunner.getInstance().execute("testExecute_04.json");
 
@@ -105,7 +128,7 @@ public class ScenarioRunnerTest {
 	public void testKiteContext_05() throws Exception {
 		String value1 = "myString00000123";
 
-		stubForUrlAndBody(SERVICE_URI + "/myFirstUrl", 201, new FieldClass(value1));
+		stubForUrlAndBody(POST, "/myFirstUrl", 201, new FieldClass(value1));
 
 		ScenarioRunner scenarioRunner = KiteRunner.getInstance();
 		KiteContext kiteContext = scenarioRunner.execute("testExecute_05_A.json");
@@ -118,11 +141,23 @@ public class ScenarioRunnerTest {
 		String value3 = "myString00000324";
 		kiteContext.addBodyAsJsonString("cmdAA", new FieldClass(value3));
 
-		stubForUrlAndBody(SERVICE_URI + "/mySecondeUrl", 201, value1);
+		stubForUrlAndBody(POST, "/mySecondeUrl", 201, value1);
 		scenarioRunner.execute("testExecute_05_B.json", kiteContext);
 
 		verify(postRequestedFor(urlMatching(SERVICE_URI + "/mySecondeUrl"))
 				.withRequestBody(matching(value2 + value3)));
+	}
+
+	/**
+	 * pust/post cmd with a null body
+	 */
+	@Test
+	public void testKiteContext_06() throws Exception {
+		stubForUrlAndBody(PUT, "/nullBodyUrl", 204, null);
+		stubForUrlAndBody(POST, "/nullBodyUrl", 201, null);
+
+		ScenarioRunner scenarioRunner = KiteRunner.getInstance();
+		KiteContext kiteContext = scenarioRunner.execute("testExecute_06.json");
 	}
 
 	@AllArgsConstructor

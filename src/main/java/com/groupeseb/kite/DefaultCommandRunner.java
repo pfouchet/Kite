@@ -1,5 +1,6 @@
 package com.groupeseb.kite;
 
+import com.google.common.base.Charsets;
 import com.groupeseb.kite.check.Check;
 import com.groupeseb.kite.check.DefaultCheckRunner;
 import com.jayway.jsonpath.JsonPath;
@@ -15,6 +16,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
+import org.assertj.core.util.Strings;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -27,7 +29,6 @@ import java.util.Map;
 
 import static com.jayway.restassured.RestAssured.given;
 import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.fail;
 
 @Slf4j
 @Component
@@ -119,11 +120,16 @@ public class DefaultCommandRunner {
 		runChecks(command.getChecks(context), response);
 
 		if (command.getAutomaticCheck()) {
-			doCheck(command, context, postResponse.getHeader("Location"), kiteContext);
+			doCheck(command, context, postResponse, kiteContext);
 		}
 	}
 
-	private void doCheck(Command command, ContextProcessor context, String location, KiteContext kiteContext) {
+	private static void doCheck(Command command, ContextProcessor context, Response response, KiteContext kiteContext) {
+		String location = response.getHeader("Location");
+		if (Strings.isNullOrEmpty(location)) {
+			throw new IllegalStateException("'Location' is empty in header response, set a valid location or set 'automaticCheck' to false");
+		}
+
 		log.info("Checking resource: " + location + "...");
 		given().header("Accept-Encoding", UTF_8_ENCODING)
 				.headers(command.getProcessedHeaders(context))
@@ -169,7 +175,7 @@ public class DefaultCommandRunner {
 		runChecks(command.getChecks(context), response);
 
 		if (command.getAutomaticCheck()) {
-			doCheck(command, context, patchResponse.getHeader("Location"), kiteContext);
+			doCheck(command, context, patchResponse, kiteContext);
 		}
 	}
 
@@ -298,7 +304,7 @@ public class DefaultCommandRunner {
 			try {
 				defaultCheckRunner.verify(check, responseBody);
 			} catch (RuntimeException e) {
-				fail("Check [" + check.getDescription() + "] failed : " + e.getMessage());
+				throw new IllegalStateException("Check [" + check.getDescription() + "] failed ", e);
 			}
 		}
 	}
@@ -313,15 +319,11 @@ public class DefaultCommandRunner {
 	 * @param context the creation log related to the command, not null
 	 * @return the body of the request, with placeholders processed and encoded in UTF-8
 	 */
-	private static byte[] getProcessedBodyBytes(Command command,
-	                                            ContextProcessor context) {
+	private static byte[] getProcessedBodyBytes(Command command, ContextProcessor context) {
 		try {
-			return command.getProcessedBody(context).getBytes(
-					Charset.forName(UTF_8_ENCODING));
+			return command.getProcessedBody(context).getBytes(Charsets.UTF_8);
 		} catch (RuntimeException e) {
-			fail("Command [" + command.getDescription() + "] failed : "
-					+ e.getMessage());
-			throw e;
+			throw new IllegalStateException("Command [" + command.getDescription() + "] failed ", e);
 		}
 	}
 }

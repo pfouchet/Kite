@@ -46,19 +46,19 @@ public class KiteContext {
 	}
 
 	public Object getObjectVariable(String objectName) {
-		return this.objectVariables.get(objectName);
+		return checkAndGet(objectVariables, "ObjectVariables", objectName);
 	}
 
 	public String getVariableValue(String variableName) {
-		return this.variables.get(variableName.trim());
+		return checkAndGet(variables, "Variables", variableName.trim());
 	}
 
 	public String getBody(String objectName) {
-		return this.bodies.get(objectName);
+		return checkAndGet(bodies, "Bodies", objectName);
 	}
 
 	public <T> T getBodyAs(String objectName, Class<T> clazz) throws IOException {
-		return OBJECT_MAPPER.readValue(this.bodies.get(objectName), clazz);
+		return OBJECT_MAPPER.readValue(getBody(objectName), clazz);
 	}
 
 	public void addBody(String name, String response) {
@@ -67,5 +67,12 @@ public class KiteContext {
 
 	public void addBodyAsJsonString(String name, Object object) throws JsonProcessingException {
 		this.bodies.put(name, OBJECT_MAPPER.writeValueAsString(object));
+	}
+
+	private static <T> T checkAndGet(Map<String, T> map, String mapName, String key) {
+		if (map.containsKey(key)) {
+			return map.get(key);
+		}
+		throw new IllegalArgumentException("Missing key : " + key + " in :" + mapName);
 	}
 }
