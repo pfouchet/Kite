@@ -73,6 +73,6 @@ public class KiteContext {
 		if (map.containsKey(key)) {
 			return map.get(key);
 		}
-		throw new IllegalArgumentException("Missing key : " + key + " in :" + mapName);
+		throw new IllegalArgumentException("Missing <" + key + "> in " + mapName);
 	}
 }

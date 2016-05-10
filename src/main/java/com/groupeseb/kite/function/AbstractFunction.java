@@ -1,8 +1,10 @@
 package com.groupeseb.kite.function;
 
 import com.groupeseb.kite.ContextProcessor;
+import lombok.Data;
 
 import java.util.List;
+import java.util.regex.Matcher;
 
 /**
  * Interface for classes allowing to replace placeholders in some {@link String}
@@ -16,16 +18,24 @@ import java.util.List;
  * </ul>
  *
  * @author jcanquelain
- *
  */
-public abstract class Function {
-    public Boolean match(String name) {
-        return name.trim().toUpperCase()
-                .equals(this.getName().trim().toUpperCase());
-    }
+@Data
+public abstract class AbstractFunction {
+	private final String name;
 
-    public abstract String getName();
+	protected AbstractFunction(String name) {
+		this.name = name;
+	}
 
-    public abstract String apply(List<String> parameters,
-                                 ContextProcessor contextProcessor);
+	public final boolean match(String name) {
+		return name.equalsIgnoreCase(this.name);
+	}
+
+	public abstract Matcher getMatcher(String input);
+
+	public abstract boolean idWithParameters();
+
+	public abstract String apply(List<String> parameters, ContextProcessor contextProcessor);
+
+	public abstract String apply();
 }

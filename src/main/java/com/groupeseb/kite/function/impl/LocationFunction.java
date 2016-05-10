@@ -2,7 +2,7 @@ package com.groupeseb.kite.function.impl;
 
 import com.google.common.base.Preconditions;
 import com.groupeseb.kite.ContextProcessor;
-import com.groupeseb.kite.function.Function;
+import com.groupeseb.kite.function.AbstractWithParameters;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -14,17 +14,15 @@ import java.util.List;
  * @author jcanquelain
  */
 @Component
-public class LocationFunction extends Function {
-	@Override
-	public String getName() {
-		return "Location";
+public class LocationFunction extends AbstractWithParameters {
+
+	LocationFunction() {
+		super("Location");
 	}
 
 	@Override
 	public String apply(List<String> parameters, ContextProcessor context) {
-		Preconditions.checkArgument(parameters.size() == 1,
-				"objetName parameter is needed for [%s] function", getName());
-		String objectName = parameters.get(0);
+		String objectName = getUniqueParameter(parameters);
 		String locationURI = context.getKiteContext().getLocations().get(objectName);
 		return Preconditions.checkNotNull(locationURI, "No location corresponds to object named [%s]", objectName);
 	}

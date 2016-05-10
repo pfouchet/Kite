@@ -9,7 +9,7 @@ import java.util.Collection;
 @Component
 public class LengthMethod implements ICheckMethod {
 	@Override
-	public Boolean match(String name) {
+	public boolean match(String name) {
 		return "length".equalsIgnoreCase(name);
 	}
 

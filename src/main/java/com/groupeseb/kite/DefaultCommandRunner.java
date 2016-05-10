@@ -1,6 +1,7 @@
 package com.groupeseb.kite;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Strings;
 import com.groupeseb.kite.check.Check;
 import com.groupeseb.kite.check.DefaultCheckRunner;
 import com.jayway.jsonpath.JsonPath;
@@ -16,7 +17,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
-import org.assertj.core.util.Strings;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -109,10 +109,7 @@ public class DefaultCommandRunner {
 		log.info(response);
 
 		KiteContext kiteContext = context.getKiteContext();
-		kiteContext.addBody("%", response);
-		if (command.getName() != null) {
-			kiteContext.addBody(command.getName(), response);
-		}
+		addBodyIfNotEmpty(kiteContext,response,command);
 
 		assertEquals("Unexpected response status",
 				command.getExpectedStatus(),
@@ -164,10 +161,7 @@ public class DefaultCommandRunner {
 		log.info(response);
 
 		KiteContext kiteContext = context.getKiteContext();
-		kiteContext.addBody("%", response);
-		if (command.getName() != null) {
-			kiteContext.addBody(command.getName(), response);
-		}
+		addBodyIfNotEmpty(kiteContext, response, command);
 
 		assertEquals("Unexpected response status",
 				command.getExpectedStatus(),
@@ -211,10 +205,7 @@ public class DefaultCommandRunner {
 
 			String body = EntityUtils.toString(response.getEntity());
 			KiteContext kiteContext = context.getKiteContext();
-			kiteContext.addBody("%", body);
-			if (command.getName() != null) {
-				kiteContext.addBody(command.getName(), body);
-			}
+			addBodyIfNotEmpty(kiteContext, body, command);
 			return body;
 
 		} catch (Exception ignored) {
@@ -273,11 +264,7 @@ public class DefaultCommandRunner {
 		log.info(response);
 
 		KiteContext kiteContext = context.getKiteContext();
-		kiteContext.addBody("%", response);
-		if (command.getName() != null) {
-			kiteContext.addBody(command.getName(), response);
-		}
-
+		addBodyIfNotEmpty(kiteContext,response,command);
 		runChecks(command.getChecks(context), response);
 	}
 
@@ -324,6 +311,17 @@ public class DefaultCommandRunner {
 			return command.getProcessedBody(context).getBytes(Charsets.UTF_8);
 		} catch (RuntimeException e) {
 			throw new IllegalStateException("Command [" + command.getDescription() + "] failed ", e);
+		}
+	}
+
+	private static void addBodyIfNotEmpty(KiteContext kiteContext, String response, Command command) {
+		if (Strings.isNullOrEmpty(response)) {
+			return;
+		}
+		kiteContext.addBody("%", response);
+		String name = command.getName();
+		if (!Strings.isNullOrEmpty(name)) {
+			kiteContext.addBody(name, response);
 		}
 	}
 }

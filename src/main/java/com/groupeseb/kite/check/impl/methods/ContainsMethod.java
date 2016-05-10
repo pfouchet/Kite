@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ContainsMethod implements ICheckMethod {
     @Override
-    public Boolean match(String name) {
+    public boolean match(String name) {
         return "contains".equalsIgnoreCase(name);
     }
 

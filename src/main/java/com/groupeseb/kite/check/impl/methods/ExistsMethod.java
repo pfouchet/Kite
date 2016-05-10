@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 @Component
 public class ExistsMethod implements ICheckMethod {
     @Override
-    public Boolean match(String name) {
+    public boolean match(String name) {
         return "exists".equalsIgnoreCase(name);
     }
 

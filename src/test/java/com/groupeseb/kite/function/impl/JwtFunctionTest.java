@@ -3,7 +3,6 @@ package com.groupeseb.kite.function.impl;
 import com.google.common.base.Charsets;
 import com.groupeseb.kite.ContextProcessor;
 import com.groupeseb.kite.Json;
-import com.groupeseb.kite.function.Function;
 import org.apache.commons.codec.binary.Base64;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
@@ -21,7 +20,7 @@ public class JwtFunctionTest {
 	private static final String SIMPLE_VALUE = "simpleValue";
 	private static final String PROFILE_UID = "profileUid";
 	private static final String ROOT_OBJECT_NAME = "authorization";
-	private final Function function = new JwtFunction();
+	private final JwtFunction function = new JwtFunction();
 
 	@Nullable
 	private static String decodeAndExtract(String jwt, String key) throws ParseException {

@@ -25,9 +25,8 @@ public class JwtFunction extends ObjectFunction {
 	 */
 	private static final String JWT_HS256_HEADERS = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.";
 
-	@Override
-	public String getName() {
-		return "JWT";
+	JwtFunction() {
+		super("JWT");
 	}
 
 	@Override

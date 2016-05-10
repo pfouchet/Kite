@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class NopMethod implements ICheckMethod {
     @Override
-    public Boolean match(String name) {
+    public boolean match(String name) {
         return "nop".equalsIgnoreCase(name);
     }
 

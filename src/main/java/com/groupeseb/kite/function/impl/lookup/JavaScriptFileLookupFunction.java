@@ -2,7 +2,6 @@ package com.groupeseb.kite.function.impl.lookup;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-import com.groupeseb.kite.function.impl.JavaScriptHelper;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;

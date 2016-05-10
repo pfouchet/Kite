@@ -1,5 +1,7 @@
-package com.groupeseb.kite.function.impl;
+package com.groupeseb.kite.function.impl.lookup;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.script.ScriptEngine;
@@ -13,9 +15,8 @@ import static org.testng.Assert.fail;
  * The script can use the var 'inputValue' and must produce the var 'outputValue'.
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class JavaScriptHelper {
-	private JavaScriptHelper() {
-	}
 
 	public static String eval(String script, String inputValue) {
 		ScriptEngineManager factory = new ScriptEngineManager();

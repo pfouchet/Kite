@@ -2,7 +2,7 @@ package com.groupeseb.kite.function.impl.lookup;
 
 import com.groupeseb.kite.ContextProcessor;
 import com.groupeseb.kite.KiteContext;
-import com.groupeseb.kite.function.Function;
+import com.groupeseb.kite.function.AbstractWithParameters;
 import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,18 +16,15 @@ import static org.testng.Assert.fail;
 
 @Slf4j
 @Component
-public class LookupFunction extends Function {
+public class LookupFunction extends AbstractWithParameters {
 	private static final Pattern ADDITINAL_FUNCTION_PATTERN = Pattern.compile("(.+?):(.+?)", Pattern.CASE_INSENSITIVE);
 
 	private final List<AdditionalLookupFunction> additionalLookupFunctions;
 
-	@Override
-	public String getName() {
-		return "Lookup";
-	}
 
 	@Autowired
 	LookupFunction(List<AdditionalLookupFunction> additionalLookupFunctions) {
+		super("Lookup");
 		this.additionalLookupFunctions = additionalLookupFunctions;
 	}
 
@@ -35,13 +32,11 @@ public class LookupFunction extends Function {
 	public String apply(List<String> parameters, ContextProcessor context) {
 		String input = parameters.get(0);
 		Matcher matcher = ADDITINAL_FUNCTION_PATTERN.matcher(input);
-		boolean hasAdditinalFunction = matcher.matches();
-		String parameter = hasAdditinalFunction ? matcher.group(1) : input;
-		String fieldValue = getFieldValue(context.getKiteContext(), parameter);
-		if (hasAdditinalFunction) {
+		if (matcher.matches()) {
+			String fieldValue = getFieldValue(context.getKiteContext(), matcher.group(1));
 			return applyAddtionalFunction(fieldValue, matcher.group(2));
 		}
-		return fieldValue;
+		return getFieldValue(context.getKiteContext(), input);
 	}
 
 	private String applyAddtionalFunction(String input, String additionalParameter) {
@@ -55,6 +50,9 @@ public class LookupFunction extends Function {
 
 	static String getFieldValue(KiteContext kiteContext, String parameter) {
 		String objectName = parameter.split("\\.")[0];
+		if ("ProfileWithOnePreference".equals(objectName)) {
+			String ppp = "";
+		}
 		String body = kiteContext.getBody(objectName);
 		if (body == null) {
 			fail(String
@@ -64,10 +62,11 @@ public class LookupFunction extends Function {
 		if (!parameter.contains(".")) {
 			return body;
 		}
+
 		String field = parameter.replace(objectName + '.', "");
 
 		try {
-			 Object readField = JsonPath.read(body, field);
+			Object readField = JsonPath.read(body, field);
 			if (readField == null) {
 				fail(String.format("Lookup : Could not get field [%s] for object %s", field, objectName));
 			}
