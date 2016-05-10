@@ -6,6 +6,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.Random;
 
+/**
+ * Function to calculate a random integer greater than 1
+ */
 @Slf4j
 @Component
 public class RandomIntegerFunction extends AbstractWithoutParametersFunction {
@@ -17,6 +20,6 @@ public class RandomIntegerFunction extends AbstractWithoutParametersFunction {
 
 	@Override
 	public String apply() {
-		return Integer.toString(randomGenerator.nextInt(1));
+		return Integer.toString(1 + randomGenerator.nextInt());
 	}
 }

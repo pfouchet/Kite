@@ -53,8 +53,13 @@ public class KiteContext {
 		return checkAndGet(variables, "Variables", variableName.trim());
 	}
 
+	/**
+	 *
+	 * @param objectName name of payloads
+	 * @return payload non null and not empty
+	 */
 	public String getBody(String objectName) {
-		return checkAndGet(bodies, "Bodies", objectName);
+		return checkAndGet(bodies, "Payloads", objectName);
 	}
 
 	public <T> T getBodyAs(String objectName, Class<T> clazz) throws IOException {

@@ -21,10 +21,7 @@ import static java.util.Objects.requireNonNull;
 @SuppressWarnings("UnusedDeclaration")
 public class Json {
 	private final JSONParser parser = new JSONParser();
-	@Nullable
 	private JSONObject rootObject = null;
-
-	@Nullable
 	private JSONArray rootArray = null;
 	private String json = null;
 
@@ -183,7 +180,7 @@ public class Json {
 	}
 
 	/**
-	 * Get a string leaf
+	 * Format a field to json string
 	 *
 	 * @param key The leaf key
 	 */

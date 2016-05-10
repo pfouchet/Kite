@@ -12,7 +12,6 @@
         <jackson.version>2.7.4</jackson.version>
     </properties>
 
-
     <distributionManagement>
         <repository>
             <id>seb-nexus-releases</id>

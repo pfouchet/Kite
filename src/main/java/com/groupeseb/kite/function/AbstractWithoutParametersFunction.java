@@ -8,19 +8,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Interface for classes allowing to replace placeholders in some {@link String}
- * values, by applying a parameterized (or not) function.
- * <p>
- * Implementations of this abstract class must fulfill following requirements:
- * <ul>
- * <li><b>Name </b>of the function must not contain characters that need to be
- * escaped in strings with respect to JSON specification. These characters are :
- * /,\, ", \b, \f, \n, \r, \t, unicode character with u{4 digit hexa} notation
- * </ul>
- *
- * @author jcanquelain
- */
 @EqualsAndHashCode(callSuper = true)
 @Data
 public abstract class AbstractWithoutParametersFunction extends AbstractFunction {
@@ -42,7 +29,7 @@ public abstract class AbstractWithoutParametersFunction extends AbstractFunction
 	}
 
 	@Override
-	public final boolean idWithParameters() {
-		return true;
+	public final boolean isWithParameters() {
+		return false;
 	}
 }

@@ -33,7 +33,7 @@ public abstract class AbstractFunction {
 
 	public abstract Matcher getMatcher(String input);
 
-	public abstract boolean idWithParameters();
+	public abstract boolean isWithParameters();
 
 	public abstract String apply(List<String> parameters, ContextProcessor contextProcessor);
 

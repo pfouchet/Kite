@@ -47,7 +47,7 @@ public class ContextProcessor {
 
 		Matcher matcher = abstractFunction.getMatcher(valueWithPlaceHolders);
 
-		if (abstractFunction.idWithParameters()) {
+		if (abstractFunction.isWithParameters()) {
 			String result = valueWithPlaceHolders;
 			while (matcher.find()) {
 				List<String> parameters = new ArrayList<>();

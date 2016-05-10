@@ -11,7 +11,7 @@ import org.testng.annotations.Test;
 import javax.annotation.Nullable;
 import java.util.Collections;
 
-import static com.groupeseb.kite.DataProvider.newInternalContext;
+import static com.groupeseb.kite.DataProvider.newContextProcessor;
 import static org.testng.Assert.assertEquals;
 
 @SuppressWarnings("unchecked")
@@ -30,7 +30,7 @@ public class JwtFunctionTest {
 
 	@Test
 	public void testSimpleObject() throws ParseException {
-		ContextProcessor context = newInternalContext();
+		ContextProcessor context = newContextProcessor();
 
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put(PROFILE_UID, SIMPLE_VALUE);
@@ -44,7 +44,7 @@ public class JwtFunctionTest {
 	@Test
 	public void withPlaceholders() throws ParseException {
 
-		ContextProcessor context = newInternalContext();
+		ContextProcessor context = newContextProcessor();
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put(PROFILE_UID, "{{Variable:profileVariable}}");
 		context.getKiteContext().getObjectVariables().put(ROOT_OBJECT_NAME, jsonObject);

@@ -50,15 +50,7 @@ public class LookupFunction extends AbstractWithParameters {
 
 	static String getFieldValue(KiteContext kiteContext, String parameter) {
 		String objectName = parameter.split("\\.")[0];
-		if ("ProfileWithOnePreference".equals(objectName)) {
-			String ppp = "";
-		}
 		String body = kiteContext.getBody(objectName);
-		if (body == null) {
-			fail(String
-					.format("No payload found for %s. Are you sure any request name %s was performed ?",
-							objectName, objectName));
-		}
 		if (!parameter.contains(".")) {
 			return body;
 		}

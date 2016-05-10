@@ -6,16 +6,19 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
+/**
+ * Function to calculate a random String
+ */
 @Slf4j
 @Component
 public class RandomStringFunction extends AbstractWithoutParametersFunction {
 
-    RandomStringFunction() {
-        super("RandomString");
-    }
+	RandomStringFunction() {
+		super("RandomString");
+	}
 
-    @Override
-    public String apply() {
-        return UUID.randomUUID().toString();
-    }
+	@Override
+	public String apply() {
+		return UUID.randomUUID().toString();
+	}
 }

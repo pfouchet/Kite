@@ -13,7 +13,7 @@ public final class FunctionsProvider {
 	public static List<AbstractFunction> getFunctions() {
 		return Arrays.asList(new Base64Function(),
 				new JwtFunction(),
-				new AbstractWithParameters(),
+				new LocationFunction(),
 				new RandomIntegerFunction(),
 				new RandomStringFunction(),
 				new UUIDFunction(),

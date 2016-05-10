@@ -31,9 +31,7 @@ public class JwtFunction extends ObjectFunction {
 
 	@Override
 	protected String innerApplyOnObject(JSONObject untransformedJsonObject, ContextProcessor context) {
-		String json = untransformedJsonObject.toJSONString();
-		json = context.processPlaceholdersInString(json);
-
+		String json = context.processPlaceholdersInString(untransformedJsonObject.toJSONString());
 		return JWT_HS256_HEADERS + new String(new Base64().encode(json.getBytes(Charsets.UTF_8)), Charsets.UTF_8);
 	}
 

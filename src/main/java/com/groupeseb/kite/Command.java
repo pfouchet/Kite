@@ -3,6 +3,7 @@ package com.groupeseb.kite;
 import com.groupeseb.kite.check.Check;
 import lombok.Getter;
 import org.apache.http.HttpStatus;
+import org.assertj.core.util.Strings;
 import org.json.simple.parser.ParseException;
 
 import java.util.ArrayList;
@@ -91,7 +92,7 @@ class Command {
 	}
 
 	String getProcessedBody(ContextProcessor context) {
-		if (getBody() == null) {
+		if (Strings.isNullOrEmpty(getBody())) {
 			return "";
 		}
 		return context.processPlaceholders(getName(), getBody(), true);

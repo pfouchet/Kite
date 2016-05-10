@@ -7,7 +7,7 @@ public final class DataProvider {
 	private DataProvider() {
 	}
 
-	public static ContextProcessor newInternalContext() {
+	public static ContextProcessor newContextProcessor() {
 		return new ContextProcessor(FunctionsProvider.getFunctions(), new KiteContext());
 	}
 
