@@ -1,35 +1,25 @@
 package com.groupeseb.kite.function.impl;
 
-import java.util.List;
-
-import org.springframework.stereotype.Component;
-
 import com.google.common.base.Preconditions;
-import com.groupeseb.kite.CreationLog;
-import com.groupeseb.kite.function.Function;
+import com.groupeseb.kite.ContextProcessor;
+import org.springframework.stereotype.Component;
 
 /**
  * Function that replaces {{Location:objectName}} placeholders by the full URI of the object
  * identified by <code>objectName</code> in the creationLog
- * 
- * @author jcanquelain
  *
+ * @author jcanquelain
  */
 @Component
-public class LocationFunction extends Function {
-	@Override
-	public String getName() {
-		return "Location";
+public class LocationFunction extends AbstractWithOneParameter {
+
+	LocationFunction() {
+		super("Location");
 	}
 
 	@Override
-	public String apply(List<String> parameters, CreationLog creationLog) {
-		Preconditions.checkArgument(parameters.size() == 1,
-				"objetName parameter is needed for [%s] function", getName());
-		String objectName = parameters.get(0);
-		String locationURI = creationLog.getLocations().get(objectName);
-		Preconditions.checkNotNull(locationURI, "No location corresponds to object named [%s]",
-				objectName);
-		return locationURI;
+	protected String apply(String parameter, ContextProcessor context) {
+		String locationURI = context.getKiteContext().getLocations().get(parameter);
+		return Preconditions.checkNotNull(locationURI, "No location corresponds to object named [%s]", parameter);
 	}
 }

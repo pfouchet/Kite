@@ -4,7 +4,7 @@
 package com.groupeseb.kite.function.impl;
 
 import com.google.common.base.Charsets;
-import com.groupeseb.kite.CreationLog;
+import com.groupeseb.kite.ContextProcessor;
 import org.apache.commons.codec.binary.Base64;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Component;
@@ -25,16 +25,13 @@ public class JwtFunction extends ObjectFunction {
 	 */
 	private static final String JWT_HS256_HEADERS = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.";
 
-	@Override
-	public String getName() {
-		return "JWT";
+	JwtFunction() {
+		super("JWT");
 	}
 
 	@Override
-	protected String innerApplyOnObject(JSONObject untransformedJsonObject, CreationLog creationLog) {
-		String json = untransformedJsonObject.toJSONString();
-		json = creationLog.processPlaceholdersInString(json);
-
+	protected String innerApplyOnObject(JSONObject untransformedJsonObject, ContextProcessor context) {
+		String json = context.processPlaceholdersInString(untransformedJsonObject.toJSONString());
 		return JWT_HS256_HEADERS + new String(new Base64().encode(json.getBytes(Charsets.UTF_8)), Charsets.UTF_8);
 	}
 

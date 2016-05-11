@@ -1,8 +1,9 @@
 package com.groupeseb.kite.function;
 
-import com.groupeseb.kite.CreationLog;
+import com.groupeseb.kite.ContextProcessor;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Interface for classes allowing to replace placeholders in some {@link String}
@@ -16,16 +17,28 @@ import java.util.List;
  * </ul>
  *
  * @author jcanquelain
- *
  */
-public abstract class Function {
-    public Boolean match(String name) {
-        return name.trim().toUpperCase()
-                .equals(this.getName().trim().toUpperCase());
-    }
+public interface Function {
 
-    public abstract String getName();
+	/**
+	 * @return The pattern of function, used to find all occurrence  in string
+	 */
+	Pattern getPattern();
 
-    public abstract String apply(List<String> parameters,
-            CreationLog creationLog);
+	/**
+	 * @return true if the function need a parameters
+	 */
+	boolean isWithParameters();
+
+	/**
+	 * @param parameters       parameters after function
+	 * @param contextProcessor used to access to kiteContext
+	 * @return a final value
+	 */
+	String apply(List<String> parameters, ContextProcessor contextProcessor);
+
+	/**
+	 * @return genrated value
+	 */
+	String apply();
 }

@@ -1,6 +1,5 @@
 package com.groupeseb.kite.function.impl.lookup;
 
-import com.groupeseb.kite.function.impl.JavaScriptHelper;
 import org.springframework.stereotype.Component;
 
 import java.util.regex.Matcher;

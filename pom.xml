@@ -9,6 +9,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <jackson.version>2.7.4</jackson.version>
     </properties>
 
     <distributionManagement>
@@ -147,13 +148,32 @@
             <version>3.0.1</version>
         </dependency>
 
+       <dependency>
+           <groupId>com.fasterxml.jackson.core</groupId>
+           <artifactId>jackson-databind</artifactId>
+           <version>${jackson.version}</version>
+       </dependency>
 
+       <dependency>
+           <groupId>com.fasterxml.jackson.core</groupId>
+           <artifactId>jackson-core</artifactId>
+           <version>${jackson.version}</version>
+       </dependency>
+
+
+       <!--TESTS-->
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
             <artifactId>wiremock</artifactId>
             <version>1.57</version>
             <scope>test</scope>
         </dependency>
+
+       <dependency>
+           <groupId>org.assertj</groupId>
+           <artifactId>assertj-core</artifactId>
+           <version>1.6.0</version>
+       </dependency>
 
     </dependencies>
 

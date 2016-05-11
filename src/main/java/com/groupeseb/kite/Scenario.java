@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Possible root values :
@@ -73,7 +74,7 @@ public class Scenario {
 	@SuppressWarnings("unchecked")
 	private void parseScenario(String scenario) throws IOException, ParseException {
 		Json jsonScenario = new Json(scenario);
-		jsonScenario.checkExistence(new String[]{DESCRIPTION_KEY, COMMANDS_KEY});
+		jsonScenario.checkExistence(DESCRIPTION_KEY, COMMANDS_KEY);
 
 		this.description = jsonScenario.getString(DESCRIPTION_KEY);
 		this.variables = (Map<String, Object>) jsonScenario.getMap(VARIABLE_KEY);
@@ -84,9 +85,10 @@ public class Scenario {
 			dependencies.add(new Scenario(dependency));
 		}
 
-		Integer commandCount = jsonScenario.getLength(COMMANDS_KEY);
-		for (Integer i = 0; i < commandCount; ++i) {
-			commands.add(new Command(jsonScenario.get(COMMANDS_KEY).get(i)));
+		int commandCount = jsonScenario.getLength(COMMANDS_KEY);
+		for (int i = 0; i < commandCount; ++i) {
+			Json json = Objects.requireNonNull(jsonScenario.get(COMMANDS_KEY));
+			commands.add(new Command(json.get(i)));
 		}
 	}
 

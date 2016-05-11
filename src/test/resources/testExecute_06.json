@@ -1,0 +1,14 @@
+{
+	"description": "Put cmd with a null body",
+	"commands": [
+		{
+			"verb": "PUT",
+			"uri": "/nullBodyUrl"
+		},
+		{
+			"verb": "POST",
+			"uri": "/nullBodyUrl",
+			"automaticCheck": false
+		}
+	]
+}

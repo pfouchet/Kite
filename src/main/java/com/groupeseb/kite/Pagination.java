@@ -4,13 +4,11 @@ import lombok.Data;
 
 @Data
 public class Pagination {
-    protected String totalPagesField;
-
-    protected String pageParameterName;
-    protected String sizeParameterName;
-
-    protected Integer size;
-    protected Integer startPage;
+    private final String totalPagesField;
+    private final String pageParameterName;
+    private final String sizeParameterName;
+    private final Integer size;
+    private final Integer startPage;
 
     public Pagination(Json specification) {
         totalPagesField = specification.getString("totalPagesField");

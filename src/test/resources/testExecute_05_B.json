@@ -1,0 +1,11 @@
+{
+  "description": "POST http operation (2)",
+  "commands": [
+	{
+	  "verb": "POST",
+	  "uri": "/mySecondeUrl",
+	  "automaticCheck": false,
+	  "body": "{{Lookup:cmdA}}{{Lookup:cmdAA.field}}"
+	}
+  ]
+}
