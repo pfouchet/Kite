@@ -23,7 +23,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
 
@@ -32,7 +31,7 @@ import static org.testng.AssertJUnit.assertEquals;
 
 @Slf4j
 @Component
-public class DefaultCommandRunner {
+public class CommandRunner {
 	private static final String UTF_8_ENCODING = "UTF-8";
 	private static final String JSON_UTF8 = ContentType.create(
 			ContentType.APPLICATION_JSON.getMimeType(), UTF_8_ENCODING).toString();
@@ -44,11 +43,11 @@ public class DefaultCommandRunner {
 	private final DefaultCheckRunner defaultCheckRunner;
 
 	@Autowired
-	DefaultCommandRunner(DefaultCheckRunner defaultCheckRunner) {
+	CommandRunner(DefaultCheckRunner defaultCheckRunner) {
 		this.defaultCheckRunner = defaultCheckRunner;
 	}
 
-	void execute(Command command, ContextProcessor context) throws Exception {
+	void execute(Command command, ContextProcessor contextProcessor) throws Exception {
 
 		if (command.getDescription() != null) {
 			log.info(command.getDescription() + "...");
@@ -66,19 +65,19 @@ public class DefaultCommandRunner {
 
 		switch (command.getVerb().toUpperCase()) {
 			case POST:
-				post(command, context);
+				post(command, contextProcessor);
 				break;
 			case GET:
-				get(command, context);
+				get(command, contextProcessor);
 				break;
 			case PUT:
-				put(command, context);
+				put(command, contextProcessor);
 				break;
 			case DELETE:
-				delete(command, context);
+				delete(command, contextProcessor);
 				break;
 			case PATCH:
-				patch(command, context);
+				patch(command, contextProcessor);
 				break;
 			default:
 				throw new IllegalArgumentException(String.format("Verbe %s is not supported", command.getVerb().toUpperCase()));
@@ -87,41 +86,43 @@ public class DefaultCommandRunner {
 		log.info('[' + command.getName() + "] OK");
 	}
 
-	void post(Command command, ContextProcessor context) throws ParseException {
+	void post(Command command, ContextProcessor contextProcessor) throws ParseException {
+		String processedURI = contextProcessor.getProcessedURI(command);
 		log.info('['
 				+ command.getName()
 				+ "] POST "
-				+ command.getProcessedURI(context)
+				+ processedURI
 				+ " (expecting "
 				+ command.getExpectedStatus()
 				+ ')');
 
+		String processedBody = contextProcessor.getProcessedBody(command);
 		if (command.getDebug()) {
-			log.info('[' + command.getName() + "] " + command.getProcessedBody(context));
+			log.info('[' + command.getName() + "] " + processedBody);
 		}
 
 		Response postResponse = given()
-				.contentType(JSON_UTF8).headers(command.getProcessedHeaders(context))
-				.body(getProcessedBodyBytes(command, context))
-				.when().post(command.getProcessedURI(context));
+				.contentType(JSON_UTF8).headers(contextProcessor.getProcessedHeaders(command))
+				.body(processedBody.getBytes(Charsets.UTF_8))
+				.when().post(processedURI);
 
 		String response = postResponse.prettyPrint();
 		log.info(response);
 
-		KiteContext kiteContext = context.getKiteContext();
-		addBodyIfNotEmpty(kiteContext,response,command);
+		KiteContext kiteContext = contextProcessor.getKiteContext();
+		addBodyIfNotEmpty(kiteContext, response, command);
 
 		assertEquals("Unexpected response status",
 				command.getExpectedStatus(),
 				Integer.valueOf(postResponse.getStatusCode()));
-		runChecks(command.getChecks(context), response);
+		runChecks(contextProcessor.getChecks(command), response);
 
 		if (command.getAutomaticCheck()) {
-			doCheck(command, context, postResponse, kiteContext);
+			doCheck(command, contextProcessor, postResponse, kiteContext);
 		}
 	}
 
-	private static void doCheck(Command command, ContextProcessor context, Response response, KiteContext kiteContext) {
+	private static void doCheck(Command command, ContextProcessor contextProcessor, Response response, KiteContext kiteContext) {
 		String location = response.getHeader("Location");
 		if (Strings.isNullOrEmpty(location)) {
 			throw new IllegalStateException("'Location' is empty in header response, set a valid location or set 'automaticCheck' to false");
@@ -129,7 +130,7 @@ public class DefaultCommandRunner {
 
 		log.info("Checking resource: " + location + "...");
 		given().header("Accept-Encoding", UTF_8_ENCODING)
-				.headers(command.getProcessedHeaders(context))
+				.headers(contextProcessor.getProcessedHeaders(command))
 				.expect().statusCode(HttpStatus.SC_OK)
 				.when().get(location);
 
@@ -139,56 +140,56 @@ public class DefaultCommandRunner {
 	}
 
 
-	void patch(Command command, ContextProcessor context) throws ParseException {
+	void patch(Command command, ContextProcessor contextProcessor) throws ParseException {
+		String processedURI = contextProcessor.getProcessedURI(command);
 		log.info('['
 				+ command.getName()
 				+ "] PATCH "
-				+ command.getProcessedURI(context)
+				+ processedURI
 				+ " (expecting "
 				+ command.getExpectedStatus()
 				+ ')');
 
+		String processedBody = contextProcessor.getProcessedBody(command);
 		if (command.getDebug()) {
-			log.info('[' + command.getName() + "] " + command.getProcessedBody(context));
+			log.info('[' + command.getName() + "] " + processedBody);
 		}
 
 		Response patchResponse = given()
-				.contentType(JSON_UTF8).headers(command.getProcessedHeaders(context))
-				.body(getProcessedBodyBytes(command, context))
-				.when().patch(command.getProcessedURI(context));
+				.contentType(JSON_UTF8).headers(contextProcessor.getProcessedHeaders(command))
+				.body(processedBody.getBytes(Charsets.UTF_8))
+				.when().patch(processedURI);
 
 		String response = patchResponse.prettyPrint();
 		log.info(response);
 
-		KiteContext kiteContext = context.getKiteContext();
+		KiteContext kiteContext = contextProcessor.getKiteContext();
 		addBodyIfNotEmpty(kiteContext, response, command);
 
 		assertEquals("Unexpected response status",
 				command.getExpectedStatus(),
 				Integer.valueOf(patchResponse.getStatusCode()));
-		runChecks(command.getChecks(context), response);
+		runChecks(contextProcessor.getChecks(command), response);
 
 		if (command.getAutomaticCheck()) {
-			doCheck(command, context, patchResponse, kiteContext);
+			doCheck(command, contextProcessor, patchResponse, kiteContext);
 		}
 	}
 
-	private static String performGetRequest(Command command, ContextProcessor context, @Nullable HttpParams params) throws IOException {
-		String requestURI = command.getProcessedURI(context);
-		if (!command.getProcessedURI(context).contains("http://") && !command.getProcessedURI(context).contains(
-				"https://")) {
-			requestURI = RestAssured.baseURI + ':' + RestAssured.port + RestAssured.basePath + command.getProcessedURI(
-					context);
+	private static String performGetRequest(Command command, ContextProcessor contextProcessor, @Nullable HttpParams params) throws IOException {
+		String processedURI = contextProcessor.getProcessedURI(command);
+		if (!processedURI.contains("http://") && !processedURI.contains("https://")) {
+			processedURI = RestAssured.baseURI + ':' + RestAssured.port + RestAssured.basePath + processedURI;
 		}
 
-		HttpGet httpget = new HttpGet(requestURI);
+		HttpGet httpget = new HttpGet(processedURI);
 
 		if (params != null) {
 			httpget.setParams(httpget.getParams());
 		}
 
 		httpget.addHeader("Content-Type", "application/json");
-		for (Map.Entry<String, String> header : command.getProcessedHeaders(context).entrySet()) {
+		for (Map.Entry<String, String> header : contextProcessor.getProcessedHeaders(command).entrySet()) {
 			httpget.addHeader(header.getKey(), header.getValue());
 		}
 
@@ -204,7 +205,7 @@ public class DefaultCommandRunner {
 					(int) command.getExpectedStatus(), response.getStatusLine().getStatusCode());
 
 			String body = EntityUtils.toString(response.getEntity());
-			KiteContext kiteContext = context.getKiteContext();
+			KiteContext kiteContext = contextProcessor.getKiteContext();
 			addBodyIfNotEmpty(kiteContext, body, command);
 			return body;
 
@@ -213,17 +214,17 @@ public class DefaultCommandRunner {
 		}
 	}
 
-	void get(Command command, ContextProcessor context) throws ParseException, IOException {
+	void get(Command command, ContextProcessor contextProcessor) throws ParseException, IOException {
 		if (command.getPagination() != null) {
-			paginatedGet(command, context);
+			paginatedGet(command, contextProcessor);
 		} else {
-			String responseBody = performGetRequest(command, context, null);
-			runChecks(command.getChecks(context), responseBody);
+			String responseBody = performGetRequest(command, contextProcessor, null);
+			runChecks(contextProcessor.getChecks(command), responseBody);
 		}
 	}
 
-	void paginatedGet(Command command, ContextProcessor context) throws ParseException, IOException {
-		log.info("GET " + command.getProcessedURI(context) + " (expecting " + command.getExpectedStatus() + ')');
+	void paginatedGet(Command command, ContextProcessor contextProcessor) throws ParseException, IOException {
+		log.info("GET " + contextProcessor.getProcessedURI(command) + " (expecting " + command.getExpectedStatus() + ')');
 
 		Integer currentPage = command.getPagination().getStartPage();
 		Integer totalPages = currentPage;
@@ -233,56 +234,70 @@ public class DefaultCommandRunner {
 			params.setParameter(command.getPagination().getPageParameterName(), command.getPagination().getStartPage());
 			params.setParameter(command.getPagination().getSizeParameterName(), command.getPagination().getSize());
 
-			String responseBody = performGetRequest(command, context, params);
+			String responseBody = performGetRequest(command, contextProcessor, params);
 			totalPages = JsonPath.read(responseBody, command.getPagination().getTotalPagesField());
 
-			runChecks(command.getChecks(context), responseBody);
+			runChecks(contextProcessor.getChecks(command), responseBody);
 			currentPage++;
 		}
 	}
 
-	void put(Command command, ContextProcessor context) throws ParseException {
+	void put(Command command, ContextProcessor contextProcessor) throws ParseException {
+		String processedURI = contextProcessor.getProcessedURI(command);
+
 		log.info('['
 				+ command.getName()
 				+ "] PUT "
-				+ command.getProcessedURI(context)
+				+ processedURI
 				+ " (expecting "
 				+ command.getExpectedStatus()
 				+ ')');
 
+		String processedBody = contextProcessor.getProcessedBody(command);
 		if (command.getDebug()) {
-			log.info('[' + command.getName() + "] " + command.getProcessedBody(context));
+			log.info('[' + command.getName() + "] " + processedBody);
 		}
 
 		Response putResponse = given()
-				.contentType(JSON_UTF8).headers(command.getProcessedHeaders(context))
-				.body(getProcessedBodyBytes(command, context)).log().everything(true)
+				.contentType(JSON_UTF8).headers(contextProcessor.getProcessedHeaders(command))
+				.body(processedBody.getBytes(Charsets.UTF_8))
+				.log().everything(true)
 				.expect().statusCode(command.getExpectedStatus())
-				.when().put(command.getProcessedURI(context));
+				.when().put(processedURI);
 
 		String response = putResponse.prettyPrint();
 		log.info(response);
 
-		KiteContext kiteContext = context.getKiteContext();
-		addBodyIfNotEmpty(kiteContext,response,command);
-		runChecks(command.getChecks(context), response);
+		KiteContext kiteContext = contextProcessor.getKiteContext();
+		addBodyIfNotEmpty(kiteContext, response, command);
+		runChecks(contextProcessor.getChecks(command), response);
 	}
 
-	void delete(Command command, ContextProcessor context) throws ParseException {
-		log.info("DELETE " + command.getProcessedURI(context) + " (expecting " + command.getExpectedStatus() + ')');
-		Response r = given().contentType(JSON_UTF8).headers(command.getProcessedHeaders(context))
-				.body(getProcessedBodyBytes(command, context)).log().everything(true)
-				.expect().statusCode(command.getExpectedStatus())
-				.when().delete(command.getProcessedURI(context));
+	void delete(Command command, ContextProcessor contextProcessor) throws ParseException {
+		String processedURI = contextProcessor.getProcessedURI(command);
+		Integer expectedStatus = command.getExpectedStatus();
 
-		runChecks(command.getChecks(context), r.prettyPrint());
+		log.info("DELETE " + processedURI + " (expecting " + expectedStatus + ')');
 
-		log.info("Checking resource: " + command.getProcessedURI(context) + "...");
+		Response r = given()
+				.contentType(JSON_UTF8)
+				.headers(contextProcessor.getProcessedHeaders(command))
+				.body(contextProcessor.getProcessedBody(command).getBytes(Charsets.UTF_8))
+				.log()
+				.everything(true)
+				.expect()
+				.statusCode(expectedStatus)
+				.when()
+				.delete(processedURI);
+
+		runChecks(contextProcessor.getChecks(command), r.prettyPrint());
+
+		log.info("Checking resource: " + processedURI + "...");
 
 		if (command.getAutomaticCheck()) {
 			given().contentType(JSON_UTF8)
 					.expect().statusCode(HttpStatus.SC_NOT_FOUND)
-					.when().get(command.getProcessedURI(context));
+					.when().get(processedURI);
 		}
 	}
 
@@ -293,24 +308,6 @@ public class DefaultCommandRunner {
 			} catch (RuntimeException e) {
 				throw new IllegalStateException("Check [" + check.getDescription() + "] failed ", e);
 			}
-		}
-	}
-
-	/**
-	 * Processes and encodes the body of the request using UTF-8 {@link Charset}.
-	 * <p>
-	 * Processing is done using {@link Command#getProcessedBody(ContextProcessor)} prior encoding to
-	 * bytes.
-	 *
-	 * @param command the command to get body from, not null
-	 * @param context the creation log related to the command, not null
-	 * @return the body of the request, with placeholders processed and encoded in UTF-8
-	 */
-	private static byte[] getProcessedBodyBytes(Command command, ContextProcessor context) {
-		try {
-			return command.getProcessedBody(context).getBytes(Charsets.UTF_8);
-		} catch (RuntimeException e) {
-			throw new IllegalStateException("Command [" + command.getDescription() + "] failed ", e);
 		}
 	}
 

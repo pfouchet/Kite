@@ -1,14 +1,8 @@
 package com.groupeseb.kite;
 
-import com.groupeseb.kite.check.Check;
 import lombok.Getter;
 import org.apache.http.HttpStatus;
-import org.assertj.core.util.Strings;
-import org.json.simple.parser.ParseException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
@@ -58,16 +52,6 @@ class Command {
 		headers = commandSpecification.getMap("headers");
 	}
 
-	public List<Check> getChecks(ContextProcessor context) throws ParseException {
-		List<Check> checks = new ArrayList<>();
-		for (Integer i = 0; i < commandSpecification.getLength("checks"); ++i) {
-			Json json = requireNonNull(commandSpecification.get("checks"));
-			checks.add(new Check(json.get(i), context));
-		}
-
-		return checks;
-	}
-
 	private static int getExpectedStatusByVerb(String string) {
 		switch (string) {
 			case "POST":
@@ -85,32 +69,5 @@ class Command {
 			default:
 				return HttpStatus.SC_OK;
 		}
-	}
-
-	String getProcessedURI(ContextProcessor context) {
-		return context.processPlaceholders(getName(), getUri(), false);
-	}
-
-	String getProcessedBody(ContextProcessor context) {
-		if (Strings.isNullOrEmpty(getBody())) {
-			return "";
-		}
-		return context.processPlaceholders(getName(), getBody(), true);
-	}
-
-	Map<String, String> getProcessedHeaders(ContextProcessor context) {
-		Map<String, String> processedHeaders = new HashMap<>(getHeaders());
-
-		for (Map.Entry<String, String> entry : processedHeaders.entrySet()) {
-			processedHeaders.put(entry.getKey(),
-					context.processPlaceholders(getName(),
-							processedHeaders.get(entry.getKey()), false));
-		}
-
-		if (!processedHeaders.containsKey("Accept")) {
-			processedHeaders.put("Accept", "application/json");
-		}
-
-		return processedHeaders;
 	}
 }

@@ -1,10 +1,12 @@
 package com.groupeseb.kite;
 
+import com.groupeseb.kite.check.Check;
 import com.groupeseb.kite.function.Function;
 import com.groupeseb.kite.function.impl.UUIDFunction;
 import lombok.Data;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.assertj.core.util.Strings;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
@@ -19,9 +21,12 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.util.Objects.requireNonNull;
+
 @Data
 public class ContextProcessor {
 	private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("\\{\\{Timestamp:Now\\{\\{", Pattern.CASE_INSENSITIVE);
+	private static final Pattern UUID_PATTERN = Pattern.compile("\\{\\{" + UUIDFunction.NAME + ":(.+?)\\}\\}");
 	private final KiteContext kiteContext;
 	private final Collection<Function> availableFunctions;
 
@@ -140,22 +145,15 @@ public class ContextProcessor {
 		return new Json(processPlaceholders(null, json.toString(), true));
 	}
 
-	private Map<String, String> getEveryUUIDs(String scenario) {
-		Pattern uuidPattern = Pattern.compile("\\{\\{" + UUIDFunction.NAME
-				+ ":(.+?)\\}\\}");
-		Matcher uuidMatcher = uuidPattern.matcher(scenario);
-
-		Map<String, String> localUuids = new HashMap<>();
-
+	private void getEveryUUIDs(String scenario) {
+		Matcher uuidMatcher = UUID_PATTERN.matcher(scenario);
+		Map<String, String> uuids = kiteContext.getUuids();
 		while (uuidMatcher.find()) {
 			String name = uuidMatcher.group(1);
-
-			if (!this.kiteContext.getUuids().containsKey(name)) {
-				localUuids.put(name, UUID.randomUUID().toString());
+			if (!uuids.containsKey(name)) {
+				uuids.put(name, UUID.randomUUID().toString());
 			}
 		}
-
-		return localUuids;
 	}
 
 	/**
@@ -192,7 +190,7 @@ public class ContextProcessor {
 							+ UUIDFunction.NAME + ':' + commandName + "}}");
 		}
 		// Update UUIDs list to add the one assigned for current command
-		this.kiteContext.getUuids().putAll(getEveryUUIDs(processedValue));
+		getEveryUUIDs(processedValue);
 
 		processedValue = applyFunctions(processedValue,
 				jsonEscapeFunctionResult);
@@ -214,5 +212,52 @@ public class ContextProcessor {
 			return expected;
 		}
 		throw new UnsupportedOperationException("Incorrect value : " + expected);
+	}
+
+
+	String getProcessedURI(Command command) {
+		return processPlaceholders(command.getName(), command.getUri(), false);
+	}
+
+
+	/**
+	 * @param command the command to get body from, not null
+	 * @return the body of the request, with placeholders processed
+	 */
+	String getProcessedBody(Command command) {
+		String body = command.getBody();
+		if (Strings.isNullOrEmpty(body)) {
+			return "";
+		}
+		try {
+			return processPlaceholders(command.getName(), body, true);
+		} catch (RuntimeException e) {
+			throw new IllegalStateException("getProcessedBody : Command [" + command.getDescription() + "] failed ", e);
+		}
+	}
+
+	Map<String, String> getProcessedHeaders(Command command) {
+		Map<String, String> processedHeaders = new HashMap<>(command.getHeaders());
+
+		for (Map.Entry<String, String> entry : processedHeaders.entrySet()) {
+			processedHeaders.put(entry.getKey(),
+					processPlaceholders(command.getName(), entry.getValue(), false));
+		}
+
+		if (!processedHeaders.containsKey("Accept")) {
+			processedHeaders.put("Accept", "application/json");
+		}
+
+		return processedHeaders;
+	}
+
+	public List<Check> getChecks(Command command) throws ParseException {
+		List<Check> checks = new ArrayList<>();
+		for (Integer i = 0; i < command.getCommandSpecification().getLength("checks"); ++i) {
+			Json json = requireNonNull(command.getCommandSpecification().get("checks"));
+			checks.add(new Check(json.get(i), this));
+		}
+
+		return checks;
 	}
 }
