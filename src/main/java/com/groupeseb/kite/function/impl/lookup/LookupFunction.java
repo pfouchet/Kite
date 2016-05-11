@@ -17,7 +17,7 @@ import static org.testng.Assert.fail;
 @Slf4j
 @Component
 public class LookupFunction extends AbstractWithParameters {
-	private static final Pattern ADDITINAL_FUNCTION_PATTERN = Pattern.compile("(.+?):(.+?)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern ADDITIONAL_FUNCTION_PATTERN = Pattern.compile("(.+?):(.+?)", Pattern.CASE_INSENSITIVE);
 
 	private final List<AdditionalLookupFunction> additionalLookupFunctions;
 
@@ -31,10 +31,10 @@ public class LookupFunction extends AbstractWithParameters {
 	@Override
 	public String apply(List<String> parameters, ContextProcessor context) {
 		String input = parameters.get(0);
-		Matcher matcher = ADDITINAL_FUNCTION_PATTERN.matcher(input);
-		if (matcher.matches()) {
-			String fieldValue = getFieldValue(context.getKiteContext(), matcher.group(1));
-			return applyAddtionalFunction(fieldValue, matcher.group(2));
+		Matcher additionalFunctionMatcher = ADDITIONAL_FUNCTION_PATTERN.matcher(input);
+		if (additionalFunctionMatcher.matches()) {
+			String fieldValue = getFieldValue(context.getKiteContext(), additionalFunctionMatcher.group(1));
+			return applyAddtionalFunction(fieldValue, additionalFunctionMatcher.group(2));
 		}
 		return getFieldValue(context.getKiteContext(), input);
 	}
