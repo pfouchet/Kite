@@ -25,13 +25,13 @@ import static java.util.Objects.requireNonNull;
 
 @Data
 public class ContextProcessor {
-	private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("\\{\\{Timestamp:Now\\{\\{", Pattern.CASE_INSENSITIVE);
+	private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("\\{\\{Timestamp:Now\\}\\}", Pattern.CASE_INSENSITIVE);
 	private static final Pattern UUID_PATTERN = Pattern.compile("\\{\\{" + UUIDFunction.NAME + ":(.+?)\\}\\}");
 	private final KiteContext kiteContext;
 	private final Collection<Function> availableFunctions;
 
 	ContextProcessor(Collection<Function> availableFunctions,
-	                 KiteContext kiteContext) {
+					 KiteContext kiteContext) {
 		this.availableFunctions = availableFunctions;
 		this.kiteContext = kiteContext;
 	}
@@ -103,6 +103,11 @@ public class ContextProcessor {
 			result = executeFunctions(availableAbstractFunction, result, jsonEscapeFunctionResult);
 		}
 
+		Matcher timestampMatcher = TIMESTAMP_PATTERN.matcher(result);
+		if (!timestampMatcher.find()) {
+			return result;
+		}
+
 		// 'Timestamp' is not implemented like other functions, because that
 		// would not permit to
 		// generate the same date for the whole command (since function is
@@ -112,7 +117,7 @@ public class ContextProcessor {
 		if (jsonEscapeFunctionResult) {
 			currentDateString = JSONObject.escape(currentDateString);
 		}
-		return TIMESTAMP_PATTERN.matcher(result).replaceAll(Matcher.quoteReplacement(currentDateString));
+		return timestampMatcher.replaceAll(Matcher.quoteReplacement(currentDateString));
 	}
 
 	/**
@@ -180,7 +185,7 @@ public class ContextProcessor {
 	 * placehoders replaced
 	 */
 	public String processPlaceholders(@Nullable String commandName,
-	                                  String valueWithPlaceholders, boolean jsonEscapeFunctionResult) {
+									  String valueWithPlaceholders, boolean jsonEscapeFunctionResult) {
 		String processedValue = valueWithPlaceholders;
 
 		// Assign UUID for current command if needed
