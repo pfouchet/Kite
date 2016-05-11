@@ -1,10 +1,9 @@
 package com.groupeseb.kite.function;
 
 import com.groupeseb.kite.ContextProcessor;
-import lombok.Data;
 
 import java.util.List;
-import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Interface for classes allowing to replace placeholders in some {@link String}
@@ -19,23 +18,27 @@ import java.util.regex.Matcher;
  *
  * @author jcanquelain
  */
-@Data
-public abstract class AbstractFunction {
-	private final String name;
+public interface Function {
 
-	protected AbstractFunction(String name) {
-		this.name = name;
-	}
+	/**
+	 * @return The pattern of function, used to find all occurrence  in string
+	 */
+	Pattern getPattern();
 
-	public final boolean match(String name) {
-		return name.equalsIgnoreCase(this.name);
-	}
+	/**
+	 * @return true if the function need a parameters
+	 */
+	boolean isWithParameters();
 
-	public abstract Matcher getMatcher(String input);
+	/**
+	 * @param parameters       parameters after function
+	 * @param contextProcessor used to access to kiteContext
+	 * @return a final value
+	 */
+	String apply(List<String> parameters, ContextProcessor contextProcessor);
 
-	public abstract boolean isWithParameters();
-
-	public abstract String apply(List<String> parameters, ContextProcessor contextProcessor);
-
-	public abstract String apply();
+	/**
+	 * @return genrated value
+	 */
+	String apply();
 }

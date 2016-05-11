@@ -5,10 +5,7 @@ package com.groupeseb.kite.function.impl;
 
 import com.google.common.base.Preconditions;
 import com.groupeseb.kite.ContextProcessor;
-import com.groupeseb.kite.function.AbstractWithParameters;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 /**
  * Function that replaces {{UUID:objectName}} placeholders by the value of the UUID that was
@@ -17,7 +14,7 @@ import java.util.List;
  * @author jcanquelain
  */
 @Component
-public class UUIDFunction extends AbstractWithParameters {
+public class UUIDFunction extends AbstractWithOneParameter {
 	/**
 	 * Name of this function as it appears in placeholders
 	 */
@@ -28,9 +25,8 @@ public class UUIDFunction extends AbstractWithParameters {
 	}
 
 	@Override
-	public String apply(List<String> parameters, ContextProcessor context) {
-		String objectName = getUniqueParameter(parameters);
-		String objectUUID = context.getKiteContext().getUuids().get(objectName);
-		return Preconditions.checkNotNull(objectUUID, "No UUID corresponds to object named [%s]", objectName);
+	public String apply(String parameter, ContextProcessor context) {
+		String objectUUID = context.getKiteContext().getUuids().get(parameter);
+		return Preconditions.checkNotNull(objectUUID, "No UUID corresponds to object named [%s]", parameter);
 	}
 }

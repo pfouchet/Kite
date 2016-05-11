@@ -2,7 +2,7 @@ package com.groupeseb.kite.function.impl.lookup;
 
 import com.groupeseb.kite.ContextProcessor;
 import com.groupeseb.kite.KiteContext;
-import com.groupeseb.kite.function.AbstractWithParameters;
+import com.groupeseb.kite.function.impl.AbstractWithParameters;
 import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

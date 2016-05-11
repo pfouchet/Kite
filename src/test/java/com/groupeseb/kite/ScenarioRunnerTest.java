@@ -156,8 +156,7 @@ public class ScenarioRunnerTest {
 		stubForUrlAndBody(PUT, "/nullBodyUrl", 204, null);
 		stubForUrlAndBody(POST, "/nullBodyUrl", 201, null);
 
-		ScenarioRunner scenarioRunner = KiteRunner.getInstance();
-		KiteContext kiteContext = scenarioRunner.execute("testExecute_06.json");
+		KiteRunner.getInstance().execute("testExecute_06.json");
 	}
 
 	@AllArgsConstructor

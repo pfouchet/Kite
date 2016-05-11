@@ -12,32 +12,31 @@ import static org.testng.Assert.assertTrue;
  * Verifies if actual value is strictly greater than expected value
  * <p>
  * Launch an {@link IllegalArgumentException} if actual or expected values are not numeric
- * 
- * @author mgaudin
  *
+ * @author mgaudin
  */
 @Component
 public class GreaterThanOperator implements ICheckOperator {
-    @Override
-    public boolean match(String name) {
-        return "gt".equalsIgnoreCase(name);
-    }
+	@Override
+	public boolean match(String name) {
+		return "gt".equalsIgnoreCase(name);
+	}
 
-    @Override
+	@Override
 	public void apply(Object value, Object expected, String description, Json parameters) {
-        Preconditions.checkArgument(
-                Number.class.isAssignableFrom(value.getClass()),
-                "The input argument of 'gt' must be a number"
-        );
+		Preconditions.checkArgument(
+				Number.class.isAssignableFrom(value.getClass()),
+				"The input argument of 'gt' must be a number"
+		);
 
-        Preconditions.checkArgument(
-                Number.class.isAssignableFrom(expected.getClass()),
-                "The input argument of 'gt' must be a number"
-        );
+		Preconditions.checkArgument(
+				Number.class.isAssignableFrom(expected.getClass()),
+				"The input argument of 'gt' must be a number"
+		);
 
-        assertTrue(
-                ((Number) value).doubleValue() > ((Number) expected).doubleValue()
-                , description
-        );
-    }
+		assertTrue(
+				((Number) value).doubleValue() > ((Number) expected).doubleValue()
+				, description
+		);
+	}
 }

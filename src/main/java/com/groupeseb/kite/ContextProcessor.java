@@ -1,13 +1,12 @@
 package com.groupeseb.kite;
 
-import com.groupeseb.kite.function.AbstractFunction;
+import com.groupeseb.kite.function.Function;
 import com.groupeseb.kite.function.impl.UUIDFunction;
 import lombok.Data;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -24,11 +23,11 @@ import java.util.regex.Pattern;
 public class ContextProcessor {
 	private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("\\{\\{Timestamp:Now\\{\\{", Pattern.CASE_INSENSITIVE);
 	private final KiteContext kiteContext;
-	private final Collection<AbstractFunction> availableAbstractFunctions;
+	private final Collection<Function> availableFunctions;
 
-	ContextProcessor(Collection<AbstractFunction> availableAbstractFunctions,
+	ContextProcessor(Collection<Function> availableFunctions,
 	                 KiteContext kiteContext) {
-		this.availableAbstractFunctions = availableAbstractFunctions;
+		this.availableFunctions = availableFunctions;
 		this.kiteContext = kiteContext;
 	}
 
@@ -36,18 +35,18 @@ public class ContextProcessor {
 	 * Applies function with given name on given value with function
 	 * placeholders
 	 *
-	 * @param abstractFunction                 current function
+	 * @param function                 current function
 	 * @param valueWithPlaceHolders    value on which function is applied
 	 * @param jsonEscapeFunctionResult true if function result must be json-escaped prior replacing
 	 *                                 placeholder in valueWithPlaceholder
 	 * @return the copy of initial valueWithPlaceholders with function's
 	 * placehoders replaced
 	 */
-	private String executeFunctions(AbstractFunction abstractFunction, String valueWithPlaceHolders, boolean jsonEscapeFunctionResult) {
+	private String executeFunctions(Function function, String valueWithPlaceHolders, boolean jsonEscapeFunctionResult) {
 
-		Matcher matcher = abstractFunction.getMatcher(valueWithPlaceHolders);
+		Matcher matcher = function.getPattern().matcher(valueWithPlaceHolders);
 
-		if (abstractFunction.isWithParameters()) {
+		if (function.isWithParameters()) {
 			String result = valueWithPlaceHolders;
 			while (matcher.find()) {
 				List<String> parameters = new ArrayList<>();
@@ -61,7 +60,7 @@ public class ContextProcessor {
 					parameters.add(StringEscapeUtils.unescapeJson(matcher.group(i)));
 				}
 
-				String functionResult = abstractFunction.apply(parameters, this);
+				String functionResult = function.apply(parameters, this);
 				if (jsonEscapeFunctionResult) {
 					functionResult = JSONObject.escape(functionResult);
 				}
@@ -71,7 +70,7 @@ public class ContextProcessor {
 			return result;
 		}
 
-		return matcher.replaceAll(abstractFunction.apply());
+		return matcher.replaceAll(function.apply());
 	}
 
 	/**
@@ -95,7 +94,7 @@ public class ContextProcessor {
 	String applyFunctions(String valueWithPlaceholders, boolean jsonEscapeFunctionResult) {
 		String result = valueWithPlaceholders;
 
-		for (AbstractFunction availableAbstractFunction : availableAbstractFunctions) {
+		for (Function availableAbstractFunction : availableFunctions) {
 			result = executeFunctions(availableAbstractFunction, result, jsonEscapeFunctionResult);
 		}
 
@@ -214,6 +213,6 @@ public class ContextProcessor {
 				expected instanceof Double) {
 			return expected;
 		}
-		throw new NotImplementedException();
+		throw new UnsupportedOperationException("Incorrect value : " + expected);
 	}
 }

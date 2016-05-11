@@ -1,6 +1,5 @@
 package com.groupeseb.kite.function.impl;
 
-import com.groupeseb.kite.function.AbstractWithoutParametersFunction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

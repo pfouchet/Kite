@@ -18,7 +18,6 @@ import static java.util.Objects.requireNonNull;
  * This Helper class was written to make testing Json output easier.
  * Because I write methods lazily, feel free to add new ones if required for your tests
  */
-@SuppressWarnings("UnusedDeclaration")
 public class Json {
 	private final JSONParser parser = new JSONParser();
 	private JSONObject rootObject = null;

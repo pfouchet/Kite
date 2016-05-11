@@ -71,7 +71,7 @@ import java.util.List;
 @Component
 public class JsonEqualsOperator implements ICheckOperator {
 
-	private final List<String> AVAILABLE_JSON_COMPARE_MODE = getAvailableJSONCompareMode();
+	private static final List<String> AVAILABLE_JSON_COMPARE_MODE = getAvailableJSONCompareMode();
 
 	@Override
 	public boolean match(String name) {

@@ -1,6 +1,6 @@
 package com.groupeseb.kite.function.impl;
 
-import com.groupeseb.kite.function.AbstractFunction;
+import com.groupeseb.kite.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -10,8 +10,9 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class FunctionsProvider {
 
-	public static List<AbstractFunction> getFunctions() {
-		return Arrays.asList(new Base64Function(),
+	public static List<Function> getFunctions() {
+		return Arrays.asList(
+				(Function) new Base64Function(),
 				new JwtFunction(),
 				new LocationFunction(),
 				new RandomIntegerFunction(),

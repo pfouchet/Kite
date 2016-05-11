@@ -1,6 +1,6 @@
 package com.groupeseb.kite;
 
-import com.groupeseb.kite.function.AbstractFunction;
+import com.groupeseb.kite.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,16 +13,16 @@ import java.util.Map;
 @Component
 public class ScenarioRunner {
 	private final DefaultCommandRunner defaultCommandRunner;
-	private final Collection<AbstractFunction> abstractFunctions;
+	private final Collection<Function> functions;
 
 	@Autowired
-	ScenarioRunner(Collection<AbstractFunction> abstractFunctions, DefaultCommandRunner defaultCommandRunner) {
-		this.abstractFunctions = abstractFunctions;
+	ScenarioRunner(Collection<Function> functions, DefaultCommandRunner defaultCommandRunner) {
+		this.functions = functions;
 		this.defaultCommandRunner = defaultCommandRunner;
 	}
 
 	public KiteContext execute(String fileName, KiteContext kiteContext) throws Exception {
-		ContextProcessor context = new ContextProcessor(abstractFunctions, kiteContext);
+		ContextProcessor context = new ContextProcessor(functions, kiteContext);
 		return executeWithContext(new Scenario(fileName), context).getKiteContext();
 	}
 
