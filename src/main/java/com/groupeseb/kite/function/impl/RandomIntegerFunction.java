@@ -19,6 +19,6 @@ public class RandomIntegerFunction extends AbstractWithoutParametersFunction {
 
 	@Override
 	public String apply() {
-		return Integer.toString(1 + randomGenerator.nextInt());
+		return Integer.toString(1 + Math.abs(randomGenerator.nextInt()));
 	}
 }
