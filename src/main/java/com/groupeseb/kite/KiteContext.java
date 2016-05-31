@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @NoArgsConstructor
 @Data
@@ -54,7 +55,6 @@ public class KiteContext {
 	}
 
 	/**
-	 *
 	 * @param objectName name of payloads
 	 * @return payload non null and not empty
 	 */
@@ -75,9 +75,8 @@ public class KiteContext {
 	}
 
 	private static <T> T checkAndGet(Map<String, T> map, String mapName, String key) {
-		if (map.containsKey(key)) {
-			return map.get(key);
-		}
-		throw new IllegalArgumentException("Missing <" + key + "> in " + mapName);
+		return Objects.requireNonNull(
+				map.get(key),
+				String.format("Missing <%s> in %s, available keys : %s", key, mapName, map.keySet()));
 	}
 }
