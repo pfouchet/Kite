@@ -1,0 +1,32 @@
+{
+	"description": "Use placeholders in field attribute",
+	"variables": {
+		"fieldVariable": "anAttribute"
+	},
+	"commands": [
+		{
+			"verb": "POST",
+			"uri": "/myUrl07",
+			"automaticCheck": false,
+			"checks": [
+				{
+					"description": "Placeholder is correctly executed",
+					"field": "{{Variable:fieldVariable}}",
+					"expected": "aValue"
+				}
+			]
+		},
+		{
+			"verb": "POST",
+			"uri": "/myUrl07",
+			"automaticCheck": false,
+			"checks": [
+				{
+					"description": "No placeholder still works",
+					"field": "$.anAttribute",
+					"expected": "aValue"
+				}
+			]
+		}
+	]
+}

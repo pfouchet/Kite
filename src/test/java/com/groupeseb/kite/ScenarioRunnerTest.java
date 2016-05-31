@@ -15,6 +15,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -157,6 +159,15 @@ public class ScenarioRunnerTest {
 		stubForUrlAndBody(POST, "/nullBodyUrl", 201, null);
 
 		KiteRunner.getInstance().execute("testExecute_06.json");
+	}
+
+	@Test
+	public void testKiteContext_07() throws Exception {
+		Map<Object, Object> response = new HashMap<>();
+		response.put("anAttribute", "aValue");
+		stubForUrlAndBody(POST, "/myUrl07", 201, response);
+
+		KiteRunner.getInstance().execute("testExecute_07.json");
 	}
 
 	@AllArgsConstructor
