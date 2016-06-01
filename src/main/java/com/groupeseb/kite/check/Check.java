@@ -19,6 +19,7 @@ public class Check {
 	private final Boolean mustMatch;
 	private final Boolean skip;
 
+	@SuppressWarnings("ConstantConditions")
 	public Check(Json checkSpecification, ContextProcessor context) throws ParseException {
 		checkSpecification.checkExistence("field", "expected");
 
@@ -26,10 +27,10 @@ public class Check {
 			log.warn("'description' field is missing in one of your check.");
 		}
 
-		description = (checkSpecification.getString("description") == null) ? "" : checkSpecification.getString("description");
-		fieldName = checkSpecification.getString("field");
-		methodName = (checkSpecification.getString("method") == null) ? "nop" : checkSpecification.getString("method");
-		operatorName = (checkSpecification.getString("operator") == null) ? "equals" : checkSpecification.getString("operator");
+		description = checkSpecification.getStringOrDefault("description", "");
+		fieldName = context.processPlaceholdersInString(checkSpecification.getString("field"));
+		methodName = checkSpecification.getStringOrDefault("method", "nop");
+		operatorName = checkSpecification.getStringOrDefault("operator", "equals");
 		expectedValue = context.processPlaceholders(checkSpecification.getObject("expected"));
 		parameters = checkSpecification.get("parameters");
 		foreach = checkSpecification.getBooleanOrDefault("foreach", false);
