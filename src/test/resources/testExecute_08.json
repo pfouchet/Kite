@@ -1,0 +1,8 @@
+{
+  "description": "test current time integer",
+  "variables": {
+	"timeInt1": "{{currentTimeInt:0}}",
+	"timeInt2": "{{currentTimeInt:-100}}"
+  },
+  "commands": []
+}

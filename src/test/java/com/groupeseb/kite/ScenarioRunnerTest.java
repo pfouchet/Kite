@@ -31,6 +31,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.groupeseb.kite.ScenarioRunnerTest.HttpCmdEnum.POST;
 import static com.groupeseb.kite.ScenarioRunnerTest.HttpCmdEnum.PUT;
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ScenarioRunnerTest {
@@ -168,6 +169,19 @@ public class ScenarioRunnerTest {
 		stubForUrlAndBody(POST, "/myUrl07", 201, response);
 
 		KiteRunner.getInstance().execute("testExecute_07.json");
+	}
+
+	@Test
+	public void testKiteContext_08() throws Exception {
+		KiteContext kiteContext = KiteRunner.getInstance().execute("testExecute_08.json");
+		Map<String, String> variables = kiteContext.getVariables();
+		long currentTimeInt = System.currentTimeMillis() / 1000;
+
+		long timeInt1 = Long.valueOf(requireNonNull(variables.get("timeInt1")));
+		assertThat(timeInt1).isBetween(currentTimeInt - 2, currentTimeInt + 2);
+
+		long timeInt2 = Long.valueOf(requireNonNull(variables.get("timeInt2")));
+		assertThat(timeInt2).isBetween(currentTimeInt - 102, currentTimeInt - 98);
 	}
 
 	@AllArgsConstructor
