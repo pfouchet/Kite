@@ -1,6 +1,5 @@
 package com.groupeseb.kite;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.groupeseb.kite.check.Check;
 import com.groupeseb.kite.check.DefaultCheckRunner;
@@ -88,23 +87,13 @@ public class CommandRunner {
 
 	void post(Command command, ContextProcessor contextProcessor) throws ParseException {
 		String processedURI = contextProcessor.getProcessedURI(command);
-		log.info('['
-				+ command.getName()
-				+ "] POST "
-				+ processedURI
-				+ " (expecting "
-				+ command.getExpectedStatus()
-				+ ')');
+		log.info("[ {} ] POST {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
 
-		String processedBody = contextProcessor.getProcessedBody(command);
-		if (command.getDebug()) {
-			log.info('[' + command.getName() + "] " + processedBody);
-		}
-
-		Response postResponse = given()
-				.contentType(JSON_UTF8).headers(contextProcessor.getProcessedHeaders(command))
-				.body(processedBody.getBytes(Charsets.UTF_8))
-				.when().post(processedURI);
+		Response postResponse = contextProcessor.initRequestSpecificationContent(command)
+				.contentType(JSON_UTF8)
+				.headers(contextProcessor.getProcessedHeaders(command))
+				.when()
+				.post(processedURI);
 
 		String response = postResponse.prettyPrint();
 		log.info(response);
@@ -142,23 +131,13 @@ public class CommandRunner {
 
 	void patch(Command command, ContextProcessor contextProcessor) throws ParseException {
 		String processedURI = contextProcessor.getProcessedURI(command);
-		log.info('['
-				+ command.getName()
-				+ "] PATCH "
-				+ processedURI
-				+ " (expecting "
-				+ command.getExpectedStatus()
-				+ ')');
+		log.info("[{}] PATCH {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
 
-		String processedBody = contextProcessor.getProcessedBody(command);
-		if (command.getDebug()) {
-			log.info('[' + command.getName() + "] " + processedBody);
-		}
-
-		Response patchResponse = given()
-				.contentType(JSON_UTF8).headers(contextProcessor.getProcessedHeaders(command))
-				.body(processedBody.getBytes(Charsets.UTF_8))
-				.when().patch(processedURI);
+		Response patchResponse = contextProcessor.initRequestSpecificationContent(command)
+				.contentType(JSON_UTF8)
+				.headers(contextProcessor.getProcessedHeaders(command))
+				.when()
+				.patch(processedURI);
 
 		String response = patchResponse.prettyPrint();
 		log.info(response);
@@ -245,25 +224,17 @@ public class CommandRunner {
 	void put(Command command, ContextProcessor contextProcessor) throws ParseException {
 		String processedURI = contextProcessor.getProcessedURI(command);
 
-		log.info('['
-				+ command.getName()
-				+ "] PUT "
-				+ processedURI
-				+ " (expecting "
-				+ command.getExpectedStatus()
-				+ ')');
+		log.info("[ {} ] PUT {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
 
-		String processedBody = contextProcessor.getProcessedBody(command);
-		if (command.getDebug()) {
-			log.info('[' + command.getName() + "] " + processedBody);
-		}
-
-		Response putResponse = given()
-				.contentType(JSON_UTF8).headers(contextProcessor.getProcessedHeaders(command))
-				.body(processedBody.getBytes(Charsets.UTF_8))
-				.log().everything(true)
-				.expect().statusCode(command.getExpectedStatus())
-				.when().put(processedURI);
+		Response putResponse = contextProcessor.initRequestSpecificationContent(command)
+				.contentType(JSON_UTF8)
+				.headers(contextProcessor.getProcessedHeaders(command))
+				.log()
+				.everything(true)
+				.expect()
+				.statusCode(command.getExpectedStatus())
+				.when()
+				.put(processedURI);
 
 		String response = putResponse.prettyPrint();
 		log.info(response);
@@ -279,10 +250,9 @@ public class CommandRunner {
 
 		log.info("DELETE " + processedURI + " (expecting " + expectedStatus + ')');
 
-		Response r = given()
+		Response r = contextProcessor.initRequestSpecificationContent(command)
 				.contentType(JSON_UTF8)
 				.headers(contextProcessor.getProcessedHeaders(command))
-				.body(contextProcessor.getProcessedBody(command).getBytes(Charsets.UTF_8))
 				.log()
 				.everything(true)
 				.expect()

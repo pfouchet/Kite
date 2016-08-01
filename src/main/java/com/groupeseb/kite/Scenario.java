@@ -3,9 +3,7 @@ package com.groupeseb.kite;
 import lombok.Getter;
 import org.apache.commons.io.IOUtils;
 import org.json.simple.parser.ParseException;
-import org.springframework.core.io.ClassPathResource;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -58,17 +56,11 @@ public class Scenario {
 	}
 
 	protected static String readFixture(String filename) throws IOException {
-		ClassPathResource resource = new ClassPathResource(filename);
-
-		if (!resource.exists()) {
-			throw new FileNotFoundException(filename);
+		try (InputStream inputStream = FileHelper.getFileInputStream(filename)) {
+			StringWriter writer = new StringWriter();
+			IOUtils.copy(inputStream, writer);
+			return writer.toString();
 		}
-
-		InputStream inputStream = resource.getInputStream();
-		StringWriter writer = new StringWriter();
-		IOUtils.copy(inputStream, writer);
-
-		return writer.toString();
 	}
 
 	@SuppressWarnings("unchecked")
