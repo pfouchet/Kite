@@ -1,0 +1,14 @@
+{
+  "description": "test body + multipart case",
+  "commands": [
+	{
+	  "verb": "POST",
+	  "uri": "myUrl",
+	  "body": "",
+	  "multiPart": {
+		"name": "",
+		"fileLocation": ""
+	  }
+	}
+  ]
+}
