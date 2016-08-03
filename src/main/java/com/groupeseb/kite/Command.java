@@ -1,8 +1,10 @@
 package com.groupeseb.kite;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.http.HttpStatus;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
@@ -23,6 +25,8 @@ class Command {
 	private final Boolean automaticCheck;
 	private final Boolean debug;
 	private final Map<String, String> headers;
+	@Nullable
+	private final MultiPart multiPart;
 
 	private Pagination pagination = null;
 
@@ -32,13 +36,16 @@ class Command {
 		this.commandSpecification = commandSpecification;
 
 		commandSpecification.checkExistence(VERB_KEY, URI_KEY);
-
+		body = commandSpecification.formatFieldToString("body");
+		multiPart = initMultiPart(commandSpecification.get("multiPart"));
+		if (body != null && multiPart != null) {
+			throw new IllegalStateException("One of 'body' or 'multiPart' must be present");
+		}
 		name = commandSpecification.getString("name");
 		description = commandSpecification.getString("description");
 		verb = requireNonNull(commandSpecification.getString(VERB_KEY));
 		uri = commandSpecification.getString(URI_KEY);
 		wait = commandSpecification.getIntegerOrDefault("wait", 0);
-		body = commandSpecification.formatFieldToString("body");
 		disabled = commandSpecification.getBooleanOrDefault("disabled", false);
 		expectedStatus = commandSpecification.getIntegerOrDefault("expectedStatus", getExpectedStatusByVerb(verb));
 		automaticCheck = commandSpecification.getBooleanOrDefault("automaticCheck",
@@ -48,8 +55,15 @@ class Command {
 		if (commandSpecification.exists("pagination")) {
 			pagination = new Pagination(requireNonNull(commandSpecification.get("pagination")));
 		}
-
 		headers = commandSpecification.getMap("headers");
+	}
+
+	@Nullable
+	private static MultiPart initMultiPart(@Nullable Json multiPartJson) {
+		return multiPartJson == null ? null :
+				new MultiPart(
+						requireNonNull(multiPartJson.getString("name"), "multiPart.name is null"),
+						requireNonNull(multiPartJson.getString("fileLocation"), "multiPart.fileLocation is null"));
 	}
 
 	private static int getExpectedStatusByVerb(String string) {
@@ -69,5 +83,12 @@ class Command {
 			default:
 				return HttpStatus.SC_OK;
 		}
+	}
+
+	@AllArgsConstructor
+	@Getter
+	static class MultiPart {
+		private final String name;
+		private final String fileLocation;
 	}
 }

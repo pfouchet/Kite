@@ -1,9 +1,12 @@
 package com.groupeseb.kite;
 
+import com.google.common.base.Charsets;
 import com.groupeseb.kite.check.Check;
 import com.groupeseb.kite.function.Function;
 import com.groupeseb.kite.function.impl.UUIDFunction;
+import com.jayway.restassured.specification.RequestSpecification;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.assertj.core.util.Strings;
@@ -11,6 +14,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
 import javax.annotation.Nullable;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -21,9 +25,11 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.jayway.restassured.RestAssured.given;
 import static java.util.Objects.requireNonNull;
 
 @Data
+@Slf4j
 public class ContextProcessor {
 	private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("\\{\\{Timestamp:Now\\}\\}", Pattern.CASE_INSENSITIVE);
 	private static final Pattern UUID_PATTERN = Pattern.compile("\\{\\{" + UUIDFunction.NAME + ":(.+?)\\}\\}");
@@ -188,18 +194,20 @@ public class ContextProcessor {
 									  String valueWithPlaceholders, boolean jsonEscapeFunctionResult) {
 		String processedValue = valueWithPlaceholders;
 
-		// Assign UUID for current command if needed
-		if (commandName != null) {
-			processedValue = processedValue
-					.replace("{{" + UUIDFunction.NAME + "}}", "{{"
-							+ UUIDFunction.NAME + ':' + commandName + "}}");
-		}
-		// Update UUIDs list to add the one assigned for current command
-		getEveryUUIDs(processedValue);
+		try {
+			// Assign UUID for current command if needed
+			if (commandName != null) {
+				processedValue = processedValue
+						.replace("{{" + UUIDFunction.NAME + "}}", "{{"
+								+ UUIDFunction.NAME + ':' + commandName + "}}");
+			}
+			// Update UUIDs list to add the one assigned for current command
+			getEveryUUIDs(processedValue);
 
-		processedValue = applyFunctions(processedValue,
-				jsonEscapeFunctionResult);
-		return processedValue;
+			return applyFunctions(processedValue, jsonEscapeFunctionResult);
+		} catch (RuntimeException e) {
+			throw new IllegalStateException("processPlaceholders : Command [" + commandName + "] failed ", e);
+		}
 	}
 
 	public Object processPlaceholders(Object expected) throws ParseException {
@@ -229,16 +237,40 @@ public class ContextProcessor {
 	 * @param command the command to get body from, not null
 	 * @return the body of the request, with placeholders processed
 	 */
-	String getProcessedBody(Command command) {
+	private String getProcessedBody(Command command) {
 		String body = command.getBody();
 		if (Strings.isNullOrEmpty(body)) {
 			return "";
 		}
-		try {
-			return processPlaceholders(command.getName(), body, true);
-		} catch (RuntimeException e) {
-			throw new IllegalStateException("getProcessedBody : Command [" + command.getDescription() + "] failed ", e);
+		return processPlaceholders(command.getName(), body, true);
+	}
+
+	/**
+	 * init requestSpecification with the string if request is a string or with a multiPart if request is a file
+	 */
+	RequestSpecification initRequestSpecificationContent(Command command) {
+		RequestSpecification requestSpecification = given();
+		Command.MultiPart multiPart = command.getMultiPart();
+		String commandName = command.getName();
+
+		if (multiPart == null) {
+			String processedBody = getProcessedBody(command);
+			if (command.getDebug()) {
+				log.info("[{} {}]", commandName, processedBody);
+			}
+			return requestSpecification.body(processedBody.getBytes(Charsets.UTF_8));
 		}
+
+
+		String fileLocation = processPlaceholders(commandName, multiPart.getFileLocation(), true);
+		String multiPartName = processPlaceholders(commandName, multiPart.getName(), true);
+		if (command.getDebug()) {
+			log.info("[{} , multiPartName:{}, fileLocation:{}]", commandName, multiPartName, fileLocation);
+		}
+		return requestSpecification.multiPart(
+				multiPartName,
+				Paths.get(fileLocation).getFileName().toString(),
+				FileHelper.getFileInputStream(fileLocation));
 	}
 
 	Map<String, String> getProcessedHeaders(Command command) {

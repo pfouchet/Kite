@@ -33,6 +33,7 @@ import static com.groupeseb.kite.ScenarioRunnerTest.HttpCmdEnum.POST;
 import static com.groupeseb.kite.ScenarioRunnerTest.HttpCmdEnum.PUT;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
 
 public class ScenarioRunnerTest {
 	protected static final int SERVICE_PORT = 8089;
@@ -182,6 +183,19 @@ public class ScenarioRunnerTest {
 
 		long timeInt2 = Long.valueOf(requireNonNull(variables.get("timeInt2")));
 		assertThat(timeInt2).isBetween(currentTimeInt - 102, currentTimeInt - 98);
+	}
+
+	/**
+	 * test body + multipart case
+	 */
+	@Test
+	public void testKiteContext_09() throws Exception {
+		try {
+			KiteRunner.getInstance().execute("testExecute_09.json");
+			fail("missing error");
+		} catch (IllegalStateException e) {
+			assertThat(e.getMessage()).isEqualTo("One of 'body' or 'multiPart' must be present");
+		}
 	}
 
 	@AllArgsConstructor
