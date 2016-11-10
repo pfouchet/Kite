@@ -1,14 +1,15 @@
 package com.groupeseb.kite.check;
 
 import com.google.common.base.Preconditions;
+import com.groupeseb.kite.exceptions.CheckFailException;
 import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.testng.Assert;
 
 import java.util.Collection;
-
 @Slf4j
 @Component
 public class DefaultCheckRunner {
@@ -65,7 +66,7 @@ public class DefaultCheckRunner {
 		return match;
 	}
 
-	public void verify(Check check, String responseBody) throws ParseException {
+	public void verify(Check check, String responseBody) throws ParseException, CheckFailException {
 		log.info("Checking " + check.getDescription() + "...");
 
 		if (check.getSkip()) {
@@ -77,6 +78,7 @@ public class DefaultCheckRunner {
 		ICheckMethod method = getMatchingMethod(check.getMethodName());
 
 		Object node = JsonPath.read(responseBody, check.getFieldName());
+		Boolean errorFound = false;
 		if (check.getForeach()) {
 			Preconditions.checkArgument(node instanceof Iterable, "Using 'forEach' mode for check requires an iterable node.");
 
@@ -87,14 +89,26 @@ public class DefaultCheckRunner {
 			}
 
 			for (Object o : nodeList) {
-				operator.apply(method.apply(o, check.getParameters()),
-						check.getExpectedValue(),
-						check.getDescription(), check.getParameters());
+				try {
+					operator.apply(method.apply(o, check.getParameters()),
+							check.getExpectedValue(),
+							check.getDescription(), check.getFailonerror(), check.getParameters());
+				} catch (CheckFailException ex) {
+					errorFound = true;
+				}
 			}
 		} else {
-			operator.apply(method.apply(node, check.getParameters()),
-					check.getExpectedValue(),
-					check.getDescription(), check.getParameters());
+			try {
+				operator.apply(method.apply(node, check.getParameters()),
+						check.getExpectedValue(),
+						check.getDescription(), check.getFailonerror(), check.getParameters());
+			} catch (CheckFailException ex) {
+				errorFound = true;
+			}
+		}
+
+		if(errorFound) {
+			throw new CheckFailException("Errors found in check processus. See previous errors messages to found them");
 		}
 	}
 }

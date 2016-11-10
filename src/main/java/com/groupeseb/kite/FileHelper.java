@@ -3,6 +3,8 @@ package com.groupeseb.kite;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,10 +20,15 @@ public final class FileHelper {
 	 * @param filename the absolute path within the class path
 	 */
 	public static InputStream getFileInputStream(String filename) {
-		ClassPathResource resource = new ClassPathResource(filename);
+		Resource resource = new ClassPathResource(filename);
 
 		if (!resource.exists()) {
-			throw new IllegalArgumentException("Incorrect file location :" + filename);
+
+			// try external file
+			resource = new FileSystemResource(filename);
+			if (!resource.exists()) {
+				throw new IllegalArgumentException("Incorrect file location :" + filename);
+			}
 		}
 		try {
 			return resource.getInputStream();

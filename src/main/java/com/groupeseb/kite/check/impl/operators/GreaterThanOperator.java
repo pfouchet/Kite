@@ -23,7 +23,7 @@ public class GreaterThanOperator implements ICheckOperator {
 	}
 
 	@Override
-	public void apply(Object value, Object expected, String description, Json parameters) {
+	public void apply(Object value, Object expected, String description, Boolean failonerror, Json parameters) {
 		Preconditions.checkArgument(
 				Number.class.isAssignableFrom(value.getClass()),
 				"The input argument of 'gt' must be a number"
