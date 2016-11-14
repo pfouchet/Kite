@@ -58,48 +58,48 @@ public class TypeOfOperator implements ICheckOperator {
 	 * @param value       actual value
 	 * @param expected    expected value (type pattern)
 	 * @param description description of this assertion
-	 * @param failonerror Boolean to avoid fail on error
+	 * @param failOnError Boolean to avoid fail on error
 	 * @param parameters  parameters of check
 	 * @throws CheckFailException
 	 */
 	@SuppressWarnings({"UnusedCatchParameter", "SimpleDateFormatWithoutLocale"})
 	@Override
-	public void apply(@Nullable Object value, @Nullable Object expected, String description, Boolean failonerror, Json parameters) throws CheckFailException {
-		validate(value != null, description + ": value is null", failonerror);
+	public void apply(@Nullable Object value, @Nullable Object expected, String description, Boolean failOnError, Json parameters) throws CheckFailException {
+		validate(value != null, description + ": value is null", failOnError);
 
 		if (expected instanceof String && value != null) {
 			Type expect = getExpectCase(expected);
 			switch (expect.getValue()) {
 				case NUMERIC:
-					validate(value instanceof Number, description, failonerror);
+					validate(value instanceof Number, description, failOnError);
 					break;
 				case EMAIL:
 					Matcher matcher = EMAIL_PATTERN.matcher(value.toString());
-					validate(matcher.matches(), description + ": " + value + " didnt' match email pattern", failonerror);
+					validate(matcher.matches(), description + ": " + value + " didnt' match email pattern", failOnError);
 					break;
 				case REGEX:
 					String regex = expect.getPattern();
 					Pattern pattern = Pattern.compile(regex);
 					Matcher matcherReg = pattern.matcher(value.toString());
-					validate(matcherReg.matches(), description + ": " + value + " didnt' match regex : " + regex, failonerror);
+					validate(matcherReg.matches(), description + ": " + value + " didnt' match regex : " + regex, failOnError);
 					break;
 				case VALUE:
 					String expectedValue = expect.getPattern();
-					validate(value.toString().equals(expectedValue), description + ": value not equals to [" + expectedValue + ']', failonerror);
+					validate(value.toString().equals(expectedValue), description + ": value not equals to [" + expectedValue + ']', failOnError);
 					break;
 				case DATE:
 					String format = expect.getPattern();
 					SimpleDateFormat sdf = new SimpleDateFormat(format);
 					try {
 						Date date = sdf.parse(value.toString());
-						validate(date != null, description + ": " + value + " didnt' match date pattern " + format, failonerror);
+						validate(date != null, description + ": " + value + " didnt' match date pattern " + format, failOnError);
 					} catch (ParseException parseEx) {
-						validate(false, description + ": " + value + " didnt' match date pattern " + format, failonerror);
+						validate(false, description + ": " + value + " didnt' match date pattern " + format, failOnError);
 					}
 					break;
 				case BOOLEAN:
 					validate("true".equalsIgnoreCase(value.toString()) || "false".equalsIgnoreCase(value.toString()),
-							description + ": " + value + " didnt' boolean type ", failonerror);
+							description + ": " + value + " didnt' boolean type ", failOnError);
 					break;
 				case ALL:
 					assertTrue(true, description);

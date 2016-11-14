@@ -31,8 +31,8 @@ public interface ICheckOperator {
 	 * @param value       actual value
 	 * @param expected    expected value
 	 * @param description description of this assertion
-	 * @param failonerror boolean to avoid fail on error
+	 * @param failOnError boolean to avoid fail on error
 	 * @param parameters  parameters of check
 	 */
-	void apply(Object value, Object expected, String description, Boolean failonerror, Json parameters) throws CheckFailException;
+	void apply(Object value, Object expected, String description, Boolean failOnError, Json parameters) throws CheckFailException;
 }

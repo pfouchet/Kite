@@ -23,7 +23,7 @@ public class NotEqualsOperator implements ICheckOperator {
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
-	public void apply(Object value, Object expected, String description, Boolean failonerror, Json parameters) {
+	public void apply(Object value, Object expected, String description, Boolean failOnError, Json parameters) {
 		Preconditions.checkArgument(value instanceof Comparable, "Using 'equals' or 'notEquals' operators requires Comparable objects.");
 		assertTrue(((Comparable) value).compareTo(expected) != 0, description);
 	}
