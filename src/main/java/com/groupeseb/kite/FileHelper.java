@@ -17,7 +17,7 @@ public final class FileHelper {
 	 * Create a new InputStream for input fileName.
 	 * The resource must be exist in the Classpath
 	 *
-	 * @param filename the absolute path within the class path
+	 * @param filename the absolute path within the class path or a file system resource path
 	 */
 	public static InputStream getFileInputStream(String filename) {
 		Resource resource = new ClassPathResource(filename);

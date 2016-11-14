@@ -3,6 +3,8 @@ package com.groupeseb.kite.check.impl.operators;
 import com.groupeseb.kite.Json;
 import com.groupeseb.kite.check.ICheckOperator;
 import com.groupeseb.kite.exceptions.CheckFailException;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -13,21 +15,31 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 /**
  * Operator to check the type of evaluate object.
+ * Type Operator need a check rule defined by Api.
+ * Api Type :
+ * - numeric : check a numeric value
+ * - regex : check a defined regex pattern (regex:[_A-Za-z0-9-]*)
+ * - value : check a specific value (value:PRO)
+ * - date : check a date pattern (date:yyyy-MM-dd'T'HH:mm:ss)
+ * - email : check a email value
+ * - boolean : check a boolean value
+ * - any : only check if value isn't null
  */
 @Component
 @Slf4j
 public class TypeOfOperator implements ICheckOperator {
 
 	public static final String NUMERIC = "numeric";
-	public static final String REGEX = "regex:";
-	public static final String VALUE = "value:";
-	public static final String DATE = "date:";
-	public static final String MAIL = "mail";
+	public static final String REGEX = "regex";
+	public static final String VALUE = "value";
+	public static final String DATE = "date";
+	public static final String EMAIL = "email";
+	public static final String BOOLEAN = "boolean";
 	public static final String ALL = "any";
 
 	private static final String EMAIL_REGEX =
@@ -56,38 +68,60 @@ public class TypeOfOperator implements ICheckOperator {
 		validate(value != null, description + ": value is null", failonerror);
 
 		if (expected instanceof String && value != null) {
-			String expect = (String) expected;
-			if (expect.equalsIgnoreCase(NUMERIC)) {
-				validate(value instanceof Number, description, failonerror);
+			Type expect = getExpectCase(expected);
+			switch (expect.getValue()) {
+				case NUMERIC:
+					validate(value instanceof Number, description, failonerror);
+					break;
+				case EMAIL:
+					Matcher matcher = EMAIL_PATTERN.matcher(value.toString());
+					validate(matcher.matches(), description + ": " + value + " didnt' match email pattern", failonerror);
+					break;
+				case REGEX:
+					String regex = expect.getPattern();
+					Pattern pattern = Pattern.compile(regex);
+					Matcher matcherReg = pattern.matcher(value.toString());
+					validate(matcherReg.matches(), description + ": " + value + " didnt' match regex : " + regex, failonerror);
+					break;
+				case VALUE:
+					String expectedValue = expect.getPattern();
+					validate(value.toString().equals(expectedValue), description + ": value not equals to [" + expectedValue + ']', failonerror);
+					break;
+				case DATE:
+					String format = expect.getPattern();
+					SimpleDateFormat sdf = new SimpleDateFormat(format);
+					try {
+						Date date = sdf.parse(value.toString());
+						validate(date != null, description + ": " + value + " didnt' match date pattern " + format, failonerror);
+					} catch (ParseException parseEx) {
+						validate(false, description + ": " + value + " didnt' match date pattern " + format, failonerror);
+					}
+					break;
+				case BOOLEAN:
+					validate("true".equalsIgnoreCase(value.toString()) || "false".equalsIgnoreCase(value.toString()),
+							description + ": " + value + " didnt' boolean type ", failonerror);
+					break;
+				case ALL:
+					assertTrue(true, description);
+					break;
+				default:
+					fail("Type Operator need an expected rule (See documentation)");
 			}
-			if (expect.equalsIgnoreCase(MAIL)) {
-				Matcher matcher = EMAIL_PATTERN.matcher(value.toString());
-				validate(matcher.matches(), description + ": " + value + " didnt' match email pattern", failonerror);
-			}
-			if (expect.equalsIgnoreCase(ALL)) {
-				assertTrue(true, description);
-			}
-			if (expect.startsWith(REGEX)) {
-				String regex = expect.substring(REGEX.length());
-				Pattern pattern = Pattern.compile(regex);
-				Matcher matcher = pattern.matcher(value.toString());
-				validate(matcher.matches(), description + ": " + value + " didnt' match regex : " + regex, failonerror);
-			}
-			if (expect.startsWith(VALUE)) {
-				String expectedValue = expect.substring(VALUE.length());
-				validate(value.toString().equals(expectedValue), description + ": value not equals to [" + expectedValue + ']', failonerror);
-			}
-			if (expect.startsWith(DATE)) {
-				String format = expect.substring(DATE.length());
-				SimpleDateFormat sdf = new SimpleDateFormat(format);
-				try {
-					Date date = sdf.parse(value.toString());
-					validate(date != null, description + ": " + value + " didnt' match date pattern " + format, failonerror);
-				} catch (ParseException parseEx) {
-					validate(false, description + ": " + value + " didnt' match date pattern " + format, failonerror);
-				}
-			}
+
 		}
+	}
+
+	private static Type getExpectCase(Object expected) {
+		if(!(expected instanceof String)) {
+			return new Type(ALL, null);
+		}
+		String expectedStr = (String) expected;
+		if(expectedStr.contains(":")) {
+			String value = expectedStr.substring(0, expectedStr.indexOf(':'));
+			String pattern = expectedStr.substring(expectedStr.indexOf(':')+1);
+			return new Type(value, pattern);
+		}
+		return new Type(expectedStr, null);
 	}
 
 	/**
@@ -106,6 +140,13 @@ public class TypeOfOperator implements ICheckOperator {
 			log.error(description);
 			throw new CheckFailException(description);
 		}
+	}
+
+	@AllArgsConstructor
+	@Getter
+	private static class Type {
+		private String value;
+		private String pattern;
 	}
 
 }
