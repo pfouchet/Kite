@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
 
@@ -28,6 +29,15 @@ public class ScenarioRunner {
 
 	public KiteContext execute(String fileName) throws Exception {
 		return execute(fileName, new KiteContext());
+	}
+
+	public KiteContext execute(InputStream inputStream, KiteContext kiteContext) throws Exception {
+		ContextProcessor context = new ContextProcessor(functions, kiteContext);
+		return executeWithContext(new Scenario(inputStream), context).getKiteContext();
+	}
+
+	public KiteContext execute(InputStream inputStream) throws Exception {
+		return execute(inputStream, new KiteContext());
 	}
 
 	ContextProcessor executeWithContext(Scenario scenario, ContextProcessor context) throws Exception {
