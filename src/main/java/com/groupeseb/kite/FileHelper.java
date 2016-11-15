@@ -15,7 +15,7 @@ public final class FileHelper {
 
 	/**
 	 * Create a new InputStream for input fileName.
-	 * The resource must be exist in the Classpath
+	 * The resource must be exist in the Classpath or in the file system.
 	 *
 	 * @param filename the absolute path within the class path or a file system resource path
 	 */
