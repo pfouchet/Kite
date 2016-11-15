@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.apache.commons.io.IOUtils;
 import org.json.simple.parser.ParseException;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -55,8 +56,23 @@ public class Scenario {
 		parseScenario(readFixture(filename));
 	}
 
+	/**
+	 *
+	 * @param inputStream a stream with scenario desciption
+	 * @throws IOException
+	 * @throws ParseException
+	 */
+	public Scenario(InputStream inputStream) throws IOException, ParseException {
+		this.filename = "direct stream";
+		parseScenario(readFixture(inputStream));
+	}
+
 	protected static String readFixture(String filename) throws IOException {
-		try (InputStream inputStream = FileHelper.getFileInputStream(filename)) {
+		return readFixture(FileHelper.getFileInputStream(filename));
+	}
+
+	protected static String readFixture(InputStream stream) throws IOException {
+		try (InputStream inputStream = stream) {
 			StringWriter writer = new StringWriter();
 			IOUtils.copy(inputStream, writer);
 			return writer.toString();
