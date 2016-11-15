@@ -31,9 +31,13 @@ public class ScenarioRunner {
 		return execute(fileName, new KiteContext());
 	}
 
-	public KiteContext execute(InputStream inputStream) throws Exception {
-		ContextProcessor context = new ContextProcessor(functions, new KiteContext());
+	public KiteContext execute(InputStream inputStream, KiteContext kiteContext) throws Exception {
+		ContextProcessor context = new ContextProcessor(functions, kiteContext);
 		return executeWithContext(new Scenario(inputStream), context).getKiteContext();
+	}
+
+	public KiteContext execute(InputStream inputStream) throws Exception {
+		return execute(inputStream, new KiteContext());
 	}
 
 	ContextProcessor executeWithContext(Scenario scenario, ContextProcessor context) throws Exception {
