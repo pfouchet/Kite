@@ -29,6 +29,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static com.groupeseb.kite.ScenarioRunnerTest.HttpCmdEnum.GET;
 import static com.groupeseb.kite.ScenarioRunnerTest.HttpCmdEnum.POST;
 import static com.groupeseb.kite.ScenarioRunnerTest.HttpCmdEnum.PUT;
 import static java.util.Objects.requireNonNull;
@@ -196,6 +197,24 @@ public class ScenarioRunnerTest {
 		} catch (IllegalStateException e) {
 			assertThat(e.getMessage()).isEqualTo("One of 'body' or 'multiPart' must be present");
 		}
+	}
+
+	/**
+	 * test typeOfOperator
+	 */
+	@Test
+	public void testKiteContext_10() throws Exception {
+		Map<Object, Object> response = new HashMap<>();
+		response.put("number", 1);
+		response.put("boolean", true);
+		response.put("name", "Heisenberg");
+		response.put("created", "2016-11-14T10:47:22");
+		response.put("email", "se@seb.com");
+		response.put("value", "PRO");
+		response.put("regex", "stringwithoutspaceandcaps");
+		stubForUrlAndBody(GET, "/myUrl10", 200, response);
+
+		KiteRunner.getInstance().execute("testExecute_10.json");
 	}
 
 	@AllArgsConstructor

@@ -18,6 +18,13 @@ public class Check {
 	private final Boolean foreach;
 	private final Boolean mustMatch;
 	private final Boolean skip;
+	/**
+	 * Enable fail on error : if this option is enabled the test suite stop on first check failed.
+	 * If this option is disabled, each check throw a CheckFailException and the test suite failed after log all fail
+	 * Check.
+	 * Default value = true
+	 */
+	private final Boolean failonerror;
 
 	@SuppressWarnings("ConstantConditions")
 	public Check(Json checkSpecification, ContextProcessor context) throws ParseException {
@@ -36,5 +43,6 @@ public class Check {
 		foreach = checkSpecification.getBooleanOrDefault("foreach", false);
 		mustMatch = checkSpecification.getBooleanOrDefault("mustMatch", foreach);
 		skip = checkSpecification.getBooleanOrDefault("skip", false);
+		failonerror = checkSpecification.getBooleanOrDefault("failOnError", true);
 	}
 }

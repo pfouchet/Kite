@@ -79,7 +79,7 @@ public class JsonEqualsOperator implements ICheckOperator {
 	}
 
 	@Override
-	public void apply(Object value, Object expected, String description, Json parameters) {
+	public void apply(Object value, Object expected, String description, Boolean failOnError, Json parameters) {
 		try {
 			String modeString = parameters.getString("mode");
 			Preconditions.checkArgument(modeString != null && EnumUtils.isValidEnum(JSONCompareMode.class, modeString),

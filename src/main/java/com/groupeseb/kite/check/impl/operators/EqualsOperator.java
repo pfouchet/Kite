@@ -21,7 +21,7 @@ public class EqualsOperator implements ICheckOperator {
 	}
 
 	@Override
-	public void apply(@Nullable Object value, @Nullable Object expected, String description, Json parameters) {
+	public void apply(@Nullable Object value, @Nullable Object expected, String description, Boolean failOnError, Json parameters) {
 		if (value == null || expected == null) {
 			assertEquals(value, expected, description);
 			return;

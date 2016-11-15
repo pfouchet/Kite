@@ -1,0 +1,54 @@
+{
+	"description": "sync recipes",
+	"commands": [
+		{
+			"verb": "GET",
+			"uri": "/myUrl10",
+			"checks": [
+				{
+					"description": "Check if field [number] exists with pattern = {numeric}",
+					"field": "number",
+					"operator": "type",
+					"expected": "numeric",
+					"failOnError": false
+				}, {
+					"description": "Check if field [boolean] exists with pattern = {boolean}",
+					"field": "boolean",
+					"operator": "type",
+					"expected": "boolean",
+					"failOnError": false
+				}, {
+					"description": "Check if field [name] exists with pattern = {any}",
+					"field": "name",
+					"operator": "type",
+					"expected": "any",
+					"failOnError": false
+				}, {
+					"description": "Check if field [created] exists with pattern = {date:yyyy-MM-dd'T'HH:mm:ss}",
+					"field": "created",
+					"operator": "type",
+					"expected": "date:yyyy-MM-dd'T'HH:mm:ss",
+					"failOnError": false
+				}, {
+					"description": "Check if field [email] exists with pattern = {email}",
+					"field": "email",
+					"operator": "type",
+					"expected": "email",
+					"failOnError": false
+				}, {
+					"description": "Check if field [value] exists with pattern = {value:PRO}",
+					"field": "value",
+					"operator": "type",
+					"expected": "value:PRO",
+					"failOnError": false
+				}, {
+					"description": "Check if field [regex] exists with pattern = {regex:[a-z]*}",
+					"field": "regex",
+					"operator": "type",
+					"expected": "regex:[a-z]*",
+					"failOnError": false
+				}
+			]
+		}
+	]
+}

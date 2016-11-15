@@ -3,9 +3,11 @@ package com.groupeseb.kite;
 import com.google.common.base.Strings;
 import com.groupeseb.kite.check.Check;
 import com.groupeseb.kite.check.DefaultCheckRunner;
+import com.groupeseb.kite.exceptions.CheckFailException;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
+import junit.framework.Assert;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -272,12 +274,18 @@ public class CommandRunner {
 	}
 
 	void runChecks(Collection<Check> checks, String responseBody) throws ParseException {
+		String errorMessage = null;
 		for (Check check : checks) {
 			try {
 				defaultCheckRunner.verify(check, responseBody);
+			} catch (CheckFailException cfex) {
+				errorMessage = cfex.getMessage();
 			} catch (RuntimeException e) {
 				throw new IllegalStateException("Check [" + check.getDescription() + "] failed ", e);
 			}
+		}
+		if(errorMessage != null) {
+			Assert.fail(errorMessage);
 		}
 	}
 
