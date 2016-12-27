@@ -1,0 +1,11 @@
+{
+	"description": "Verify authorization header on automatic check",
+	"commands": [
+		{
+			"verb": "POST",
+			"uri": "/resources1",
+			"name":"resource1",
+			"automaticCheck": true
+		}
+	]
+}
