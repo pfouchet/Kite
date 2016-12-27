@@ -19,7 +19,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
@@ -99,7 +101,7 @@ public class ScenarioRunnerTest {
 		KiteRunner.getInstance().execute("testExecute_02.json");
 
 		verify(postRequestedFor(urlMatching("/myService/muUrl02"))
-				.withRequestBody(matching(".*124.*")));
+				       .withRequestBody(matching(".*124.*")));
 	}
 
 	/**
@@ -113,7 +115,7 @@ public class ScenarioRunnerTest {
 		KiteRunner.getInstance().execute("testExecute_03.json");
 
 		verify(postRequestedFor(urlMatching("/myService/muUrl02"))
-				.withRequestBody(matching(".*124.*")));
+				       .withRequestBody(matching(".*124.*")));
 	}
 
 	@Test
@@ -123,7 +125,9 @@ public class ScenarioRunnerTest {
 		KiteRunner.getInstance().execute("testExecute_04.json");
 
 		verify(postRequestedFor(urlMatching(SERVICE_URI + "/urlUsingJwtHeader"))
-				.withHeader("Authorization", matching("Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkb21haW5zIjpbeyJrZXkiOiJkb21haW4yIn1dLCJwcm9maWxlVWlkIjoiZmlyc3RVaWQifQ==")));
+				       .withHeader("Authorization",
+				                   matching(
+						                   "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkb21haW5zIjpbeyJrZXkiOiJkb21haW4yIn1dLCJwcm9maWxlVWlkIjoiZmlyc3RVaWQifQ==")));
 	}
 
 	/**
@@ -150,7 +154,7 @@ public class ScenarioRunnerTest {
 		scenarioRunner.execute("testExecute_05_B.json", kiteContext);
 
 		verify(postRequestedFor(urlMatching(SERVICE_URI + "/mySecondeUrl"))
-				.withRequestBody(matching(value2 + value3)));
+				       .withRequestBody(matching(value2 + value3)));
 	}
 
 	/**
@@ -215,6 +219,40 @@ public class ScenarioRunnerTest {
 		stubForUrlAndBody(GET, "/myUrl10", 200, response);
 
 		KiteRunner.getInstance().execute("testExecute_10.json");
+	}
+
+	@Test
+	public void testKiteContext_11_automaticCheckWithAuthorization() throws Exception {
+		Map<Object, Object> response = new HashMap<>();
+		response.put("anAttribute", "aValue");
+		stubForUrlAndBody(POST, "/resources1", 201, response);
+
+		// Stub the POST call : simulate location header
+		ResponseDefinitionBuilder responseDefBuilder = aResponse().withStatus(201);
+		responseDefBuilder.withHeader("Location", "/resources1/123");
+		MappingBuilder cmdBuilder = getMappingBuilder(POST, urlEqualTo(SERVICE_URI + "/resources1"));
+		stubFor(cmdBuilder.willReturn(responseDefBuilder));
+
+		// Stub the automatic check call based on location header found during previous POST
+		ResponseDefinitionBuilder responseGetDefBuilder = aResponse().withStatus(200);
+		MappingBuilder cmdGetBuilder = getMappingBuilder(GET, urlEqualTo(SERVICE_URI + "/resources1/123"));
+		stubFor(cmdGetBuilder.willReturn(responseGetDefBuilder));
+
+		KiteContext kiteContext = new KiteContext();
+		// Configure the header name used to represent authenticated user.
+		kiteContext.setAuthorizationHeaderNameForAutomaticCheck("Authorization");
+
+		// Configure the header value used for the authenticated user.
+		kiteContext.addVariable("internalCheckFullyAuthenticated", "123");
+		KiteContext resultingKiteContext = KiteRunner.getInstance().execute("testExecute_11.json", kiteContext);
+
+
+		assertThat(resultingKiteContext.getLocations().get("resource1"))
+				.as("Location given by distant server was correctly added to kite context")
+				.isNotEmpty();
+
+		verify(getRequestedFor(urlEqualTo(SERVICE_URI + "/resources1/123")).withHeader("Authorization", equalTo("123")));
+
 	}
 
 	@AllArgsConstructor
