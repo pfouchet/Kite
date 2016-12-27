@@ -19,6 +19,12 @@ public class KiteContext {
 	private final Map<String, String> variables = new HashMap<>();
 	private final Map<String, String> bodies = new HashMap<>();
 	private final Map<String, Object> objectVariables = new HashMap<>();
+
+	/**
+	 * This will be the header used when doing an automatic resource check.
+	 */
+	private String authorizationHeaderNameForAutomaticCheck = null;
+
 	private static final ObjectMapper OBJECT_MAPPER = initObjectMapper();
 
 	static ObjectMapper initObjectMapper() {
@@ -32,6 +38,7 @@ public class KiteContext {
 		this.locations.putAll(kiteContext.locations);
 		this.variables.putAll(kiteContext.variables);
 		this.objectVariables.putAll(kiteContext.objectVariables);
+		this.authorizationHeaderNameForAutomaticCheck = kiteContext.authorizationHeaderNameForAutomaticCheck;
 	}
 
 	public void addLocation(String name, String location) {

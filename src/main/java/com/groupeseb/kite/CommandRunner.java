@@ -121,7 +121,7 @@ public class CommandRunner {
 
 		log.info("Checking resource: " + location + "...");
 		given().header("Accept-Encoding", UTF_8_ENCODING)
-				.headers(contextProcessor.getProcessedHeaders(command))
+				.headers(contextProcessor.getProcessedHeadersForCheck(command))
 				.expect().statusCode(HttpStatus.SC_OK)
 				.when().get(location);
 

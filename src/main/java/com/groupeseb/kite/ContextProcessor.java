@@ -31,13 +31,19 @@ import static java.util.Objects.requireNonNull;
 @Data
 @Slf4j
 public class ContextProcessor {
-	private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("\\{\\{Timestamp:Now\\}\\}", Pattern.CASE_INSENSITIVE);
+	private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("\\{\\{Timestamp:Now\\}\\}",
+	                                                                 Pattern.CASE_INSENSITIVE);
 	private static final Pattern UUID_PATTERN = Pattern.compile("\\{\\{" + UUIDFunction.NAME + ":(.+?)\\}\\}");
+
+	/**
+	 *
+	 */
+	private static final String AUTOMATIC_CHECK_AUTHORIZATION_HEADER_VALUE = "internalCheckFullyAuthenticated";
 	private final KiteContext kiteContext;
 	private final Collection<Function> availableFunctions;
 
 	ContextProcessor(Collection<Function> availableFunctions,
-					 KiteContext kiteContext) {
+	                 KiteContext kiteContext) {
 		this.availableFunctions = availableFunctions;
 		this.kiteContext = kiteContext;
 	}
@@ -191,7 +197,7 @@ public class ContextProcessor {
 	 * placehoders replaced
 	 */
 	public String processPlaceholders(@Nullable String commandName,
-									  String valueWithPlaceholders, boolean jsonEscapeFunctionResult) {
+	                                  String valueWithPlaceholders, boolean jsonEscapeFunctionResult) {
 		String processedValue = valueWithPlaceholders;
 
 		try {
@@ -199,7 +205,7 @@ public class ContextProcessor {
 			if (commandName != null) {
 				processedValue = processedValue
 						.replace("{{" + UUIDFunction.NAME + "}}", "{{"
-								+ UUIDFunction.NAME + ':' + commandName + "}}");
+						                                          + UUIDFunction.NAME + ':' + commandName + "}}");
 			}
 			// Update UUIDs list to add the one assigned for current command
 			getEveryUUIDs(processedValue);
@@ -220,8 +226,8 @@ public class ContextProcessor {
 		}
 
 		if (expected instanceof Boolean ||
-				expected instanceof Long ||
-				expected instanceof Double) {
+		    expected instanceof Long ||
+		    expected instanceof Double) {
 			return expected;
 		}
 		throw new UnsupportedOperationException("Incorrect value : " + expected);
@@ -278,11 +284,40 @@ public class ContextProcessor {
 
 		for (Map.Entry<String, String> entry : processedHeaders.entrySet()) {
 			processedHeaders.put(entry.getKey(),
-					processPlaceholders(command.getName(), entry.getValue(), false));
+			                     processPlaceholders(command.getName(), entry.getValue(), false));
 		}
 
 		if (!processedHeaders.containsKey("Accept")) {
 			processedHeaders.put("Accept", "application/json");
+		}
+
+		return processedHeaders;
+	}
+
+	/**
+	 * This special version of {@link #getProcessedHeaders(Command)} allow one to use
+	 * auth header configured in kite framework during automatic location check.
+	 * Kite user must provide a variable for {@link #AUTOMATIC_CHECK_AUTHORIZATION_HEADER_VALUE} value name
+	 * and set {@link KiteContext#authorizationHeaderNameForAutomaticCheck}
+	 */
+	Map<String, String> getProcessedHeadersForCheck(Command command) {
+		Map<String, String> processedHeaders = new HashMap<>(command.getHeaders());
+
+		for (Map.Entry<String, String> entry : processedHeaders.entrySet()) {
+			processedHeaders.put(entry.getKey(),
+			                     processPlaceholders(command.getName(), entry.getValue(), false));
+		}
+
+		if (!processedHeaders.containsKey("Accept")) {
+			processedHeaders.put("Accept", "application/json");
+		}
+
+		if (kiteContext.getAuthorizationHeaderNameForAutomaticCheck() != null
+		    && !processedHeaders.containsKey(kiteContext.getAuthorizationHeaderNameForAutomaticCheck())
+		    && kiteContext.getVariables().get(AUTOMATIC_CHECK_AUTHORIZATION_HEADER_VALUE) != null) {
+			log.debug("Add authorization header for automatic check");
+			processedHeaders.put(kiteContext.getAuthorizationHeaderNameForAutomaticCheck(),
+			                     kiteContext.getVariableValue(AUTOMATIC_CHECK_AUTHORIZATION_HEADER_VALUE));
 		}
 
 		return processedHeaders;
