@@ -27,23 +27,42 @@ Warning : Your scenarios must be stored in your resources folder.
 
 A KITE scenario is a JSON file containing the following fields :
 
-description - The description of what the test does
-dependencies - The ordered list of scenarios to execute prior to the test.
-variables - The dictionnary of variables
-commands - The ordered list of command to execute during the test
+### description
+The description of what the test does
+
+### dependencies
+The ordered list of scenarios to execute prior to the test.
+
+### variables
+The dictionnary of variables. It may contain placeholders.
+
+### objectVariables
+
+The dictionary of objects. It may contain any placeholders and can have nested structure (variables cannot).
+For the moment only *JWT* placeholder has been tested with this section.
+
+### commands
+The ordered list of command to execute during the test
+
 For instance :
 ```json
 {
-    "description": "Check that no can access this endpoint without authorizations",
-    "variables": {
-        "login": "John",
-        "badPassword": "1234",
-        "goodPassword": "N#2B5&jcP5z5KCvs"
-    },
-    "dependencies": [
-        "createUser.json"
-    ],
-    "commands": []
+  "description": "Check that no can access this endpoint without authorizations",
+  "variables": {
+    "login": "John",
+    "badPassword": "1234",
+    "goodPassword": "N#2B5&jcP5z5KCvs"
+  },
+  "objectVariables": {
+    "authorization": {
+      "id": 1,
+      "isStaff": true
+    }
+  },
+  "dependencies": [
+    "createUser.json"
+  ],
+  "commands": []
 }
 ```
 
@@ -53,26 +72,54 @@ To make the development easier and minimal, some placeholder are available and w
 
 Placeholders are scoped to the current Scenario context (it contains prepared context, dependencies and current test).
 
+* Base 64 : {{Base64:char}} will produce char with Base64 encoding.
+* currentTimeInt : {{currentTimeInt}} will produce the current time in seconds.
+* RandomString : {{RandomString}} will produce a UUID4.
+* RandomInteger :  {{RandomInteger}} will produce a random integer between 1 and Max Int.
 * Variables : {{Variable:MyVariableName}} will produce value where value is the value defined in the variable node.
 * UUID : {{UUID}} will produce a random UUID and associate it with the current object of the POST request. DEPRECATED preferring way is {{RandomString}} with variable.
 * UUID : {{UUID:User01}} will produce the UUID associated with the object named User01. DEPRECATED preferring way is {{RandomString}} with variable.
+* JWT : {{JWT:authorization}} will produce an unsigned [JWT](http://www.jwt.io/) for the object found in the objectVariables section.
 * URI : {{Location:User01}} will produce the full URI of the object named User01.
-* For the two lated cases, the object User01 must have been created before referenced.
+* Lookup : {{Lookup:User01.title}} will produce the value matching the jsonpath inside the object named User01.
+* For the three last cases, the object User01 must have been created before referenced.
 
 ## Command node
 
 A command corresponds to a HTTP command. It contains the following fields :
 
-description - The description of the command performed
-verb - The HTTP verb to use [GET, POST, GET, DELETE, HEAD, PUT]
-uri - The URI to perform the HTTP operation against
-body - The body of the HTTP operation
-headers - The dictionnary of the header values to use
-expectedStatus - The expected response status of the command
-wait - The number of second to wait before the command
-name - Usable during a POST, it allow to name a created resource to use it later
+### Attributes
 
-###POST
+#### description
+The description of the command performed.
+
+#### verb
+The HTTP verb to use [GET, POST, GET, DELETE, HEAD, PUT].
+
+#### uri
+The URI to perform the HTTP operation against.
+Uri can be a path with */endpoint* format or can be a special value {{Location:existingName}}.
+
+#### body
+The body of the HTTP operation. It may contain placeholders.
+
+#### headers
+The dictionnary of the header values to use
+
+#### expectedStatus
+The expected response status of the command.
+
+#### wait
+The number of milliseconds to wait before executing the command.
+
+#### name
+Usable during a POST, it allow to name a created resource to use it later.
+
+#### automaticCheck
+Boolean value available to POST and PUT only. If set to true (default value) then the header Location of the response will be fetched.
+If name attribute is set, returned payload will be saved under this name for further use and will be available through {{Location:}} and {{Lookup:}}
+
+### POST
 
 During a POST, the default expected status is 201.
 
@@ -133,6 +180,15 @@ Sample scenario :
         }
     ]
 }
+
+### PUT
+
+During a PUT, the default expected status is 204.
+
+### PATCH
+
+During a PATCH, the default expected status is 201.
+
 ## Check node
 
 Check node is mainly composed by field, method, operator and expected.
