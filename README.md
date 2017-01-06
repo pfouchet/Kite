@@ -7,16 +7,20 @@ KITE (Kite Integration Test Environment) is a both a testing scenario language s
 
 To use KITE, simply add the following Maven dependency :
 
+```xml
 <dependency>
     <groupId>com.groupeseb</groupId>
     <artifactId>kite</artifactId>
     <version>1.0-SNAPSHOT</version>
     <scope>test</scope>
 </dependency>
+```
 Then use this sample code to run your scenario :
 
+```java
 Scenario scenario = new Scenario("myScenario.json");
 new DefaultScenarioRunner().execute(scenario);
+```
 Warning : Your scenarios must be stored in your resources folder.
 
 ## How to write KITE scenario
@@ -28,7 +32,7 @@ dependencies - The ordered list of scenarios to execute prior to the test.
 variables - The dictionnary of variables
 commands - The ordered list of command to execute during the test
 For instance :
-
+```json
 {
     "description": "Check that no can access this endpoint without authorizations",
     "variables": {
@@ -41,17 +45,19 @@ For instance :
     ],
     "commands": []
 }
+```
+
 ## Placeholders
 
 To make the development easier and minimal, some placeholder are available and will be replaced at runtime wherever you put it.
 
-Placeholders are scoped the current scenario and the dependent scenarios.
+Placeholders are scoped to the current Scenario context (it contains prepared context, dependencies and current test).
 
-Variables : {{Variable:MyVariableName}} will produce value where value is the value defined in the variable node.
-UUID : {{UUID}} will produce a random UUID and associate it with the current object of the POST request.
-UUID : {{UUID:User01}} will produce the UUID associated with the object named User01.
-URI : {{Location:User01}} will produce the full URI of the object named User01.
-For the two lated cases, the object User01 must have been created before referenced.
+* Variables : {{Variable:MyVariableName}} will produce value where value is the value defined in the variable node.
+* UUID : {{UUID}} will produce a random UUID and associate it with the current object of the POST request. DEPRECATED preferring way is {{RandomString}} with variable.
+* UUID : {{UUID:User01}} will produce the UUID associated with the object named User01. DEPRECATED preferring way is {{RandomString}} with variable.
+* URI : {{Location:User01}} will produce the full URI of the object named User01.
+* For the two lated cases, the object User01 must have been created before referenced.
 
 ## Command node
 
