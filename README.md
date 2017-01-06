@@ -129,18 +129,129 @@ Sample scenario :
 }
 ## Check node
 
-Methods
+Check node is mainly composed by field, method, operator and expected.
 
-The following methods are available :
+### "Field" attribute
 
-* exists - Return true if the field was found, false otherwise
-* length - Return the length of the specified list field
-* contains - Return true if all the specified values were found in the specified field.
-* nop - Return the field value. This method is the default one and should not be specified when used.
-Operators
+This field defines the complete json path which should be verified.
+It is jsonpath compliant i.e dot notation must be used (as content.a.b).
+Array exploration is possible and use [] characters.
+Between those brackets, digit, wildcard or jsonpath boolean expression can be used :
+* content[0].title : title of the first element.
+* content[\*].title : an array containing all title from all content.
+* content[?(@title=='TITLE_1')] : an array of content matching the condition.
+* content[?(@title=='TITLE_1')].id : an array of id coming from content matching the condition.
 
-The following operators are available :
+### Expected value
 
-* equals - Return true if the expected value and the actual value are equals, false otherwise. This operator is the default one and should not be specified when used.
-* notequals - Return false if the expected value and the actual value are equals, true otherwise.
-* gt - Return true if the actual value is greater than the expected, false otherwise.
+This field defines the expected value.
+
+### Methods
+
+Methods apply a transformation on the "field" value coming from the json object. The result will be compared to the expected value using the given operator.
+
+#### exists
+Return true if the field was found, false otherwise. Empty array or null value match the *exist* condition.
+
+```json
+{
+  "field": "content",
+  "method": "exists",
+  "expected": true
+}
+```
+
+#### length
+Return the length of the specified list field
+
+```json
+{
+  "field": "content",
+  "method": "length",
+  "expected": 2
+}
+```
+
+#### contains
+Return true if all the specified values were found in the specified field.
+This method needs another attribute called "parameters" which must be an array of simple type (numeric, string...)
+
+Example : 
+
+
+```json
+{
+  "field": "content[*].arrayOfString",
+  "method": "contains",
+  "parameters": [
+    "DEFAULT"
+  ],
+  "expected":true
+}
+```
+
+#### nop
+Return the field value. This method is the default one and should not be specified when used.
+
+Example : 
+
+```json
+{
+  "field": "content[0].title",
+  "expected":"TITLE_1"
+}
+```
+
+### Operators
+
+Operators define assertion which must be verified by expected and actual values.
+
+#### equals 
+
+Return true if the expected value and the actual value are equals, false otherwise. This operator is the default one and should not be specified when used.
+
+#### notequals
+
+Return false if the expected value and the actual value are equals, true otherwise.
+
+#### gt 
+
+Return true if the actual value is greater than the expected, false otherwise.
+
+#### jsonEquals 
+
+Return true if expected value and actual value are equals, accordingly to specified mode. json comparison ignore attribute order.
+Possible mode are :
+* STRICT : array and attribute order do matter. Comparison is strict.
+* LENIENT : array order does not matter, additional attributes are ignored.
+* NON_EXTENSIBLE : array order does not matter, additional attributes are forbidden.
+* STRICT_ORDER : array order does matter, additional attributes are ignored.
+
+#### type
+
+Return true if the expected type match the type of the actual value. This operator MUST be used with the nop method. expected values must pick of the values defined in the next section.
+
+Example 
+
+```json
+{
+  "field": "content[*].title",
+  "operator": "type",
+  "expected": "array",
+  "failOnError": true
+}
+```
+
+if failOnError is set, test will be in failure otherwise a log will be produced and other checks will continue.
+
+##### Available expected values
+
+* numeric : The value is coercible to numeric value.
+* boolean : The value is "true" or "false" whether it is a String or a Boolean value.
+* any : The field exists (empty array and null value work).
+* date:*pattern* :The value match the given pattern (Example : date:yyyy-MM-dd'T'HH:mm:ss).
+* email : The value matches the email pattern.
+* value:*value* : The field has the specified value.
+* regex:*pattern* : the value matches the given pattern.
+
+
