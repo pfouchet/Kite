@@ -34,7 +34,7 @@ The description of what the test does
 The ordered list of scenarios to execute prior to the test.
 
 ### variables
-The dictionnary of variables. It may contain placeholders.
+The dictionary of variables. It may contain placeholders.
 
 ### objectVariables
 
@@ -47,7 +47,10 @@ The ordered list of command to execute during the test
 For instance :
 ```json
 {
-  "description": "Check that no can access this endpoint without authorizations",
+  "description": "Check that nobody can access this endpoint without authorizations",
+  "dependencies": [
+    "createUser.json"
+  ],
   "variables": {
     "login": "John",
     "badPassword": "1234",
@@ -59,9 +62,6 @@ For instance :
       "isStaff": true
     }
   },
-  "dependencies": [
-    "createUser.json"
-  ],
   "commands": []
 }
 ```
@@ -104,7 +104,7 @@ Uri can be a path with */endpoint* format or can be a special value {{Location:e
 The body of the HTTP operation. It may contain placeholders.
 
 #### headers
-The dictionnary of the header values to use
+The dictionary of the header values to use
 
 #### expectedStatus
 The expected response status of the command.
