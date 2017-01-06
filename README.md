@@ -1,7 +1,7 @@
 # Kite
 Kite Integration Testing Environment
 
-KITE (Kite Integration Test Environment) is a both a testing scenario language specification and a reference implementation of the runner.
+KITE (Kite Integration Test Environment) is a both a testing scenario language specification and a reference implementation of the runner. It allows one to express a REST api test suite using JSON format.
 
 ## How to use
 
@@ -11,7 +11,7 @@ To use KITE, simply add the following Maven dependency :
 <dependency>
     <groupId>com.groupeseb</groupId>
     <artifactId>kite</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>3.14</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -38,7 +38,7 @@ The dictionnary of variables. It may contain placeholders.
 
 ### objectVariables
 
-The dictionary of objects. It may contain any placeholders and can have nested structure (variables cannot).
+The dictionary of objects. It may contain any placeholders and can have nested structure (variables section cannot).
 For the moment only *JWT* placeholder has been tested with this section.
 
 ### commands
@@ -316,4 +316,9 @@ if failOnError is set, test will be in failure otherwise a log will be produced 
 * value:*value* : The field has the specified value.
 * regex:*pattern* : the value matches the given pattern.
 
+## General Architecture
 
+Kite framework is composed by Runners, Scenario and Context and use Spring.
+
+Entrypoint of the library is the com.groupeseb.kite.KiteRunner class which wires every classes together.
+For more details, see the internal documentation.
