@@ -291,20 +291,21 @@ Possible mode are :
 
 #### type
 
-Return true if the expected type match the type of the actual value. This operator MUST be used with the nop method. expected values must pick of the values defined in the next section.
+Return true if the expected type match the type of the actual value. This operator MUST be used with the nop method. 
+expected values must pick of the values defined in the next section.
 
 Example 
 
 ```json
 {
-  "field": "content[*].title",
+  "field": "content[*].yield.quantity",
   "operator": "type",
-  "expected": "array",
+  "expected": "numeric",
   "failOnError": true
 }
 ```
 
-if failOnError is set, test will be in failure otherwise a log will be produced and other checks will continue.
+if failOnError (this keyword can only be used with type operator) is set, test will be in failure otherwise a log will be produced and other checks will continue.
 
 ##### Available expected values
 
