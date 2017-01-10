@@ -289,6 +289,10 @@ Possible mode are :
 * NON_EXTENSIBLE : array order does not matter, additional attributes are forbidden.
 * STRICT_ORDER : array order does matter, additional attributes are ignored.
 
+```json
+TODO need exemple
+```
+
 #### type
 
 Return true if the expected type match the type of the actual value. This operator MUST be used with the nop method. 
