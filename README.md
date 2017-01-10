@@ -290,7 +290,7 @@ Possible mode are :
 * STRICT_ORDER : array order does matter, additional attributes are ignored.
 
 ```json
-TODO need exemple
+TODO need example
 ```
 
 #### type
