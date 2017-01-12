@@ -21,7 +21,15 @@ Then use this sample code to run your scenario :
 Scenario scenario = new Scenario("myScenario.json");
 new DefaultScenarioRunner().execute(scenario);
 ```
-Warning : Your scenarios must be stored in your resources folder.
+
+Alternative way :
+
+```java
+Scenario scenario = new Scenario(inputStream);
+new DefaultScenarioRunner().execute(scenario);
+```
+
+The last version is useful when scenario are built during runtime or are not provided as bare files.
 
 ## How to write KITE scenario
 
