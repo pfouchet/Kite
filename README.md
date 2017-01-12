@@ -78,23 +78,95 @@ For instance :
 
 To make the development easier and minimal, some placeholder are available and will be replaced at runtime wherever you put it.
 
-Placeholders are scoped to the current Scenario context (it contains prepared context, dependencies and current test).
+Placeholders are scoped to the current Scenario context (it contains prepared context, dependencies and current test) and may have up to 3 arguments, separated by ':' character.
 
-* Base 64 : {{Base64:char}} will produce char with Base64 encoding.
-* currentTimeInt : {{currentTimeInt}} will produce the current time in seconds.
-* RandomString : {{RandomString}} will produce a UUID4.
-* RandomInteger :  {{RandomInteger}} will produce a random integer between 1 and Max Int.
-* Variables : {{Variable:MyVariableName}} will produce value where value is the value defined in the variable node.
-* UUID : {{UUID}} will produce a random UUID and associate it with the current object of the POST request. DEPRECATED preferring way is {{RandomString}} with variable.
-* UUID : {{UUID:User01}} will produce the UUID associated with the object named User01. DEPRECATED preferring way is {{RandomString}} with variable.
-* JWT : {{JWT:authorization}} will produce an unsigned [JWT](http://www.jwt.io/) for the object found in the objectVariables section.
-* URI : {{Location:User01}} will produce the full URI of the object named User01.
-* Lookup : {{Lookup:User01.title}} will produce the value matching the jsonpath inside the object named User01.
-* Lookup with inlined javascript : Inline javascript can be executed as follow :
-`{{Lookup:User01.title:js:outputValue=inputValue.concat('more')}}`will produce the concatenation of title with 'more' string. Any js can be executed but outputValue must be set. inputValue represents the looked value.
-* Lookup with file based javascript : javascript defined in a file can be executed as follow : 
-`{{Lookup:User01.title:jsfile:concatMore.js}}`.This lookup need the js script to set "outputValue".
-* For the five last cases, the object User01 must have been created before referenced.
+### Base 64
+
+{{Base64:aTitle}} will produce 'aTitle' with Base64 encoding.
+
+### currentTimeInt
+
+{{currentTimeInt}} will produce the current time in seconds.
+
+### RandomString
+
+{{RandomString}} will produce a UUID4.
+
+### RandomInteger
+
+{{RandomInteger}} will produce a random integer between 1 and Max Int.
+
+### Variables
+
+{{Variable:MyVariableName}} will produce value where value is the value defined in the variable node.
+
+### UUID 
+
+{{UUID}} will produce a random UUID and associate it with the current object of the POST request. 
+This placeholder is DEPRECATED. Preferring way is {{RandomString}} with variable.
+
+### Named UUID 
+
+{{UUID:User01}} will produce the UUID associated with the object named User01. 
+This placeholder is DEPRECATED. Preferring way is {{RandomString}} with variable.
+
+Note : the object User01 must have been created before referenced.
+
+### JWT 
+
+{{JWT:authorization}} will produce an unsigned [JWT](http://www.jwt.io/) for the object found in the objectVariables section.
+
+### URI
+
+{{Location:User01}} will produce the full URI of the object named User01.
+
+Note : the object User01 must have been created before referenced.
+
+### Lookup
+
+{{Lookup:User01.title}} will produce the value matching the jsonpath inside the object named User01.
+
+### Lookup with inlined javascript
+
+Inline javascript can be executed in a Lookup placeholder. It uses second and third argument for configuration :
+
+```
+{{Lookup:<registeredName>.<path>:js:outputValue=<InlinedJSScript>}}
+```
+
+*outputValue* MUST be set as it will be used for this placeholder.
+Special value *inputValue* represents the looked value and is automatically added to the js context.
+
+#### Example
+
+```
+{{Lookup:User01.title:js:outputValue=inputValue.concat('more')}}
+```
+
+This script will extract the title attribute of User01 and produces the concatenation of title with 'more' string. Any js can be executed but outputValue must be set.
+
+Note : the object User01 must have been created before referenced.
+
+### Lookup with file based javascript
+
+Javascript defined in a file can be executed in a Lookup placeholder. It uses second and third argument for configuration :
+
+```
+{{Lookup:<registeredName>.<path>:jsfile:<path/to/script.js>}}
+```
+
+*outputValue* MUST be set as it will be used for this placeholder.
+Special value *inputValue* represents the looked value and is automatically added to the js context.
+
+### Example
+
+```
+{{Lookup:User01.title:jsfile:concatMore.js}}
+```
+
+This script will extract title attribute from User01 and apply concatMore.js script.
+
+Note : the object User01 must have been created before referenced.
 
 ## Command node
 
