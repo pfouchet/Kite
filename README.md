@@ -90,7 +90,9 @@ Placeholders are scoped to the current Scenario context (it contains prepared co
 * JWT : {{JWT:authorization}} will produce an unsigned [JWT](http://www.jwt.io/) for the object found in the objectVariables section.
 * URI : {{Location:User01}} will produce the full URI of the object named User01.
 * Lookup : {{Lookup:User01.title}} will produce the value matching the jsonpath inside the object named User01.
-* For the three last cases, the object User01 must have been created before referenced.
+* Lookup with inlined javascript : Inline javascript can be executed as follow : {{Lookup:User01.title:js:outputValue=inputValue.concat('more')}} will produce the concatenation of title with 'more' string. Any js can be executed but outputValue must be set. inputValue represents the looked value.
+* Lookup with file based javascript : javascript defined in a file can be executed as follow : {{Lookup:User01.title:jsfile:concatMore.js}}. This lookup need the js script to set "outputValue".
+* For the five last cases, the object User01 must have been created before referenced.
 
 ## Command node
 
