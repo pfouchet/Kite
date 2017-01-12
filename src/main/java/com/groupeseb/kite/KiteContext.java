@@ -11,6 +11,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * This is the context hold by an entire test file. This context will keep track of:
+ *
+ * uids generated with {{UUID}} command.
+ * locations generated with automaticCheck : true and setted name.
+ * variables generated with "variables" section.
+ * bodies generated with setted name.
+ * objectVariables generated with "objectVariables" section.
+ *
+ * It can be twicked beforehand so that specific values maybe added by calling api.
+ *
+ * The latest addition was to allow authorization during automaticCheck. Since authorization can be anything from simpleAuth to JWT authorization,
+ * header that should be used can be customized with com.groupeseb.kite.KiteContext#authorizationHeaderNameForAutomaticCheck attribute.
+ *
+ */
 @NoArgsConstructor
 @Data
 public class KiteContext {

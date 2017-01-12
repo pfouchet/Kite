@@ -4,7 +4,6 @@ import lombok.Getter;
 import org.apache.commons.io.IOUtils;
 import org.json.simple.parser.ParseException;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -58,7 +57,7 @@ public class Scenario {
 
 	/**
 	 *
-	 * @param inputStream a stream with scenario desciption
+	 * @param inputStream a stream with scenario description
 	 * @throws IOException
 	 * @throws ParseException
 	 */

@@ -9,7 +9,9 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
 
-
+/**
+ * This bean will run all commands defined in a {@link Scenario}
+ */
 @Slf4j
 @Component
 public class ScenarioRunner {

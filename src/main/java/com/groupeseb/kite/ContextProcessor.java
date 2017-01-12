@@ -28,6 +28,13 @@ import java.util.regex.Pattern;
 import static com.jayway.restassured.RestAssured.given;
 import static java.util.Objects.requireNonNull;
 
+/**
+ * Bean having the responsibility to replace any placeholders & functions calls using {@link KiteContext}
+ * as data provider.
+ *
+ * Look at {@link ContextProcessor#AUTOMATIC_CHECK_AUTHORIZATION_HEADER_VALUE} for more details about the authorization-aware automaticCheck
+ *
+ */
 @Data
 @Slf4j
 public class ContextProcessor {
@@ -36,7 +43,8 @@ public class ContextProcessor {
 	private static final Pattern UUID_PATTERN = Pattern.compile("\\{\\{" + UUIDFunction.NAME + ":(.+?)\\}\\}");
 
 	/**
-	 *
+	 * This is the variable name expected to be found in "variables" section of the kiteContext which will be used during authentication on automaticCheck.
+	 * See {@link KiteContext#getAuthorizationHeaderNameForAutomaticCheck()}
 	 */
 	private static final String AUTOMATIC_CHECK_AUTHORIZATION_HEADER_VALUE = "internalCheckFullyAuthenticated";
 	private final KiteContext kiteContext;
@@ -57,7 +65,7 @@ public class ContextProcessor {
 	 * @param jsonEscapeFunctionResult true if function result must be json-escaped prior replacing
 	 *                                 placeholder in valueWithPlaceholder
 	 * @return the copy of initial valueWithPlaceholders with function's
-	 * placehoders replaced
+	 * placeholders replaced
 	 */
 	private String executeFunctions(Function function, String valueWithPlaceHolders, boolean jsonEscapeFunctionResult) {
 
@@ -72,7 +80,7 @@ public class ContextProcessor {
 					// If function parameter contains JSON special character,
 					// they may be encoded by the JSON parser (if value with
 					// placeholder is a JSON String).
-					// It is necessary to unecape them before using
+					// It is necessary to unescape them before using
 					// them in the function
 					parameters.add(StringEscapeUtils.unescapeJson(matcher.group(i)));
 				}
@@ -106,7 +114,7 @@ public class ContextProcessor {
 	 *                                 <b>Use true if the result must be directly parsed as JSON</b>,
 	 *                                 false otherwise.
 	 * @return the copy of initial valueWithPlaceholders with function's
-	 * placehoders replaced
+	 * placeholders replaced
 	 */
 	String applyFunctions(String valueWithPlaceholders, boolean jsonEscapeFunctionResult) {
 		String result = valueWithPlaceholders;
@@ -137,7 +145,7 @@ public class ContextProcessor {
 	 * available for this creation log
 	 *
 	 * @param value the String value in which placeholder are replaced
-	 * @return a copy of the initial value with function's placehoders replaced
+	 * @return a copy of the initial value with function's placeholders replaced
 	 */
 	public String processPlaceholdersInString(String value) {
 		return processPlaceholders(null, value, false);
@@ -194,7 +202,7 @@ public class ContextProcessor {
 	 *                                 <b>Use true if the result must be directly parsed as JSON</b>,
 	 *                                 false otherwise.
 	 * @return the copy of initial valueWithPlaceholders with function's
-	 * placehoders replaced
+	 * placeholders replaced
 	 */
 	public String processPlaceholders(@Nullable String commandName,
 	                                  String valueWithPlaceholders, boolean jsonEscapeFunctionResult) {
