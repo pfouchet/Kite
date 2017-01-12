@@ -34,12 +34,12 @@ public class LookupFunction extends AbstractWithParameters {
 		Matcher additionalFunctionMatcher = ADDITIONAL_FUNCTION_PATTERN.matcher(input);
 		if (additionalFunctionMatcher.matches()) {
 			String fieldValue = getFieldValue(context.getKiteContext(), additionalFunctionMatcher.group(1));
-			return applyAddtionalFunction(fieldValue, additionalFunctionMatcher.group(2));
+			return applyAdditionalFunction(fieldValue, additionalFunctionMatcher.group(2));
 		}
 		return getFieldValue(context.getKiteContext(), input);
 	}
 
-	private String applyAddtionalFunction(String input, String additionalParameter) {
+	private String applyAdditionalFunction(String input, String additionalParameter) {
 		for (AdditionalLookupFunction additionalLookupFunction : additionalLookupFunctions) {
 			if (additionalLookupFunction.match(additionalParameter)) {
 				return additionalLookupFunction.apply(input, additionalParameter);

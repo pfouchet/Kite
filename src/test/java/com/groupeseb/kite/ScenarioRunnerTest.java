@@ -158,7 +158,7 @@ public class ScenarioRunnerTest {
 	}
 
 	/**
-	 * pust/post cmd with a null body
+	 * put/post cmd with a null body
 	 */
 	@Test
 	public void testKiteContext_06() throws Exception {

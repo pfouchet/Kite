@@ -11,7 +11,7 @@ import javax.script.ScriptException;
 import static org.testng.Assert.fail;
 
 /**
- * Class to  excute javadcript value
+ * Class to  execute javadcript value
  * The script can use the var 'inputValue' and must produce the var 'outputValue'.
  */
 @Slf4j
@@ -25,7 +25,7 @@ public final class JavaScriptHelper {
 		try {
 			engine.eval(script);
 		} catch (ScriptException e) {
-			String message = String.format("Error to excute script : %s\n with inputValue : %s", script, inputValue);
+			String message = String.format("Error to execute script : %s\n with inputValue : %s", script, inputValue);
 			fail(message, e);
 		}
 		Object outputValue = engine.get("outputValue");

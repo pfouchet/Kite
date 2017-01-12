@@ -6,7 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Class to excude javascript code.
+ * Class to execute javascript code.
  * The script can use the var 'inputValue' and must produce the var 'outputValue'.
  */
 @Component
