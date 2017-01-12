@@ -30,6 +30,9 @@ import java.util.Map;
 import static com.jayway.restassured.RestAssured.given;
 import static org.testng.AssertJUnit.assertEquals;
 
+/**
+ * This Bean will run the {@link Command} and execute {@link Check} on them.
+ */
 @Slf4j
 @Component
 public class CommandRunner {

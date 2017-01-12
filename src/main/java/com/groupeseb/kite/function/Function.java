@@ -38,7 +38,7 @@ public interface Function {
 	String apply(List<String> parameters, ContextProcessor contextProcessor);
 
 	/**
-	 * @return genrated value
+	 * @return generated value
 	 */
 	String apply();
 }
