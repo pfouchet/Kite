@@ -125,6 +125,7 @@ During a POST, the default expected status is 201.
 
 Sample scenario :
 
+```json
 {
     "description": "Create a minimal recipe (MinimalRecipe01)",
     "commands": [
@@ -140,12 +141,15 @@ Sample scenario :
         }
     ]
 }
+```
+
 ### GET
 
 During a GET, the default expectedStatus is 200.
 
 Sample scenario :
 
+```json
 {
     "description": "Create evaluations and use the search endpoint to get them back",
     "dependencies": [
@@ -180,6 +184,7 @@ Sample scenario :
         }
     ]
 }
+```
 
 ### PUT
 
