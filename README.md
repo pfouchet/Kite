@@ -117,7 +117,10 @@ Usable during a POST, it allow to name a created resource to use it later.
 
 #### automaticCheck
 Boolean value available to POST and PUT only. If set to true (default value) then the header Location of the response will be fetched.
-If name attribute is set, returned payload will be saved under this name for further use and will be available through {{Location:}} and {{Lookup:}}
+If name attribute is set, returned payload will be saved under this name for further use and will be available through {{Location:}} and {{Lookup:}}.
+This feature might need further authentication since Location header GET maybe a protected resource. To circumvent this issue, Kite library offers a way to let Api caller defines 
+* the header name that should be used (since authentication can be anything from basicAuth to JWT auth) through the KiteContext#authorizationHeaderNameForAutomaticCheck attribute and 
+* the header value defined as a variable ("variables" section) called internalCheckFullyAuthenticated.
 
 ### POST
 
