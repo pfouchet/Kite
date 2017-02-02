@@ -1,0 +1,14 @@
+{
+  "description": "test retry post",
+  "commands": [
+    {
+      "verb": "POST",
+      "uri": "/myUrlForRetry",
+      "automaticCheck": false,
+      "retry": {
+        "timeout": 3000,
+        "delay": 500
+      }
+    }
+  ]
+}

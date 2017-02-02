@@ -206,6 +206,14 @@ This feature might need further authentication since Location header GET maybe a
 * the header name that should be used (since authentication can be anything from basicAuth to JWT auth) through the KiteContext#authorizationHeaderNameForAutomaticCheck attribute and 
 * the header value defined as a variable ("variables" section) called internalCheckFullyAuthenticated.
 
+#### retry
+An object composed by (timeout and delay) to be able to repeat the command on failure execution until the timeout
+```json
+{
+	"timeout": 3000,
+	"delay": 500
+}
+```
 ### POST
 
 During a POST, the default expected status is 201.
