@@ -91,8 +91,15 @@ class Command {
 	 * Provide multi part.
 	 * Optional. Cannot be used with body.
 	 */
+	@Nullable
 	private final MultiPart multiPart;
-
+	
+	/**
+	 * Provide a repeater mechanism of failure execution.
+	 */
+	@Nullable
+	private final Retry retry;
+	
 	/**
 	 * Only used during GET.
 	 * If defined, specific page will be fetched.
@@ -114,6 +121,7 @@ class Command {
 		if (body != null && multiPart != null) {
 			throw new IllegalStateException("One of 'body' or 'multiPart' must be present");
 		}
+		retry = initRetry(commandSpecification.get("retry"));
 		name = commandSpecification.getString("name");
 		description = commandSpecification.getString("description");
 		verb = requireNonNull(commandSpecification.getString(VERB_KEY));
@@ -138,7 +146,15 @@ class Command {
 				       requireNonNull(multiPartJson.getString("name"), "multiPart.name is null"),
 				       requireNonNull(multiPartJson.getString("fileLocation"), "multiPart.fileLocation is null"));
 	}
-
+	
+	@Nullable
+	private static Retry initRetry(@Nullable Json retryJson) {
+		return retryJson == null ? null :
+			       new Retry(
+				                requireNonNull(retryJson.getLong("timeout"), "retry.timeout is null"),
+				                requireNonNull(retryJson.getLong("delay"), "retry.delay is null"));
+	}
+	
 	private static int getExpectedStatusByVerb(String string) {
 		switch (string) {
 			case "POST":
@@ -157,11 +173,18 @@ class Command {
 				return HttpStatus.SC_OK;
 		}
 	}
-
+	
 	@AllArgsConstructor
 	@Getter
 	static class MultiPart {
 		private final String name;
 		private final String fileLocation;
+	}
+	
+	@AllArgsConstructor
+	@Getter
+	static class Retry {
+		private final long timeout;
+		private final long delay;
 	}
 }

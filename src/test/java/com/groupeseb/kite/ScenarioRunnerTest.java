@@ -254,6 +254,16 @@ public class ScenarioRunnerTest {
 		verify(getRequestedFor(urlEqualTo(SERVICE_URI + "/resources1/123")).withHeader("Authorization", equalTo("123")));
 
 	}
+	
+	@Test
+	public void testKiteContext_12_testRetry() throws Exception {
+		try {
+			KiteRunner.getInstance().execute("testExecute_12.json");
+			fail("missing error");
+		} catch (IllegalStateException e) {
+			assertThat(e.getMessage()).isEqualTo("Command execution failed on timeout");
+		}
+	}
 
 	@AllArgsConstructor
 	@Data
