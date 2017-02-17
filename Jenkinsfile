@@ -47,14 +47,9 @@ node('java') {
         env.JAVA_HOME = "${tool 'JDK-1.8u111'}"
         env.PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
 
-        // specific exclusions
-        def sonarExclusions = "/src/main/java/com/groupeseb/datastore/controllers/synchronisation/SynchronizationDefaultValues.java," +
-                "/src/main/java/com/groupeseb/datastore/controllers/synchronisation/SynchronizationParameter.java," +
-                "/src/main/java/com/groupeseb/datastore/flat/**"
-
         def scannerHome = tool 'SonarQube Scanner AWS';
         withSonarQubeEnv('SonarQube AWS') {
-            sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=KITE -Dsonar.sources=. -Dsonar.exclusions=${sonarExclusions}"
+            sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=KITE -Dsonar.sources=."
         }
     }
 
