@@ -14,14 +14,14 @@
 
     <distributionManagement>
         <repository>
-            <id>seb-nexus-releases</id>
+            <id>seb-nexus-releases-aws</id>
             <name>SEB Nexus: Release</name>
-            <url>https://nexus.qa.openfoodsystem.com/content/repositories/releases/</url>
+            <url>http://192.168.103.123:8081/repository/maven-releases/</url>
         </repository>
         <snapshotRepository>
-            <id>seb-nexus-snapshots</id>
+            <id>seb-nexus-snapshots-aws</id>
             <name>SEB Nexus: Snapshots</name>
-            <url>https://nexus.qa.openfoodsystem.com/content/repositories/snapshots/</url>
+            <url>http://192.168.103.123:8081/repository/maven-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 
@@ -32,8 +32,8 @@
 
     <repositories>
         <repository>
-            <id>seb-nexus-public</id>
-            <url>https://nexus.qa.openfoodsystem.com/content/groups/public/</url>
+            <id>seb-nexus-public-aws</id>
+            <url>http://192.168.103.123:8081/repository/maven-public/</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
