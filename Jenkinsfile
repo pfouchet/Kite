@@ -66,9 +66,11 @@ node('java') {
             def sonarQubePRArguments = ""
             if (isPRBuild) {
                 echo "Building a change request : running SonarQube analysis in preview mode."
-                // The preview mode allows not to override the master analysis (results are separated from the main project)
-                // OAuth token is generated through GitHub: https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/
-                sonarQubePRArguments = " -Dsonar.analysis.mode=preview -Dsonar.github.oauth=61baaa7e8a0e9d1b439575e823d87a637fc86b41 -Dsonar.github.repository=groupeseb/Kite -Dsonar.github.pullRequest=" + CHANGE_ID
+                withCredentials([string(credentialsId: 'github-sonar-api-token', variable: 'GITHUB_TOKEN')]) {
+                    // The preview mode allows not to override the master analysis (results are separated from the main project)
+                    // OAuth token is generated through GitHub: https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/
+                    sonarQubePRArguments = " -Dsonar.analysis.mode=preview -Dsonar.github.oauth=${GITHUB_TOKEN} -Dsonar.github.repository=groupeseb/Kite -Dsonar.github.pullRequest=" + CHANGE_ID
+                }
             }
             withSonarQubeEnv('SonarQube AWS') {
                 sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=KITE -Dsonar.sources=. ${sonarQubePRArguments}"
