@@ -3,15 +3,9 @@ node('java') {
     try {
         stage('Checkout') {
             // configure old builds retention
-            /* Only keep the 2 most recent builds on branches, and 5 last builds on master. */
-            def numToKeepStr
-            if (BRANCH_NAME == 'master') {
-                numToKeepStr = '5'
-            } else {
-                numToKeepStr = '2'
-            }
+            // Only keep the latest build
             properties([[$class  : 'BuildDiscarderProperty',
-                         strategy: [$class: 'LogRotator', numToKeepStr: "${numToKeepStr}"]]])
+                         strategy: [$class: 'LogRotator', numToKeepStr: "1"]]])
 
             // Checkout code from repository
             checkout scm
