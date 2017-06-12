@@ -59,7 +59,8 @@ node('java') {
             env.JAVA_HOME = "${tool 'JDK-1.8u111'}"
             env.PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
 
-            // specific exclusions
+            // If some classes/packages need to be excluded, add them here separated by a comma
+            // Each exclusion must be justified
             def sonarExclusions = ""
             def sonarQubeCommonArgs = "-Dsonar.java.source=7 -Dsonar.sources=src -Dsonar.java.binaries=target/classes,target/test-classes -Dsonar.java.libraries=target/dependency -Dsonar.exclusions=${sonarExclusions}"
             def scannerHome = tool 'SonarQube Scanner AWS';
