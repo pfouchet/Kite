@@ -48,7 +48,7 @@ node('java') {
                     maven: 'Maven3',
                     mavenSettingsConfig: 'seb-nexus-aws-config') {
 
-                sh "mvn clean ${mvnGoal} -U -Dmaven.javadoc.skip=true -Dskip.it.tests=true -Dmaven.test.failure.ignore=true"
+                sh "mvn clean ${mvnGoal} -U -Dmaven.test.failure.ignore=true"
             }
             // publish test results
             junit '**/target/*-reports/*.xml'
@@ -73,13 +73,10 @@ node('java') {
                 }
             }
 
-            // Configure submodules as the Maven plugin would do.
-            def sonarQubeModulesMaven = ""
-
             def pom = readMavenPom file: 'pom.xml'
 
             withSonarQubeEnv('SonarQube AWS') {
-                sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=KITE -Dsonar.projectVersion=${pom.version} ${sonarQubeCommonArgs} ${sonarQubeModulesMaven} ${sonarQubePRArguments}"
+                sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=KITE -Dsonar.projectVersion=${pom.version} ${sonarQubeCommonArgs} ${sonarQubePRArguments}"
             }
         }
     } finally {
