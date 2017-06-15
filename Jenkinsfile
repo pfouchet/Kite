@@ -3,9 +3,15 @@ node('java') {
     try {
         stage('Checkout') {
             // configure old builds retention
-            // Only keep the latest build
+            /* Only keep the 2 most recent builds on branches, and 5 last builds on master. */
+            def numToKeepStr
+            if (BRANCH_NAME == 'master' || BRANCH_NAME.startsWith("mep_")) {
+                numToKeepStr = '5'
+            } else {
+                numToKeepStr = '2'
+            }
             properties([[$class  : 'BuildDiscarderProperty',
-                         strategy: [$class: 'LogRotator', numToKeepStr: "1"]]])
+                         strategy: [$class: 'LogRotator', numToKeepStr: "${numToKeepStr}"]]])
 
             // Checkout code from repository
             checkout scm
@@ -38,17 +44,14 @@ node('java') {
             }
 
             // Run the maven build, in a try/finally to ensure tests reports are published even if maven tests failed
-            try {
-                withMaven(
-                        maven: 'Maven3',
-                        mavenSettingsConfig: 'seb-nexus-aws-config') {
+            withMaven(
+                    maven: 'Maven3',
+                    mavenSettingsConfig: 'seb-nexus-aws-config') {
 
-                    sh "mvn clean ${mvnGoal}"
-                }
-            } finally {
-                // publish test results
-                step([$class: 'JUnitResultArchiver', testResults: '**/target/*-reports/*.xml'])
+                sh "mvn clean ${mvnGoal} -U -Dmaven.test.failure.ignore=true"
             }
+            // publish test results
+            junit '**/target/*-reports/*.xml'
         }
 
         stage('Code analysis') {
@@ -56,6 +59,10 @@ node('java') {
             env.JAVA_HOME = "${tool 'JDK-1.8u111'}"
             env.PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
 
+            // If some classes/packages need to be excluded, add them here separated by a comma
+            // Each exclusion must be justified
+            def sonarExclusions = ""
+            def sonarQubeCommonArgs = "-Dsonar.java.source=7 -Dsonar.sources=src -Dsonar.java.binaries=target/classes,target/test-classes -Dsonar.java.libraries=target/dependency -Dsonar.exclusions=${sonarExclusions}"
             def scannerHome = tool 'SonarQube Scanner AWS';
             def sonarQubePRArguments = ""
             if (isPRBuild) {
@@ -66,8 +73,11 @@ node('java') {
                     sonarQubePRArguments = " -Dsonar.analysis.mode=preview -Dsonar.github.oauth=${GITHUB_TOKEN} -Dsonar.github.repository=groupeseb/Kite -Dsonar.github.pullRequest=" + CHANGE_ID
                 }
             }
+
+            def pom = readMavenPom file: 'pom.xml'
+
             withSonarQubeEnv('SonarQube AWS') {
-                sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=KITE -Dsonar.sources=. ${sonarQubePRArguments}"
+                sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=KITE -Dsonar.projectVersion=${pom.version} ${sonarQubeCommonArgs} ${sonarQubePRArguments}"
             }
         }
     } finally {
