@@ -64,7 +64,7 @@
 		<!-- Project dependency version's properties -->
 		<jsonassert.version>1.5.0</jsonassert.version>
 		<jsr305.version>3.0.2</jsr305.version>
-		<ofs.core.bom.version>1.1.1</ofs.core.bom.version>
+		<ofs.core.bom.version>1.1.2-SNAPSHOT</ofs.core.bom.version>
 		<wiremock.version>1.58</wiremock.version>
 	</properties>
 
