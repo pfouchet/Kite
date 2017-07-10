@@ -39,14 +39,34 @@
 		<repository>
 			<id>seb-nexus-releases-aws</id>
 			<name>SEB Nexus: Release</name>
-			<url>http://192.168.103.123:8081/repository/maven-releases/</url>
+			<url>http://nexus.dcp.groupe-seb.com/repository/maven-releases/</url>
 		</repository>
 		<snapshotRepository>
 			<id>seb-nexus-snapshots-aws</id>
 			<name>SEB Nexus: Snapshots</name>
-			<url>http://192.168.103.123:8081/repository/maven-snapshots/</url>
+			<url>http://nexus.dcp.groupe-seb.com/repository/maven-snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
+
+	<repositories>
+		<repository>
+			<id>seb-nexus-aws</id>
+			<url>http://nexus.dcp.groupe-seb.com/repository/maven-public/</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>seb-nexus-aws</id>
+			<url>http://nexus.dcp.groupe-seb.com/repository/maven-public/</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
 
 	<!-- please keep the properties alphabetically ordered -->
 	<properties>
@@ -64,29 +84,9 @@
 		<!-- Project dependency version's properties -->
 		<jsonassert.version>1.5.0</jsonassert.version>
 		<jsr305.version>3.0.2</jsr305.version>
-		<ofs.core.bom.version>1.1.2-SNAPSHOT</ofs.core.bom.version>
+		<ofs.core.bom.version>1.1.2</ofs.core.bom.version>
 		<wiremock.version>1.58</wiremock.version>
 	</properties>
-
-	<repositories>
-		<repository>
-			<id>seb-nexus-aws</id>
-			<url>http://192.168.103.123:8081/repository/maven-public/</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>seb-nexus-aws</id>
-			<url>http://192.168.103.123:8081/repository/maven-public/</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
 
 	<dependencyManagement>
 		<dependencies>
@@ -350,6 +350,9 @@
 						<goals>
 							<goal>copy-dependencies</goal>
 						</goals>
+						<configuration>
+							<skip>${skipSourceAndDocumentation}</skip>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
@@ -393,6 +396,9 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
+				<configuration>
+					<skipSource>${skipSourceAndDocumentation}</skipSource>
+				</configuration>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -401,6 +407,13 @@
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>-Dfile.encoding=${project.build.sourceEncoding}</argLine>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
