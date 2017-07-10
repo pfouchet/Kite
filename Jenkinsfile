@@ -48,7 +48,7 @@ node('java') {
                     maven: 'Maven3',
                     mavenSettingsConfig: 'seb-nexus-aws-config') {
 
-                sh "mvn clean ${mvnGoal} -U -Dmaven.test.failure.ignore=true"
+                sh "mvn clean ${mvnGoal} -V -Dmaven.test.failure.ignore=true"
             }
             // publish test results
             junit '**/target/*-reports/*.xml'
