@@ -22,7 +22,6 @@
 		<url>https://github.com/groupeseb/Kite</url>
 		<connection>scm:git:https://github.com/groupeseb/Kite.git</connection>
 		<developerConnection>scm:git:https://github.com/groupeseb/Kite.git</developerConnection>
-		<tag>master</tag>
 	</scm>
 
 	<issueManagement>
@@ -39,19 +38,19 @@
 		<repository>
 			<id>seb-nexus-releases-aws</id>
 			<name>SEB Nexus: Release</name>
-			<url>http://nexus.dcp.groupe-seb.com/repository/maven-releases/</url>
+			<url>http://pic-nexus-1565621184.eu-west-1.elb.amazonaws.com/repository/maven-releases/</url>
 		</repository>
 		<snapshotRepository>
 			<id>seb-nexus-snapshots-aws</id>
 			<name>SEB Nexus: Snapshots</name>
-			<url>http://nexus.dcp.groupe-seb.com/repository/maven-snapshots/</url>
+			<url>http://pic-nexus-1565621184.eu-west-1.elb.amazonaws.com/repository/maven-snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
 
 	<repositories>
 		<repository>
 			<id>seb-nexus-aws</id>
-			<url>http://nexus.dcp.groupe-seb.com/repository/maven-public/</url>
+			<url>http://pic-nexus-1565621184.eu-west-1.elb.amazonaws.com/repository/maven-public/</url>
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>
@@ -61,7 +60,7 @@
 	<pluginRepositories>
 		<pluginRepository>
 			<id>seb-nexus-aws</id>
-			<url>http://nexus.dcp.groupe-seb.com/repository/maven-public/</url>
+			<url>http://pic-nexus-1565621184.eu-west-1.elb.amazonaws.com/repository/maven-public/</url>
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>
