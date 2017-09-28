@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
-import com.github.tomakehurst.wiremock.client.UrlMatchingStrategy;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.matching.UrlPattern;
 import com.jayway.restassured.RestAssured;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -78,7 +78,7 @@ public class ScenarioRunnerTest {
 		stubFor(cmdBuilder.willReturn(responseDefBuilder));
 	}
 
-	private static MappingBuilder getMappingBuilder(HttpCmdEnum httpCmd, UrlMatchingStrategy urlEqualTo) {
+	private static MappingBuilder getMappingBuilder(HttpCmdEnum httpCmd, UrlPattern urlEqualTo) {
 		switch (httpCmd) {
 			case POST:
 				return post(urlEqualTo);
@@ -127,7 +127,7 @@ public class ScenarioRunnerTest {
 		verify(postRequestedFor(urlMatching(SERVICE_URI + "/urlUsingJwtHeader"))
 				       .withHeader("Authorization",
 				                   matching(
-						                   "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkb21haW5zIjpbeyJrZXkiOiJkb21haW4yIn1dLCJwcm9maWxlVWlkIjoiZmlyc3RVaWQifQ==")));
+						                   "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJwcm9maWxlVWlkIjoiZmlyc3RVaWQiLCJkb21haW5zIjpbeyJrZXkiOiJkb21haW4yIn1dfQ==")));
 	}
 
 	/**
@@ -254,7 +254,7 @@ public class ScenarioRunnerTest {
 		verify(getRequestedFor(urlEqualTo(SERVICE_URI + "/resources1/123")).withHeader("Authorization", equalTo("123")));
 
 	}
-	
+
 	@Test
 	public void testKiteContext_12_testRetry() throws Exception {
 		try {

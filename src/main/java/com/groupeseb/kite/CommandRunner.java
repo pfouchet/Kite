@@ -5,19 +5,14 @@ import com.groupeseb.kite.check.Check;
 import com.groupeseb.kite.check.DefaultCheckRunner;
 import com.groupeseb.kite.exceptions.CheckFailException;
 import com.jayway.jsonpath.JsonPath;
-import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
 import junit.framework.Assert;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.ContentType;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
-import org.apache.http.util.EntityUtils;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -25,6 +20,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.jayway.restassured.RestAssured.given;
@@ -162,40 +158,33 @@ public class CommandRunner {
 
 	private static String performGetRequest(Command command, ContextProcessor contextProcessor, @Nullable HttpParams params) throws IOException {
 		String processedURI = contextProcessor.getProcessedURI(command);
-		if (!processedURI.contains("http://") && !processedURI.contains("https://")) {
-			processedURI = RestAssured.baseURI + ':' + RestAssured.port + RestAssured.basePath + processedURI;
-		}
-
 		HttpGet httpget = new HttpGet(processedURI);
 
-		if (params != null) {
-			httpget.setParams(httpget.getParams());
-		}
-
-		httpget.addHeader("Content-Type", "application/json");
+		Map<String, String> mapHeaders = new HashMap<>();
+		mapHeaders.put("Content-Type", "application/json");
 		for (Map.Entry<String, String> header : contextProcessor.getProcessedHeaders(command).entrySet()) {
-			httpget.addHeader(header.getKey(), header.getValue());
+			mapHeaders.put(header.getKey(), header.getValue());
 		}
 
-		try (CloseableHttpClient httpClient = HttpClients.createDefault();
-		     CloseableHttpResponse response = httpClient.execute(httpget)) {
+		Response response = given().contentType(JSON_UTF8)
+				.headers(mapHeaders)
+				.expect().statusCode(command.getExpectedStatus())
+				.when().get(processedURI);
 
-			assertEquals(command.getDescription()
-							+ " | "
-							+ command.getExpectedStatus()
-							+ " expected but "
-							+ response.getStatusLine().getStatusCode()
-							+ " received.",
-					(int) command.getExpectedStatus(), response.getStatusLine().getStatusCode());
+		assertEquals(command.getDescription()
+						+ " | "
+						+ command.getExpectedStatus()
+						+ " expected but "
+						+ response.getStatusCode()
+						+ " received.",
+				(int) command.getExpectedStatus(), response.getStatusCode());
 
-			String body = EntityUtils.toString(response.getEntity());
-			KiteContext kiteContext = contextProcessor.getKiteContext();
-			addBodyIfNotEmpty(kiteContext, body, command);
-			return body;
+		String body = response.getBody().asString();
+		KiteContext kiteContext = contextProcessor.getKiteContext();
+		addBodyIfNotEmpty(kiteContext, body, command);
 
-		} catch (Exception ignored) {
-			return "";
-		}
+		return body;
+
 	}
 
 	void get(Command command, ContextProcessor contextProcessor) throws ParseException, IOException {
