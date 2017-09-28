@@ -127,7 +127,7 @@ public class ScenarioRunnerTest {
 		verify(postRequestedFor(urlMatching(SERVICE_URI + "/urlUsingJwtHeader"))
 				       .withHeader("Authorization",
 				                   matching(
-						                   "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJwcm9maWxlVWlkIjoiZmlyc3RVaWQiLCJkb21haW5zIjpbeyJrZXkiOiJkb21haW4yIn1dfQ==")));
+						                   "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkb21haW5zIjpbeyJrZXkiOiJkb21haW4yIn1dLCJwcm9maWxlVWlkIjoiZmlyc3RVaWQifQ==")));
 	}
 
 	/**
