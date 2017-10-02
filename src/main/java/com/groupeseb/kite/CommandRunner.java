@@ -34,9 +34,8 @@ import static org.testng.AssertJUnit.assertEquals;
 @Slf4j
 @Component
 public class CommandRunner {
-	private static final String UTF_8_ENCODING = "UTF-8";
-	private static final String APPLICATION_JSON_UTF8 = ContentType.create(
-			APPLICATION_JSON.getMimeType(), UTF_8_ENCODING).toString();
+	private static final ContentType APPLICATION_JSON_UTF8 = ContentType.create(
+			APPLICATION_JSON.getMimeType(), "UTF-8");
 	private static final String POST = "POST";
 	private static final String PUT = "PUT";
 	private static final String DELETE = "DELETE";
@@ -93,7 +92,7 @@ public class CommandRunner {
 		log.info("[ {} ] POST {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
 
 		Response postResponse = contextProcessor.initRequestSpecificationContent(command)
-				.contentType(APPLICATION_JSON_UTF8)
+				.contentType(APPLICATION_JSON_UTF8.toString())
 				.headers(contextProcessor.getProcessedHeaders(command))
 				.when()
 				.post(processedURI);
@@ -121,7 +120,7 @@ public class CommandRunner {
 		}
 
 		log.info("Checking resource: " + location + "...");
-		given().header("Accept-Encoding", UTF_8_ENCODING)
+		given().header("Accept-Encoding", APPLICATION_JSON_UTF8.getCharset().toString())
 				.headers(contextProcessor.getProcessedHeadersForCheck(command))
 				.expect().statusCode(HttpStatus.SC_OK)
 				.when().get(location);
@@ -137,7 +136,7 @@ public class CommandRunner {
 		log.info("[{}] PATCH {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
 
 		Response patchResponse = contextProcessor.initRequestSpecificationContent(command)
-				.contentType(APPLICATION_JSON_UTF8)
+				.contentType(APPLICATION_JSON_UTF8.toString())
 				.headers(contextProcessor.getProcessedHeaders(command))
 				.when()
 				.patch(processedURI);
@@ -168,7 +167,7 @@ public class CommandRunner {
 			mapHeaders.put(header.getKey(), header.getValue());
 		}
 
-		Response response = given().contentType(APPLICATION_JSON_UTF8)
+		Response response = given().contentType(APPLICATION_JSON_UTF8.toString())
 				.headers(mapHeaders)
 				.expect().statusCode(command.getExpectedStatus())
 				.when().get(processedURI);
@@ -223,7 +222,7 @@ public class CommandRunner {
 		log.info("[ {} ] PUT {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
 
 		Response putResponse = contextProcessor.initRequestSpecificationContent(command)
-				.contentType(APPLICATION_JSON_UTF8)
+				.contentType(APPLICATION_JSON_UTF8.toString())
 				.headers(contextProcessor.getProcessedHeaders(command))
 				.log()
 				.everything(true)
@@ -247,7 +246,7 @@ public class CommandRunner {
 		log.info("DELETE " + processedURI + " (expecting " + expectedStatus + ')');
 
 		Response r = contextProcessor.initRequestSpecificationContent(command)
-				.contentType(APPLICATION_JSON_UTF8)
+				.contentType(APPLICATION_JSON_UTF8.toString())
 				.headers(contextProcessor.getProcessedHeaders(command))
 				.log()
 				.everything(true)
@@ -261,7 +260,7 @@ public class CommandRunner {
 		log.info("Checking resource: " + processedURI + "...");
 
 		if (command.getAutomaticCheck()) {
-			given().contentType(APPLICATION_JSON_UTF8)
+			given().contentType(APPLICATION_JSON_UTF8.toString())
 					.expect().statusCode(HttpStatus.SC_NOT_FOUND)
 					.when().get(processedURI);
 		}
