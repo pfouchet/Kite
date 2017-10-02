@@ -5,19 +5,13 @@ import com.groupeseb.kite.check.Check;
 import com.groupeseb.kite.check.DefaultCheckRunner;
 import com.groupeseb.kite.exceptions.CheckFailException;
 import com.jayway.jsonpath.JsonPath;
-import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
 import junit.framework.Assert;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.entity.ContentType;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
-import org.apache.http.util.EntityUtils;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -25,9 +19,12 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.jayway.restassured.RestAssured.given;
+import static org.apache.http.entity.ContentType.APPLICATION_JSON;
+import static org.apache.http.protocol.HTTP.CONTENT_TYPE;
 import static org.testng.AssertJUnit.assertEquals;
 
 /**
@@ -36,9 +33,7 @@ import static org.testng.AssertJUnit.assertEquals;
 @Slf4j
 @Component
 public class CommandRunner {
-	private static final String UTF_8_ENCODING = "UTF-8";
-	private static final String JSON_UTF8 = ContentType.create(
-			ContentType.APPLICATION_JSON.getMimeType(), UTF_8_ENCODING).toString();
+
 	private static final String POST = "POST";
 	private static final String PUT = "PUT";
 	private static final String DELETE = "DELETE";
@@ -95,7 +90,7 @@ public class CommandRunner {
 		log.info("[ {} ] POST {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
 
 		Response postResponse = contextProcessor.initRequestSpecificationContent(command)
-				.contentType(JSON_UTF8)
+				.contentType(APPLICATION_JSON.toString())
 				.headers(contextProcessor.getProcessedHeaders(command))
 				.when()
 				.post(processedURI);
@@ -123,7 +118,7 @@ public class CommandRunner {
 		}
 
 		log.info("Checking resource: " + location + "...");
-		given().header("Accept-Encoding", UTF_8_ENCODING)
+		given().header("Accept-Encoding", APPLICATION_JSON.getCharset().toString())
 				.headers(contextProcessor.getProcessedHeadersForCheck(command))
 				.expect().statusCode(HttpStatus.SC_OK)
 				.when().get(location);
@@ -139,7 +134,7 @@ public class CommandRunner {
 		log.info("[{}] PATCH {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
 
 		Response patchResponse = contextProcessor.initRequestSpecificationContent(command)
-				.contentType(JSON_UTF8)
+				.contentType(APPLICATION_JSON.toString())
 				.headers(contextProcessor.getProcessedHeaders(command))
 				.when()
 				.patch(processedURI);
@@ -162,40 +157,33 @@ public class CommandRunner {
 
 	private static String performGetRequest(Command command, ContextProcessor contextProcessor, @Nullable HttpParams params) throws IOException {
 		String processedURI = contextProcessor.getProcessedURI(command);
-		if (!processedURI.contains("http://") && !processedURI.contains("https://")) {
-			processedURI = RestAssured.baseURI + ':' + RestAssured.port + RestAssured.basePath + processedURI;
-		}
-
 		HttpGet httpget = new HttpGet(processedURI);
 
-		if (params != null) {
-			httpget.setParams(httpget.getParams());
-		}
-
-		httpget.addHeader("Content-Type", "application/json");
+		Map<String, String> mapHeaders = new HashMap<>();
+		mapHeaders.put(CONTENT_TYPE, APPLICATION_JSON.getMimeType());
 		for (Map.Entry<String, String> header : contextProcessor.getProcessedHeaders(command).entrySet()) {
-			httpget.addHeader(header.getKey(), header.getValue());
+			mapHeaders.put(header.getKey(), header.getValue());
 		}
 
-		try (CloseableHttpClient httpClient = HttpClients.createDefault();
-		     CloseableHttpResponse response = httpClient.execute(httpget)) {
+		Response response = given().contentType(APPLICATION_JSON.toString())
+				.headers(mapHeaders)
+				.expect().statusCode(command.getExpectedStatus())
+				.when().get(processedURI);
 
-			assertEquals(command.getDescription()
-							+ " | "
-							+ command.getExpectedStatus()
-							+ " expected but "
-							+ response.getStatusLine().getStatusCode()
-							+ " received.",
-					(int) command.getExpectedStatus(), response.getStatusLine().getStatusCode());
+		assertEquals(command.getDescription()
+						+ " | "
+						+ command.getExpectedStatus()
+						+ " expected but "
+						+ response.getStatusCode()
+						+ " received.",
+				(int) command.getExpectedStatus(), response.getStatusCode());
 
-			String body = EntityUtils.toString(response.getEntity());
-			KiteContext kiteContext = contextProcessor.getKiteContext();
-			addBodyIfNotEmpty(kiteContext, body, command);
-			return body;
+		String body = response.getBody().asString();
+		KiteContext kiteContext = contextProcessor.getKiteContext();
+		addBodyIfNotEmpty(kiteContext, body, command);
 
-		} catch (Exception ignored) {
-			return "";
-		}
+		return body;
+
 	}
 
 	void get(Command command, ContextProcessor contextProcessor) throws ParseException, IOException {
@@ -232,7 +220,7 @@ public class CommandRunner {
 		log.info("[ {} ] PUT {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
 
 		Response putResponse = contextProcessor.initRequestSpecificationContent(command)
-				.contentType(JSON_UTF8)
+				.contentType(APPLICATION_JSON.toString())
 				.headers(contextProcessor.getProcessedHeaders(command))
 				.log()
 				.everything(true)
@@ -256,7 +244,7 @@ public class CommandRunner {
 		log.info("DELETE " + processedURI + " (expecting " + expectedStatus + ')');
 
 		Response r = contextProcessor.initRequestSpecificationContent(command)
-				.contentType(JSON_UTF8)
+				.contentType(APPLICATION_JSON.toString())
 				.headers(contextProcessor.getProcessedHeaders(command))
 				.log()
 				.everything(true)
@@ -270,7 +258,7 @@ public class CommandRunner {
 		log.info("Checking resource: " + processedURI + "...");
 
 		if (command.getAutomaticCheck()) {
-			given().contentType(JSON_UTF8)
+			given().contentType(APPLICATION_JSON.toString())
 					.expect().statusCode(HttpStatus.SC_NOT_FOUND)
 					.when().get(processedURI);
 		}
