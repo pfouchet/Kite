@@ -82,6 +82,13 @@ class Command {
 	private final Boolean debug;
 
 	/**
+	 * Indicate if the HTTP client must URL Encode parameter's values before issuing the request
+	 * Used with all verbs
+	 * Optional. Default to true
+	 */
+	private final Boolean urlEncodingEnabled;
+	
+	/**
 	 * Defines headers which will be added to the HTTP call.
 	 * Maybe empty.
 	 */
@@ -132,7 +139,8 @@ class Command {
 		automaticCheck = commandSpecification.getBooleanOrDefault("automaticCheck",
 		                                                          expectedStatus.toString().startsWith("2"));
 		debug = commandSpecification.getBooleanOrDefault("debug", false);
-
+		urlEncodingEnabled = commandSpecification.getBooleanOrDefault("urlEncodingEnabled", true);
+		
 		if (commandSpecification.exists("pagination")) {
 			pagination = new Pagination(requireNonNull(commandSpecification.get("pagination")));
 		}

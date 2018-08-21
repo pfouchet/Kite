@@ -88,10 +88,11 @@ public class CommandRunner {
 	void post(Command command, ContextProcessor contextProcessor) throws ParseException {
 		String processedURI = contextProcessor.getProcessedURI(command);
 		log.info("[ {} ] POST {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
-
+		
 		Response postResponse = contextProcessor.initRequestSpecificationContent(command)
 				.contentType(APPLICATION_JSON.toString())
 				.headers(contextProcessor.getProcessedHeaders(command))
+				.urlEncodingEnabled(command.getUrlEncodingEnabled())
 				.when()
 				.post(processedURI);
 
@@ -120,6 +121,7 @@ public class CommandRunner {
 		log.info("Checking resource: " + location + "...");
 		given().header("Accept-Encoding", APPLICATION_JSON.getCharset().toString())
 				.headers(contextProcessor.getProcessedHeadersForCheck(command))
+                .urlEncodingEnabled(command.getUrlEncodingEnabled())
 				.expect().statusCode(HttpStatus.SC_OK)
 				.when().get(location);
 
@@ -136,6 +138,7 @@ public class CommandRunner {
 		Response patchResponse = contextProcessor.initRequestSpecificationContent(command)
 				.contentType(APPLICATION_JSON.toString())
 				.headers(contextProcessor.getProcessedHeaders(command))
+                .urlEncodingEnabled(command.getUrlEncodingEnabled())
 				.when()
 				.patch(processedURI);
 
@@ -167,6 +170,7 @@ public class CommandRunner {
 
 		Response response = given().contentType(APPLICATION_JSON.toString())
 				.headers(mapHeaders)
+                .urlEncodingEnabled(command.getUrlEncodingEnabled())
 				.expect().statusCode(command.getExpectedStatus())
 				.when().get(processedURI);
 
@@ -224,6 +228,7 @@ public class CommandRunner {
 				.headers(contextProcessor.getProcessedHeaders(command))
 				.log()
 				.everything(true)
+                .urlEncodingEnabled(command.getUrlEncodingEnabled())
 				.expect()
 				.statusCode(command.getExpectedStatus())
 				.when()
@@ -248,6 +253,7 @@ public class CommandRunner {
 				.headers(contextProcessor.getProcessedHeaders(command))
 				.log()
 				.everything(true)
+                .urlEncodingEnabled(command.getUrlEncodingEnabled())
 				.expect()
 				.statusCode(expectedStatus)
 				.when()
@@ -259,6 +265,7 @@ public class CommandRunner {
 
 		if (command.getAutomaticCheck()) {
 			given().contentType(APPLICATION_JSON.toString())
+                    .urlEncodingEnabled(command.getUrlEncodingEnabled())
 					.expect().statusCode(HttpStatus.SC_NOT_FOUND)
 					.when().get(processedURI);
 		}
