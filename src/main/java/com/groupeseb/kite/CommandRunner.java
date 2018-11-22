@@ -17,6 +17,7 @@ import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -112,14 +113,19 @@ public class CommandRunner {
 
 	/**
 	 * Configure {@link RestAssured} parameters with instance information.
+	 * If service in param is null, it does not change current service.
+	 *
+	 * @param service {@link Service} instance to configure.
 	 */
-	private void configureRestAssured(Service service) {
-		RestAssured.baseURI = service.getBaseURI();
-		RestAssured.basePath = service.getBasePath();
-		RestAssured.port = service.getPort();
-		RestAssured.urlEncodingEnabled = service.isUrlEncodingEnabled();
-		RestAssured.config = RestAssuredConfig.newConfig()
-				.decoderConfig(DecoderConfig.decoderConfig().defaultContentCharset(service.getCharset()));
+	private void configureRestAssured(@Nullable Service service) {
+		if (service != null) {
+			RestAssured.baseURI = service.getBaseURI();
+			RestAssured.basePath = service.getBasePath();
+			RestAssured.port = service.getPort();
+			RestAssured.urlEncodingEnabled = service.isUrlEncodingEnabled();
+			RestAssured.config = RestAssuredConfig.newConfig()
+					.decoderConfig(DecoderConfig.decoderConfig().defaultContentCharset(service.getCharset()));
+		}
 	}
 
 	private void post(Command command, ContextProcessor contextProcessor) throws ParseException {

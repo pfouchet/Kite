@@ -1,0 +1,12 @@
+{
+  "description": "test 'service' param",
+  "commands": [
+    {
+      "verb": "GET",
+      "uri": "/serviceTest2",
+      "description": "Request with 'service' param set to SERV2",
+      "service": "SERV2",
+      "automaticCheck": false
+    }
+  ]
+}

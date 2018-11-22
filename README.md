@@ -214,6 +214,11 @@ An object composed by (timeout and delay) to be able to repeat the command on fa
 	"delay": 500
 }
 ```
+
+#### service
+We can decide to which service the request must be sent. For that, we can use *service* param with a string that correspond with the key of a configured service in KiteContext.  
+To add a new service to kite context you must create an instance of `com.groupeseb.kite.Service` object and add it to KiteContext by method `com.groupeseb.kite.KiteContext#addService`.
+
 ### POST
 
 During a POST, the default expected status is 201.

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -20,6 +21,7 @@ import java.util.Objects;
  * variables generated with "variables" section.
  * bodies generated with setted name.
  * objectVariables generated with "objectVariables" section.
+ * services added manually before test executing
  * <p>
  * It can be twicked beforehand so that specific values maybe added by calling api.
  * <p>
@@ -28,6 +30,7 @@ import java.util.Objects;
  */
 @NoArgsConstructor
 @Data
+@Slf4j
 public class KiteContext {
 	private final Map<String, String> uuids = new HashMap<>();
 	private final Map<String, String> locations = new HashMap<>();
@@ -110,7 +113,7 @@ public class KiteContext {
 	}
 
 	/**
-	 * Adds a new service to existing services in context.
+	 * Add a new service to existing services in context.
 	 *
 	 * @param key     Key of service for map.
 	 * @param service Instance of {@link Service}.
@@ -120,7 +123,7 @@ public class KiteContext {
 	}
 
 	/**
-	 * Retrieves a {@link Service} instance from services in context.
+	 * Retrieve a {@link Service} instance from services in context.
 	 *
 	 * @param key Key of requested service.
 	 * @return The corresponding instance of {@link Service}.
@@ -130,13 +133,14 @@ public class KiteContext {
 	}
 
 	/**
-	 * Retrieves a {@link Service} configured as default in this Kite context.
+	 * Retrieve a {@link Service} configured as default in this Kite context.
 	 *
 	 * @return The default service.
 	 */
 	public Service getDefaultService() {
 		if (defaultServiceKey == null) {
-			throw new IllegalArgumentException("defaultServiceKey parameter is not set for this context");
+			log.warn("defaultServiceKey parameter is not set for this context");
+			return null;
 		}
 
 		Service defaultService = this.services.get(defaultServiceKey);

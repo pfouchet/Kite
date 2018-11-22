@@ -17,9 +17,7 @@ public class Service {
 	/**
 	 * Default constructor without parameters
 	 */
-	public Service() {
-		// Empty constructor
-	}
+	public Service() {}
 
 	/**
 	 * Create new instance
