@@ -5,18 +5,18 @@ import com.groupeseb.kite.check.Check;
 import com.groupeseb.kite.check.DefaultCheckRunner;
 import com.groupeseb.kite.exceptions.CheckFailException;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.config.DecoderConfig;
+import com.jayway.restassured.config.RestAssuredConfig;
 import com.jayway.restassured.response.Response;
-import junit.framework.Assert;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpParams;
 import org.json.simple.parser.ParseException;
+import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -46,7 +46,8 @@ public class CommandRunner {
 		this.defaultCheckRunner = defaultCheckRunner;
 	}
 
-	void execute(Command command, ContextProcessor contextProcessor) throws Exception {
+	void execute(Command command, ContextProcessor contextProcessor)
+			throws InterruptedException, ParseException, IOException {
 
 		if (command.getDescription() != null) {
 			log.info(command.getDescription() + "...");
@@ -61,6 +62,8 @@ public class CommandRunner {
 			log.info("Waiting for " + command.getWait() + "ms...");
 			Thread.sleep(command.getWait());
 		}
+
+		configureService(command, contextProcessor);
 
 		switch (command.getVerb().toUpperCase()) {
 			case POST:
@@ -79,16 +82,50 @@ public class CommandRunner {
 				patch(command, contextProcessor);
 				break;
 			default:
-				throw new IllegalArgumentException(String.format("Verbe %s is not supported", command.getVerb().toUpperCase()));
+				throw new IllegalArgumentException(String.format("Verb %s is not supported", command.getVerb().toUpperCase()));
 		}
 
 		log.info('[' + command.getName() + "] OK");
 	}
 
-	void post(Command command, ContextProcessor contextProcessor) throws ParseException {
+	/**
+	 * Verify if service param is set and configure requested service, otherwise configure default service.
+	 *
+	 * @param command          Instance of {@link Command} for this request.
+	 * @param contextProcessor Context for this test.
+	 */
+	private void configureService(Command command, ContextProcessor contextProcessor) {
+		// If destination service is set, it checks if service configuration is available
+		// and configures RestAssured for this service.
+		if (command.getService() != null) {
+			Service service = contextProcessor.getKiteContext().getService(command.getService());
+			if (service == null) {
+				throw new IllegalArgumentException(String.format("Service %s is not available", command.getService()));
+			}
+			configureRestAssured(service);
+			log.info("Sending request to {}", command.getService());
+		} else { // Use default service
+			configureRestAssured(contextProcessor.getKiteContext().getDefaultService());
+			log.info(("Sending request to default service"));
+		}
+	}
+
+	/**
+	 * Configure {@link RestAssured} parameters with instance information.
+	 */
+	private void configureRestAssured(Service service) {
+		RestAssured.baseURI = service.getBaseURI();
+		RestAssured.basePath = service.getBasePath();
+		RestAssured.port = service.getPort();
+		RestAssured.urlEncodingEnabled = service.isUrlEncodingEnabled();
+		RestAssured.config = RestAssuredConfig.newConfig()
+				.decoderConfig(DecoderConfig.decoderConfig().defaultContentCharset(service.getCharset()));
+	}
+
+	private void post(Command command, ContextProcessor contextProcessor) throws ParseException {
 		String processedURI = contextProcessor.getProcessedURI(command);
 		log.info("[ {} ] POST {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
-		
+
 		Response postResponse = contextProcessor.initRequestSpecificationContent(command)
 				.contentType(APPLICATION_JSON.toString())
 				.headers(contextProcessor.getProcessedHeaders(command))
@@ -121,7 +158,7 @@ public class CommandRunner {
 		log.info("Checking resource: " + location + "...");
 		given().header("Accept-Encoding", APPLICATION_JSON.getCharset().toString())
 				.headers(contextProcessor.getProcessedHeadersForCheck(command))
-                .urlEncodingEnabled(command.getUrlEncodingEnabled())
+				.urlEncodingEnabled(command.getUrlEncodingEnabled())
 				.expect().statusCode(HttpStatus.SC_OK)
 				.when().get(location);
 
@@ -131,14 +168,14 @@ public class CommandRunner {
 	}
 
 
-	void patch(Command command, ContextProcessor contextProcessor) throws ParseException {
+	private void patch(Command command, ContextProcessor contextProcessor) throws ParseException {
 		String processedURI = contextProcessor.getProcessedURI(command);
 		log.info("[{}] PATCH {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
 
 		Response patchResponse = contextProcessor.initRequestSpecificationContent(command)
 				.contentType(APPLICATION_JSON.toString())
 				.headers(contextProcessor.getProcessedHeaders(command))
-                .urlEncodingEnabled(command.getUrlEncodingEnabled())
+				.urlEncodingEnabled(command.getUrlEncodingEnabled())
 				.when()
 				.patch(processedURI);
 
@@ -158,9 +195,8 @@ public class CommandRunner {
 		}
 	}
 
-	private static String performGetRequest(Command command, ContextProcessor contextProcessor, @Nullable HttpParams params) throws IOException {
+	private static String performGetRequest(Command command, ContextProcessor contextProcessor) throws IOException {
 		String processedURI = contextProcessor.getProcessedURI(command);
-		HttpGet httpget = new HttpGet(processedURI);
 
 		Map<String, String> mapHeaders = new HashMap<>();
 		mapHeaders.put(CONTENT_TYPE, APPLICATION_JSON.getMimeType());
@@ -170,7 +206,7 @@ public class CommandRunner {
 
 		Response response = given().contentType(APPLICATION_JSON.toString())
 				.headers(mapHeaders)
-                .urlEncodingEnabled(command.getUrlEncodingEnabled())
+				.urlEncodingEnabled(command.getUrlEncodingEnabled())
 				.expect().statusCode(command.getExpectedStatus())
 				.when().get(processedURI);
 
@@ -190,16 +226,16 @@ public class CommandRunner {
 
 	}
 
-	void get(Command command, ContextProcessor contextProcessor) throws ParseException, IOException {
+	private void get(Command command, ContextProcessor contextProcessor) throws ParseException, IOException {
 		if (command.getPagination() != null) {
 			paginatedGet(command, contextProcessor);
 		} else {
-			String responseBody = performGetRequest(command, contextProcessor, null);
+			String responseBody = performGetRequest(command, contextProcessor);
 			runChecks(contextProcessor.getChecks(command), responseBody);
 		}
 	}
 
-	void paginatedGet(Command command, ContextProcessor contextProcessor) throws ParseException, IOException {
+	private void paginatedGet(Command command, ContextProcessor contextProcessor) throws ParseException, IOException {
 		log.info("GET " + contextProcessor.getProcessedURI(command) + " (expecting " + command.getExpectedStatus() + ')');
 
 		Integer currentPage = command.getPagination().getStartPage();
@@ -210,7 +246,7 @@ public class CommandRunner {
 			params.setParameter(command.getPagination().getPageParameterName(), command.getPagination().getStartPage());
 			params.setParameter(command.getPagination().getSizeParameterName(), command.getPagination().getSize());
 
-			String responseBody = performGetRequest(command, contextProcessor, params);
+			String responseBody = performGetRequest(command, contextProcessor);
 			totalPages = JsonPath.read(responseBody, command.getPagination().getTotalPagesField());
 
 			runChecks(contextProcessor.getChecks(command), responseBody);
@@ -218,7 +254,7 @@ public class CommandRunner {
 		}
 	}
 
-	void put(Command command, ContextProcessor contextProcessor) throws ParseException {
+	private void put(Command command, ContextProcessor contextProcessor) throws ParseException {
 		String processedURI = contextProcessor.getProcessedURI(command);
 
 		log.info("[ {} ] PUT {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
@@ -228,7 +264,7 @@ public class CommandRunner {
 				.headers(contextProcessor.getProcessedHeaders(command))
 				.log()
 				.everything(true)
-                .urlEncodingEnabled(command.getUrlEncodingEnabled())
+				.urlEncodingEnabled(command.getUrlEncodingEnabled())
 				.expect()
 				.statusCode(command.getExpectedStatus())
 				.when()
@@ -242,7 +278,7 @@ public class CommandRunner {
 		runChecks(contextProcessor.getChecks(command), response);
 	}
 
-	void delete(Command command, ContextProcessor contextProcessor) throws ParseException {
+	private void delete(Command command, ContextProcessor contextProcessor) throws ParseException {
 		String processedURI = contextProcessor.getProcessedURI(command);
 		Integer expectedStatus = command.getExpectedStatus();
 
@@ -253,7 +289,7 @@ public class CommandRunner {
 				.headers(contextProcessor.getProcessedHeaders(command))
 				.log()
 				.everything(true)
-                .urlEncodingEnabled(command.getUrlEncodingEnabled())
+				.urlEncodingEnabled(command.getUrlEncodingEnabled())
 				.expect()
 				.statusCode(expectedStatus)
 				.when()
@@ -265,13 +301,13 @@ public class CommandRunner {
 
 		if (command.getAutomaticCheck()) {
 			given().contentType(APPLICATION_JSON.toString())
-                    .urlEncodingEnabled(command.getUrlEncodingEnabled())
+					.urlEncodingEnabled(command.getUrlEncodingEnabled())
 					.expect().statusCode(HttpStatus.SC_NOT_FOUND)
 					.when().get(processedURI);
 		}
 	}
 
-	void runChecks(Collection<Check> checks, String responseBody) throws ParseException {
+	private void runChecks(Collection<Check> checks, String responseBody) throws ParseException {
 		String errorMessage = null;
 		for (Check check : checks) {
 			try {
@@ -282,7 +318,7 @@ public class CommandRunner {
 				throw new IllegalStateException("Check [" + check.getDescription() + "] failed ", e);
 			}
 		}
-		if(errorMessage != null) {
+		if (errorMessage != null) {
 			Assert.fail(errorMessage);
 		}
 	}

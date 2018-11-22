@@ -14,18 +14,17 @@ import java.util.Objects;
 
 /**
  * This is the context hold by an entire test file. This context will keep track of:
- *
+ * <p>
  * uids generated with {{UUID}} command.
  * locations generated with automaticCheck : true and setted name.
  * variables generated with "variables" section.
  * bodies generated with setted name.
  * objectVariables generated with "objectVariables" section.
- *
+ * <p>
  * It can be twicked beforehand so that specific values maybe added by calling api.
- *
+ * <p>
  * The latest addition was to allow authorization during automaticCheck. Since authorization can be anything from simpleAuth to JWT authorization,
  * header that should be used can be customized with com.groupeseb.kite.KiteContext#authorizationHeaderNameForAutomaticCheck attribute.
- *
  */
 @NoArgsConstructor
 @Data
@@ -35,11 +34,17 @@ public class KiteContext {
 	private final Map<String, String> variables = new HashMap<>();
 	private final Map<String, String> bodies = new HashMap<>();
 	private final Map<String, Object> objectVariables = new HashMap<>();
+	private final Map<String, Service> services = new HashMap<>();
 
 	/**
 	 * This will be the header used when doing an automatic resource check.
 	 */
 	private String authorizationHeaderNameForAutomaticCheck = null;
+
+	/**
+	 * Define the key of the service used by default for all requests that not set "service" param.
+	 */
+	private String defaultServiceKey = null;
 
 	private static final ObjectMapper OBJECT_MAPPER = initObjectMapper();
 
@@ -50,11 +55,17 @@ public class KiteContext {
 		return objectMapper;
 	}
 
+	/**
+	 * Add new values to current context.
+	 *
+	 * @param kiteContext {@link KiteContext} with additional values.
+	 */
 	public void extend(KiteContext kiteContext) {
 		this.uuids.putAll(kiteContext.uuids);
 		this.locations.putAll(kiteContext.locations);
 		this.variables.putAll(kiteContext.variables);
 		this.objectVariables.putAll(kiteContext.objectVariables);
+		this.services.putAll(kiteContext.services);
 		this.authorizationHeaderNameForAutomaticCheck = kiteContext.authorizationHeaderNameForAutomaticCheck;
 	}
 
@@ -96,6 +107,44 @@ public class KiteContext {
 
 	public void addBodyAsJsonString(String name, Object object) throws JsonProcessingException {
 		this.bodies.put(name, OBJECT_MAPPER.writeValueAsString(object));
+	}
+
+	/**
+	 * Adds a new service to existing services in context.
+	 *
+	 * @param key     Key of service for map.
+	 * @param service Instance of {@link Service}.
+	 */
+	public void addService(String key, Service service) {
+		this.services.put(key, service);
+	}
+
+	/**
+	 * Retrieves a {@link Service} instance from services in context.
+	 *
+	 * @param key Key of requested service.
+	 * @return The corresponding instance of {@link Service}.
+	 */
+	public Service getService(String key) {
+		return this.services.get(key);
+	}
+
+	/**
+	 * Retrieves a {@link Service} configured as default in this Kite context.
+	 *
+	 * @return The default service.
+	 */
+	public Service getDefaultService() {
+		if (defaultServiceKey == null) {
+			throw new IllegalArgumentException("defaultServiceKey parameter is not set for this context");
+		}
+
+		Service defaultService = this.services.get(defaultServiceKey);
+		if (defaultService == null) {
+			throw new IllegalArgumentException(String.format("Configured default service %s is not available", defaultServiceKey));
+		}
+
+		return defaultService;
 	}
 
 	private static <T> T checkAndGet(Map<String, T> map, String mapName, String key) {
