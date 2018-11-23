@@ -37,7 +37,7 @@ public class KiteContext {
 	private final Map<String, String> variables = new HashMap<>();
 	private final Map<String, String> bodies = new HashMap<>();
 	private final Map<String, Object> objectVariables = new HashMap<>();
-	private final Map<String, Service> services = new HashMap<>();
+	private Map<String, Service> services = new HashMap<>();
 
 	/**
 	 * This will be the header used when doing an automatic resource check.
@@ -120,6 +120,15 @@ public class KiteContext {
 	 */
 	public void addService(String key, Service service) {
 		this.services.put(key, service);
+	}
+
+	/**
+	 * Set services map into context.
+	 *
+	 * @param services Map of services that will be added into context.
+	 */
+	public void setServices(Map<String, Service> services) {
+		this.services = services;
 	}
 
 	/**
