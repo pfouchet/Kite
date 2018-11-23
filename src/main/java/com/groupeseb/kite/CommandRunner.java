@@ -117,7 +117,7 @@ public class CommandRunner {
 	 *
 	 * @param service {@link Service} instance to configure.
 	 */
-	private void configureRestAssured(@Nullable Service service) {
+	private static void configureRestAssured(@Nullable Service service) {
 		if (service != null) {
 			RestAssured.baseURI = service.getBaseURI();
 			RestAssured.basePath = service.getBasePath();
@@ -201,7 +201,7 @@ public class CommandRunner {
 		}
 	}
 
-	private static String performGetRequest(Command command, ContextProcessor contextProcessor) throws IOException {
+	private static String performGetRequest(Command command, ContextProcessor contextProcessor) {
 		String processedURI = contextProcessor.getProcessedURI(command);
 
 		Map<String, String> mapHeaders = new HashMap<>();

@@ -10,6 +10,7 @@ import com.github.tomakehurst.wiremock.matching.UrlPattern;
 import com.jayway.restassured.RestAssured;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -40,6 +41,7 @@ import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 
+@Slf4j
 public class ScenarioRunnerTest {
 	protected static final int SERVICE_PORT = 8089;
 	protected static final String SERVICE_URI = "/myService";
@@ -271,7 +273,7 @@ public class ScenarioRunnerTest {
 	 * Test for new param 'service'.
 	 */
 	@Test
-	public void testKiteContext_13_testService() throws Exception {
+	public void testKiteContext13TestService() throws Exception {
 		Map<Object, Object> response = new HashMap<>();
 		response.put("value", "a");
 		stubForUrlAndBody(GET, "/serviceTest1", 200, response);
@@ -296,6 +298,7 @@ public class ScenarioRunnerTest {
 		try {
 			KiteRunner.getInstance().execute("testExecute_13_B.json", kiteContext);
 		} catch (UnknownHostException e) {
+			log.info("Catch exception when host is unknown", e);
 			Assert.assertEquals(RestAssured.baseURI, service2.getBaseURI(), "Base URI is from SERV2");
 			Assert.assertEquals(RestAssured.basePath, service2.getBasePath(), "Base path is from SERV2");
 			Assert.assertEquals(RestAssured.port, service2.getPort(), "Port is from SERV2");
@@ -305,6 +308,7 @@ public class ScenarioRunnerTest {
 		try {
 			KiteRunner.getInstance().execute("testExecute_13_C.json", kiteContext);
 		} catch (UnknownHostException e) {
+			log.info("Catch exception when host is unknown", e);
 			Assert.assertEquals(RestAssured.baseURI, service1.getBaseURI(), "Base URI is from SERV1");
 			Assert.assertEquals(RestAssured.basePath, service1.getBasePath(), "Base path is from SERV1");
 			Assert.assertEquals(RestAssured.port, service1.getPort(), "Port is from SERV1");
