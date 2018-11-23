@@ -119,6 +119,11 @@ class Command {
 	 */
 	private final Json commandSpecification;
 
+	/**
+	 * Allow to set a destination service. Available services must be set in {@link KiteContext#services} attribute.
+	 */
+	private final String service;
+
 	Command(Json commandSpecification) {
 		this.commandSpecification = commandSpecification;
 
@@ -145,6 +150,7 @@ class Command {
 			pagination = new Pagination(requireNonNull(commandSpecification.get("pagination")));
 		}
 		headers = commandSpecification.getMap("headers");
+		service = commandSpecification.getString("service");
 	}
 
 	@Nullable

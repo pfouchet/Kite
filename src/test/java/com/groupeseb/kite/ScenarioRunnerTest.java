@@ -10,11 +10,14 @@ import com.github.tomakehurst.wiremock.matching.UrlPattern;
 import com.jayway.restassured.RestAssured;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import javax.annotation.Nullable;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,6 +41,7 @@ import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 
+@Slf4j
 public class ScenarioRunnerTest {
 	protected static final int SERVICE_PORT = 8089;
 	protected static final String SERVICE_URI = "/myService";
@@ -101,7 +105,7 @@ public class ScenarioRunnerTest {
 		KiteRunner.getInstance().execute("testExecute_02.json");
 
 		verify(postRequestedFor(urlMatching("/myService/muUrl02"))
-				       .withRequestBody(matching(".*124.*")));
+				.withRequestBody(matching(".*124.*")));
 	}
 
 	/**
@@ -115,7 +119,7 @@ public class ScenarioRunnerTest {
 		KiteRunner.getInstance().execute("testExecute_03.json");
 
 		verify(postRequestedFor(urlMatching("/myService/muUrl02"))
-				       .withRequestBody(matching(".*124.*")));
+				.withRequestBody(matching(".*124.*")));
 	}
 
 	@Test
@@ -125,9 +129,9 @@ public class ScenarioRunnerTest {
 		KiteRunner.getInstance().execute("testExecute_04.json");
 
 		verify(postRequestedFor(urlMatching(SERVICE_URI + "/urlUsingJwtHeader"))
-				       .withHeader("Authorization",
-				                   matching(
-						                   "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkb21haW5zIjpbeyJrZXkiOiJkb21haW4yIn1dLCJwcm9maWxlVWlkIjoiZmlyc3RVaWQifQ==")));
+				.withHeader("Authorization",
+						matching(
+								"Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkb21haW5zIjpbeyJrZXkiOiJkb21haW4yIn1dLCJwcm9maWxlVWlkIjoiZmlyc3RVaWQifQ==")));
 	}
 
 	/**
@@ -154,7 +158,7 @@ public class ScenarioRunnerTest {
 		scenarioRunner.execute("testExecute_05_B.json", kiteContext);
 
 		verify(postRequestedFor(urlMatching(SERVICE_URI + "/mySecondeUrl"))
-				       .withRequestBody(matching(value2 + value3)));
+				.withRequestBody(matching(value2 + value3)));
 	}
 
 	/**
@@ -262,6 +266,52 @@ public class ScenarioRunnerTest {
 			fail("missing error");
 		} catch (IllegalStateException e) {
 			assertThat(e.getMessage()).isEqualTo("Command execution failed on timeout");
+		}
+	}
+
+	/**
+	 * Test for new param 'service'.
+	 */
+	@Test
+	public void testKiteContext13TestService() throws Exception {
+		Map<Object, Object> response = new HashMap<>();
+		response.put("value", "a");
+		stubForUrlAndBody(GET, "/serviceTest1", 200, response);
+		stubForUrlAndBody(GET, "/serviceTest2", 200, response);
+		stubForUrlAndBody(GET, "/serviceTest3", 200, response);
+
+		// Test works without configured services
+		KiteRunner.getInstance().execute("testExecute_13_A.json");
+		Assert.assertEquals("http://localhost", RestAssured.baseURI, "Base URI has not changed");
+		Assert.assertEquals(SERVICE_URI, RestAssured.basePath, "Base path has not changed");
+		Assert.assertEquals(SERVICE_PORT, RestAssured.port, "Port has not changed");
+
+		// Configure KiteContext with services
+		Service service1 = new Service("http://remotehost1", "/basePath1", 8081);
+		Service service2 = new Service("http://remotehost2", "/basePath2", 8082);
+		KiteContext kiteContext = new KiteContext();
+		kiteContext.addService("SERV1", service1);
+		kiteContext.addService("SERV2", service2);
+		kiteContext.setDefaultServiceKey("SERV1");
+
+		// Test that SERV2 is set correctly
+		try {
+			KiteRunner.getInstance().execute("testExecute_13_B.json", kiteContext);
+		} catch (UnknownHostException e) {
+			log.info("Catch exception when host is unknown", e);
+			Assert.assertEquals(RestAssured.baseURI, service2.getBaseURI(), "Base URI is from SERV2");
+			Assert.assertEquals(RestAssured.basePath, service2.getBasePath(), "Base path is from SERV2");
+			Assert.assertEquals(RestAssured.port, service2.getPort(), "Port is from SERV2");
+		}
+
+		// Test that SERV1 is set by default
+		try {
+			KiteRunner.getInstance().execute("testExecute_13_C.json", kiteContext);
+		} catch (UnknownHostException e) {
+			log.info("Catch exception when host is unknown", e);
+			Assert.assertEquals(RestAssured.baseURI, service1.getBaseURI(), "Base URI is from SERV1");
+			Assert.assertEquals(RestAssured.basePath, service1.getBasePath(), "Base path is from SERV1");
+			Assert.assertEquals(RestAssured.port, service1.getPort(), "Port is from SERV1");
 		}
 	}
 
