@@ -4,7 +4,7 @@
 
 	<groupId>com.groupeseb</groupId>
 	<artifactId>kite</artifactId>
-	<version>3.17-SNAPSHOT</version>
+	<version>3.18-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Kite Integration Testing Environment</name>
