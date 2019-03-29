@@ -4,7 +4,7 @@
 
 	<groupId>com.groupeseb</groupId>
 	<artifactId>kite</artifactId>
-	<version>3.19-SNAPSHOT</version>
+	<version>3.19</version>
 	<packaging>jar</packaging>
 
 	<name>Kite Integration Testing Environment</name>
@@ -21,7 +21,7 @@
 		<url>https://github.com/groupeseb/Kite</url>
 		<connection>scm:git:https://github.com/groupeseb/Kite.git</connection>
 		<developerConnection>scm:git:https://github.com/groupeseb/Kite.git</developerConnection>
-	  <tag>HEAD</tag>
+	  <tag>kite-3.19</tag>
   </scm>
 
 	<issueManagement>
