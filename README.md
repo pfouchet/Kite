@@ -206,6 +206,19 @@ This feature might need further authentication since Location header GET maybe a
 * the header name that should be used (since authentication can be anything from basicAuth to JWT auth) through the KiteContext#authorizationHeaderNameForAutomaticCheck attribute and 
 * the header value defined as a variable ("variables" section) called internalCheckFullyAuthenticated.
 
+#### retry
+An object composed by (timeout and delay) to be able to repeat the command on failure execution until the timeout
+```json
+{
+	"timeout": 3000,
+	"delay": 500
+}
+```
+
+#### service
+We can decide to which service the request must be sent. For that, we can use *service* param with a string that correspond with the key of a configured service in KiteContext.  
+To add a new service to kite context you must create an instance of `com.groupeseb.kite.Service` object and add it to KiteContext by method `com.groupeseb.kite.KiteContext#addService`.
+
 ### POST
 
 During a POST, the default expected status is 201.

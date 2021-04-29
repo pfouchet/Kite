@@ -6,28 +6,28 @@ import com.groupeseb.kite.check.DefaultCheckRunner;
 import com.groupeseb.kite.exceptions.CheckFailException;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.config.DecoderConfig;
+import com.jayway.restassured.config.RestAssuredConfig;
 import com.jayway.restassured.response.Response;
-import junit.framework.Assert;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.entity.ContentType;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpParams;
-import org.apache.http.util.EntityUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.json.simple.parser.ParseException;
+import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.jayway.restassured.RestAssured.given;
+import static org.apache.http.entity.ContentType.APPLICATION_JSON;
+import static org.apache.http.protocol.HTTP.CONTENT_TYPE;
 import static org.testng.AssertJUnit.assertEquals;
 
 /**
@@ -36,9 +36,7 @@ import static org.testng.AssertJUnit.assertEquals;
 @Slf4j
 @Component
 public class CommandRunner {
-	private static final String UTF_8_ENCODING = "UTF-8";
-	private static final String JSON_UTF8 = ContentType.create(
-			ContentType.APPLICATION_JSON.getMimeType(), UTF_8_ENCODING).toString();
+
 	private static final String POST = "POST";
 	private static final String PUT = "PUT";
 	private static final String DELETE = "DELETE";
@@ -51,7 +49,8 @@ public class CommandRunner {
 		this.defaultCheckRunner = defaultCheckRunner;
 	}
 
-	void execute(Command command, ContextProcessor contextProcessor) throws Exception {
+	void execute(Command command, ContextProcessor contextProcessor)
+			throws InterruptedException, ParseException, IOException {
 
 		if (command.getDescription() != null) {
 			log.info(command.getDescription() + "...");
@@ -66,6 +65,8 @@ public class CommandRunner {
 			log.info("Waiting for " + command.getWait() + "ms...");
 			Thread.sleep(command.getWait());
 		}
+
+		configureService(command, contextProcessor);
 
 		switch (command.getVerb().toUpperCase()) {
 			case POST:
@@ -84,32 +85,72 @@ public class CommandRunner {
 				patch(command, contextProcessor);
 				break;
 			default:
-				throw new IllegalArgumentException(String.format("Verbe %s is not supported", command.getVerb().toUpperCase()));
+				throw new IllegalArgumentException(String.format("Verb %s is not supported", command.getVerb().toUpperCase()));
 		}
 
 		log.info('[' + command.getName() + "] OK");
 	}
 
-	void post(Command command, ContextProcessor contextProcessor) throws ParseException {
+	/**
+	 * Verify if service param is set and configure requested service, otherwise configure default service.
+	 *
+	 * @param command          Instance of {@link Command} for this request.
+	 * @param contextProcessor Context for this test.
+	 */
+	private void configureService(Command command, ContextProcessor contextProcessor) {
+		// If destination service is set, it checks if service configuration is available
+		// and configures RestAssured for this service.
+		if (command.getService() != null) {
+			Service service = contextProcessor.getKiteContext().getService(command.getService());
+			if (service == null) {
+				throw new IllegalArgumentException(String.format("Service %s is not available", command.getService()));
+			}
+			configureRestAssured(service);
+			log.info("Sending request to {}", command.getService());
+		} else { // Use default service
+			configureRestAssured(contextProcessor.getKiteContext().getDefaultService());
+			log.info(("Sending request to default service"));
+		}
+	}
+
+	/**
+	 * Configure {@link RestAssured} parameters with instance information.
+	 * If service in param is null, it does not change current service.
+	 *
+	 * @param service {@link Service} instance to configure.
+	 */
+	private static void configureRestAssured(@Nullable Service service) {
+		if (service != null) {
+			RestAssured.baseURI = service.getBaseURI();
+			RestAssured.basePath = service.getBasePath();
+			RestAssured.port = service.getPort();
+			RestAssured.urlEncodingEnabled = service.isUrlEncodingEnabled();
+			RestAssured.config = RestAssuredConfig.newConfig()
+					.decoderConfig(DecoderConfig.decoderConfig().defaultContentCharset(service.getCharset()));
+		}
+	}
+
+	private void post(Command command, ContextProcessor contextProcessor) throws ParseException {
 		String processedURI = contextProcessor.getProcessedURI(command);
 		log.info("[ {} ] POST {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
 
 		Response postResponse = contextProcessor.initRequestSpecificationContent(command)
-				.contentType(JSON_UTF8)
+				.contentType(APPLICATION_JSON.toString())
 				.headers(contextProcessor.getProcessedHeaders(command))
+				.urlEncodingEnabled(command.getUrlEncodingEnabled())
 				.when()
 				.post(processedURI);
 
-		String response = postResponse.prettyPrint();
-		log.info(response);
+		if (mustLog(contextProcessor)) {
+			postResponse.prettyPrint();
+		}
 
 		KiteContext kiteContext = contextProcessor.getKiteContext();
-		addBodyIfNotEmpty(kiteContext, response, command);
+		addBodyIfNotEmpty(kiteContext, postResponse.getBody().asString(), command);
 
-		assertEquals("Unexpected response status",
-				command.getExpectedStatus(),
-				Integer.valueOf(postResponse.getStatusCode()));
-		runChecks(contextProcessor.getChecks(command), response);
+		checkStatus(command, contextProcessor, postResponse);
+
+		runChecks(command, contextProcessor, postResponse);
 
 		if (command.getAutomaticCheck()) {
 			doCheck(command, contextProcessor, postResponse, kiteContext);
@@ -123,8 +164,9 @@ public class CommandRunner {
 		}
 
 		log.info("Checking resource: " + location + "...");
-		given().header("Accept-Encoding", UTF_8_ENCODING)
+		given().header("Accept-Encoding", APPLICATION_JSON.getCharset().toString())
 				.headers(contextProcessor.getProcessedHeadersForCheck(command))
+				.urlEncodingEnabled(command.getUrlEncodingEnabled())
 				.expect().statusCode(HttpStatus.SC_OK)
 				.when().get(location);
 
@@ -134,80 +176,74 @@ public class CommandRunner {
 	}
 
 
-	void patch(Command command, ContextProcessor contextProcessor) throws ParseException {
+	private void patch(Command command, ContextProcessor contextProcessor) throws ParseException {
 		String processedURI = contextProcessor.getProcessedURI(command);
 		log.info("[{}] PATCH {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
 
 		Response patchResponse = contextProcessor.initRequestSpecificationContent(command)
-				.contentType(JSON_UTF8)
+				.contentType(APPLICATION_JSON.toString())
 				.headers(contextProcessor.getProcessedHeaders(command))
+				.urlEncodingEnabled(command.getUrlEncodingEnabled())
 				.when()
 				.patch(processedURI);
 
-		String response = patchResponse.prettyPrint();
-		log.info(response);
+		if (mustLog(contextProcessor)) {
+			patchResponse.prettyPrint();
+		}
 
 		KiteContext kiteContext = contextProcessor.getKiteContext();
-		addBodyIfNotEmpty(kiteContext, response, command);
+		addBodyIfNotEmpty(kiteContext, patchResponse.getBody().asString(), command);
 
-		assertEquals("Unexpected response status",
-				command.getExpectedStatus(),
-				Integer.valueOf(patchResponse.getStatusCode()));
-		runChecks(contextProcessor.getChecks(command), response);
+		checkStatus(command, contextProcessor, patchResponse);
+
+		runChecks(command, contextProcessor, patchResponse);
 
 		if (command.getAutomaticCheck()) {
 			doCheck(command, contextProcessor, patchResponse, kiteContext);
 		}
 	}
 
-	private static String performGetRequest(Command command, ContextProcessor contextProcessor, @Nullable HttpParams params) throws IOException {
+	private static Response performGetRequest(Command command, ContextProcessor contextProcessor) {
 		String processedURI = contextProcessor.getProcessedURI(command);
-		if (!processedURI.contains("http://") && !processedURI.contains("https://")) {
-			processedURI = RestAssured.baseURI + ':' + RestAssured.port + RestAssured.basePath + processedURI;
-		}
+		log.info("[ {} ] GET {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
 
-		HttpGet httpget = new HttpGet(processedURI);
-
-		if (params != null) {
-			httpget.setParams(httpget.getParams());
-		}
-
-		httpget.addHeader("Content-Type", "application/json");
+		Map<String, String> mapHeaders = new HashMap<>();
+		mapHeaders.put(CONTENT_TYPE, APPLICATION_JSON.getMimeType());
 		for (Map.Entry<String, String> header : contextProcessor.getProcessedHeaders(command).entrySet()) {
-			httpget.addHeader(header.getKey(), header.getValue());
+			mapHeaders.put(header.getKey(), header.getValue());
 		}
 
-		try (CloseableHttpClient httpClient = HttpClients.createDefault();
-		     CloseableHttpResponse response = httpClient.execute(httpget)) {
+		Response response = given().contentType(APPLICATION_JSON.toString())
+				.headers(mapHeaders)
+				.urlEncodingEnabled(command.getUrlEncodingEnabled())
+				.expect().statusCode(command.getExpectedStatus())
+				.when().get(processedURI);
 
-			assertEquals(command.getDescription()
-							+ " | "
-							+ command.getExpectedStatus()
-							+ " expected but "
-							+ response.getStatusLine().getStatusCode()
-							+ " received.",
-					(int) command.getExpectedStatus(), response.getStatusLine().getStatusCode());
+		assertEquals(command.getDescription()
+						+ " | "
+						+ command.getExpectedStatus()
+						+ " expected but "
+						+ response.getStatusCode()
+						+ " received.",
+				(int) command.getExpectedStatus(), response.getStatusCode());
 
-			String body = EntityUtils.toString(response.getEntity());
-			KiteContext kiteContext = contextProcessor.getKiteContext();
-			addBodyIfNotEmpty(kiteContext, body, command);
-			return body;
+		KiteContext kiteContext = contextProcessor.getKiteContext();
+		addBodyIfNotEmpty(kiteContext, response.getBody().asString(), command);
 
-		} catch (Exception ignored) {
-			return "";
-		}
+		return response;
+
 	}
 
-	void get(Command command, ContextProcessor contextProcessor) throws ParseException, IOException {
+	private void get(Command command, ContextProcessor contextProcessor) throws ParseException, IOException {
 		if (command.getPagination() != null) {
 			paginatedGet(command, contextProcessor);
 		} else {
-			String responseBody = performGetRequest(command, contextProcessor, null);
-			runChecks(contextProcessor.getChecks(command), responseBody);
+			Response response = performGetRequest(command, contextProcessor);
+			runChecks(command, contextProcessor, response);
 		}
 	}
 
-	void paginatedGet(Command command, ContextProcessor contextProcessor) throws ParseException, IOException {
+	private void paginatedGet(Command command, ContextProcessor contextProcessor) throws ParseException, IOException {
 		log.info("GET " + contextProcessor.getProcessedURI(command) + " (expecting " + command.getExpectedStatus() + ')');
 
 		Integer currentPage = command.getPagination().getStartPage();
@@ -218,76 +254,85 @@ public class CommandRunner {
 			params.setParameter(command.getPagination().getPageParameterName(), command.getPagination().getStartPage());
 			params.setParameter(command.getPagination().getSizeParameterName(), command.getPagination().getSize());
 
-			String responseBody = performGetRequest(command, contextProcessor, params);
-			totalPages = JsonPath.read(responseBody, command.getPagination().getTotalPagesField());
+			Response response = performGetRequest(command, contextProcessor);
+			totalPages = JsonPath.read(response.getBody().asString(), command.getPagination().getTotalPagesField());
 
-			runChecks(contextProcessor.getChecks(command), responseBody);
+			runChecks(command, contextProcessor, response);
 			currentPage++;
 		}
 	}
 
-	void put(Command command, ContextProcessor contextProcessor) throws ParseException {
+	private void put(Command command, ContextProcessor contextProcessor) throws ParseException {
 		String processedURI = contextProcessor.getProcessedURI(command);
 
 		log.info("[ {} ] PUT {} (expecting {})", command.getName(), processedURI, command.getExpectedStatus());
 
 		Response putResponse = contextProcessor.initRequestSpecificationContent(command)
-				.contentType(JSON_UTF8)
+				.contentType(APPLICATION_JSON.toString())
 				.headers(contextProcessor.getProcessedHeaders(command))
-				.log()
-				.everything(true)
+				.urlEncodingEnabled(command.getUrlEncodingEnabled())
 				.expect()
 				.statusCode(command.getExpectedStatus())
 				.when()
 				.put(processedURI);
 
-		String response = putResponse.prettyPrint();
-		log.info(response);
+		if (mustLog(contextProcessor)) {
+			putResponse.prettyPrint();
+		}
 
 		KiteContext kiteContext = contextProcessor.getKiteContext();
-		addBodyIfNotEmpty(kiteContext, response, command);
-		runChecks(contextProcessor.getChecks(command), response);
+		addBodyIfNotEmpty(kiteContext, putResponse.getBody().asString(), command);
+		runChecks(command, contextProcessor, putResponse);
 	}
 
-	void delete(Command command, ContextProcessor contextProcessor) throws ParseException {
+	private void delete(Command command, ContextProcessor contextProcessor) throws ParseException {
 		String processedURI = contextProcessor.getProcessedURI(command);
 		Integer expectedStatus = command.getExpectedStatus();
 
 		log.info("DELETE " + processedURI + " (expecting " + expectedStatus + ')');
 
-		Response r = contextProcessor.initRequestSpecificationContent(command)
-				.contentType(JSON_UTF8)
+		Response deleteResponse = contextProcessor.initRequestSpecificationContent(command)
+				.contentType(APPLICATION_JSON.toString())
 				.headers(contextProcessor.getProcessedHeaders(command))
-				.log()
-				.everything(true)
+				.urlEncodingEnabled(command.getUrlEncodingEnabled())
 				.expect()
 				.statusCode(expectedStatus)
 				.when()
 				.delete(processedURI);
 
-		runChecks(contextProcessor.getChecks(command), r.prettyPrint());
+		if (mustLog(contextProcessor)) {
+			deleteResponse.prettyPrint();
+		}
+
+		runChecks(command, contextProcessor, deleteResponse);
 
 		log.info("Checking resource: " + processedURI + "...");
 
 		if (command.getAutomaticCheck()) {
-			given().contentType(JSON_UTF8)
+			given().contentType(APPLICATION_JSON.toString())
+					.urlEncodingEnabled(command.getUrlEncodingEnabled())
 					.expect().statusCode(HttpStatus.SC_NOT_FOUND)
 					.when().get(processedURI);
 		}
 	}
 
-	void runChecks(Collection<Check> checks, String responseBody) throws ParseException {
+	private void runChecks(Command command, ContextProcessor contextProcessor, Response response) throws ParseException {
 		String errorMessage = null;
-		for (Check check : checks) {
+		for (Check check : contextProcessor.getChecks(command)) {
 			try {
-				defaultCheckRunner.verify(check, responseBody);
+				defaultCheckRunner.verify(check, response.getBody().asString());
 			} catch (CheckFailException cfex) {
+				printErrorPayloads(cfex.getMessage(), command, contextProcessor, response);
 				errorMessage = cfex.getMessage();
+			} catch (AssertionError ae) {
+				printErrorPayloads(ae.getMessage(), command, contextProcessor, response);
+				throw ae;
 			} catch (RuntimeException e) {
+				printErrorPayloads(e.getMessage(), command, contextProcessor, response);
 				throw new IllegalStateException("Check [" + check.getDescription() + "] failed ", e);
 			}
 		}
-		if(errorMessage != null) {
+		if (errorMessage != null) {
 			Assert.fail(errorMessage);
 		}
 	}
@@ -301,5 +346,74 @@ public class CommandRunner {
 		if (!Strings.isNullOrEmpty(name)) {
 			kiteContext.addBody(name, response);
 		}
+	}
+
+	private void checkStatus(Command command, ContextProcessor contextProcessor, Response response) {
+		try {
+			assertEquals("Unexpected response status",
+					command.getExpectedStatus(), Integer.valueOf(response.getStatusCode()));
+		} catch (AssertionError ae) {
+			printErrorPayloads(ae.getMessage(), command, contextProcessor, response);
+			throw ae;
+		}
+	}
+
+	/**
+	 * Get from context a variable that says if it must log response data.
+	 *
+	 * @param contextProcessor Context that contains variables and other data.
+	 * @return <code>true</code> if it must log responses, <code>false</code> otherwise.
+	 */
+	private boolean mustLog(ContextProcessor contextProcessor) {
+		// Get from context variable that says if it must log all data from exchange
+		String logResponse = contextProcessor.getKiteContext().getVariables().get("logResponse");
+		return StringUtils.isEmpty(logResponse) ? true : Boolean.valueOf(logResponse);
+	}
+
+	/**
+	 * Print request and response payloads as error if they exist.
+	 *
+	 * @param message          String with error message.
+	 * @param command          Kite command sent by test.
+	 * @param contextProcessor Processor used to replace command's placeholders with data from the kite's context.
+	 * @param response         {@link Response} instance that contains the body of response.
+	 */
+	private void printErrorPayloads(String message, Command command,
+									ContextProcessor contextProcessor, Response response) {
+		// message
+		StringBuilder error = new StringBuilder(message);
+
+		// service
+		error.append("\nSERVICE: ")
+				.append(command.getService() != null ?
+						command.getService() : contextProcessor.getKiteContext().getDefaultServiceKey());
+
+		// request
+		error.append("\nREQUEST: ")
+				.append(command.getVerb().toUpperCase())
+				.append(" ")
+				.append(contextProcessor.getProcessedURI(command))
+				.append("\n");
+		error.append(contextProcessor.getProcessedHeaders(command));
+
+		// request body
+		String requestBody = contextProcessor.getProcessedBody(command);
+		if (!StringUtils.isEmpty(requestBody)) {
+			try {
+				error.append("\n").append(new JSONObject(requestBody).toString(4));
+			} catch (JSONException e) {
+				error.append("\n").append(requestBody);
+				log.debug(e.getMessage(), e);
+			}
+		}
+
+		// response body
+		if (!StringUtils.isEmpty(response.getBody().asString())) {
+			error.append("\nRESPONSE:");
+		}
+
+		log.error(error.toString());
+		// call to prettyPrint() prints always response's body
+		response.prettyPrint();
 	}
 }

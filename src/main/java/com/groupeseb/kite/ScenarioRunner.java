@@ -61,9 +61,30 @@ public class ScenarioRunner {
 		kiteContext.getObjectVariables().putAll(scenario.getObjectVariables());
 
 		for (Command command : scenario.getCommands()) {
-			commandRunner.execute(command, context);
+			Command.Retry retry = command.getRetry();
+			if (retry == null) {
+				commandRunner.execute(command, context);
+			} else {
+				excuteCommandWithRetry(command, context, retry);
+			}
 		}
-
+		
 		return context;
+	}
+	
+	private void excuteCommandWithRetry(Command command, ContextProcessor context, Command.Retry retry) throws InterruptedException {
+		long startTime = System.currentTimeMillis();
+		while (true) {
+			try {
+				commandRunner.execute(command, context);
+				break;
+			} catch (Throwable e) {
+				if (System.currentTimeMillis() - startTime > retry.getTimeout()) {
+					throw new IllegalStateException("Command execution failed on timeout", e);
+				}
+				log.debug("delay {} to excute {}-{}", retry.getDelay(), command.getName(), command.getDescription());
+				Thread.sleep(retry.getDelay());
+			}
+		}
 	}
 }

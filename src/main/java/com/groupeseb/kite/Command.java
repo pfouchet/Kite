@@ -82,6 +82,13 @@ class Command {
 	private final Boolean debug;
 
 	/**
+	 * Indicate if the HTTP client must URL Encode parameter's values before issuing the request
+	 * Used with all verbs
+	 * Optional. Default to true
+	 */
+	private final Boolean urlEncodingEnabled;
+	
+	/**
 	 * Defines headers which will be added to the HTTP call.
 	 * Maybe empty.
 	 */
@@ -91,8 +98,15 @@ class Command {
 	 * Provide multi part.
 	 * Optional. Cannot be used with body.
 	 */
+	@Nullable
 	private final MultiPart multiPart;
-
+	
+	/**
+	 * Provide a repeater mechanism of failure execution.
+	 */
+	@Nullable
+	private final Retry retry;
+	
 	/**
 	 * Only used during GET.
 	 * If defined, specific page will be fetched.
@@ -105,6 +119,11 @@ class Command {
 	 */
 	private final Json commandSpecification;
 
+	/**
+	 * Allow to set a destination service. Available services must be set in {@link KiteContext#services} attribute.
+	 */
+	private final String service;
+
 	Command(Json commandSpecification) {
 		this.commandSpecification = commandSpecification;
 
@@ -114,6 +133,7 @@ class Command {
 		if (body != null && multiPart != null) {
 			throw new IllegalStateException("One of 'body' or 'multiPart' must be present");
 		}
+		retry = initRetry(commandSpecification.get("retry"));
 		name = commandSpecification.getString("name");
 		description = commandSpecification.getString("description");
 		verb = requireNonNull(commandSpecification.getString(VERB_KEY));
@@ -124,11 +144,13 @@ class Command {
 		automaticCheck = commandSpecification.getBooleanOrDefault("automaticCheck",
 		                                                          expectedStatus.toString().startsWith("2"));
 		debug = commandSpecification.getBooleanOrDefault("debug", false);
-
+		urlEncodingEnabled = commandSpecification.getBooleanOrDefault("urlEncodingEnabled", true);
+		
 		if (commandSpecification.exists("pagination")) {
 			pagination = new Pagination(requireNonNull(commandSpecification.get("pagination")));
 		}
 		headers = commandSpecification.getMap("headers");
+		service = commandSpecification.getString("service");
 	}
 
 	@Nullable
@@ -138,7 +160,15 @@ class Command {
 				       requireNonNull(multiPartJson.getString("name"), "multiPart.name is null"),
 				       requireNonNull(multiPartJson.getString("fileLocation"), "multiPart.fileLocation is null"));
 	}
-
+	
+	@Nullable
+	private static Retry initRetry(@Nullable Json retryJson) {
+		return retryJson == null ? null :
+			       new Retry(
+				                requireNonNull(retryJson.getLong("timeout"), "retry.timeout is null"),
+				                requireNonNull(retryJson.getLong("delay"), "retry.delay is null"));
+	}
+	
 	private static int getExpectedStatusByVerb(String string) {
 		switch (string) {
 			case "POST":
@@ -157,11 +187,18 @@ class Command {
 				return HttpStatus.SC_OK;
 		}
 	}
-
+	
 	@AllArgsConstructor
 	@Getter
 	static class MultiPart {
 		private final String name;
 		private final String fileLocation;
+	}
+	
+	@AllArgsConstructor
+	@Getter
+	static class Retry {
+		private final long timeout;
+		private final long delay;
 	}
 }
